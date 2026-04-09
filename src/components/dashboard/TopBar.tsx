@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Search, Plus, Archive } from "lucide-react";
+import { Search, Plus, Archive, Menu, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function TopBar() {
+interface TopBarProps {
+  onMenuToggle?: () => void;
+}
+
+export default function TopBar({ onMenuToggle }: TopBarProps) {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -20,8 +24,14 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center px-4 gap-4 shrink-0">
+    <header className="h-14 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0">
       <div className="flex items-center gap-2 w-48 shrink-0">
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5" />
+        </button>
         <Archive className="size-5 text-primary" />
         <span className="font-semibold text-base tracking-tight">DevStash</span>
       </div>
@@ -36,10 +46,14 @@ export default function TopBar() {
         </div>
       </div>
 
-      <div className="w-48 flex justify-end shrink-0">
-        <Button>
+      <div className="flex items-center gap-2 justify-end shrink-0">
+        <Button variant="outline" size="sm">
+          <FolderPlus className="size-4" />
+          <span className="hidden sm:inline">New Collection</span>
+        </Button>
+        <Button size="sm">
           <Plus className="size-4" />
-          New Item
+          <span className="hidden sm:inline">New Item</span>
         </Button>
       </div>
     </header>
