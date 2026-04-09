@@ -37,6 +37,7 @@ We will create a new branch for every feature/fix. Name branch **feature/[featur
 - Keep commits focused (one feature/fix per commit)
 - Never put "Generated With Claude" in the commit messages
 - On feature branches, always use `git add .` to stage all changes
+- Always include bullet points in the commit message body summarizing what was done
 
 ## When Stuck
 
