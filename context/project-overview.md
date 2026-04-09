@@ -29,15 +29,15 @@ Content mode is one of: `text` (snippet, note, prompt, command), `url` (link), o
 
 **System Types:**
 
-| Type | Icon | Color | Content Mode | Tier |
-|---|---|---|---|---|
-| Snippet | `Code` | `#3b82f6` | text | Free |
-| Prompt | `Sparkles` | `#8b5cf6` | text | Free |
-| Command | `Terminal` | `#f97316` | text | Free |
-| Note | `StickyNote` | `#fde047` | text | Free |
-| Link | `Link` | `#10b981` | url | Free |
-| File | `File` | `#6b7280` | file | Pro |
-| Image | `Image` | `#ec4899` | file | Pro |
+| Type    | Icon         | Color     | Content Mode | Tier |
+| ------- | ------------ | --------- | ------------ | ---- |
+| Snippet | `Code`       | `#3b82f6` | text         | Free |
+| Prompt  | `Sparkles`   | `#8b5cf6` | text         | Free |
+| Command | `Terminal`   | `#f97316` | text         | Free |
+| Note    | `StickyNote` | `#fde047` | text         | Free |
+| Link    | `Link`       | `#10b981` | url          | Free |
+| File    | `File`       | `#6b7280` | file         | Pro  |
+| Image   | `Image`      | `#ec4899` | file         | Pro  |
 
 Icons from [Lucide Icons](https://lucide.dev/icons/). URL structure: `/items/snippets`, `/items/prompts`, etc.
 
@@ -204,18 +204,18 @@ model Tag {
 
 ## Tech Stack
 
-| Layer | Technology | Notes |
-|---|---|---|
-| **Framework** | Next.js 16 / React 19 | SSR + API routes, single repo |
-| **Language** | TypeScript | |
-| **Database** | Neon (PostgreSQL) | Serverless Postgres |
-| **ORM** | Prisma 7 | Migrations only — **never `db push`** |
-| **Auth** | NextAuth v5 | Email/password + GitHub OAuth |
-| **File Storage** | Cloudflare R2 | S3-compatible |
-| **AI** | OpenAI `gpt-5-nano` | Auto-tag, summarize, explain, optimize |
-| **Styling** | Tailwind CSS v4 + shadcn/ui | |
-| **Caching** | Redis (TBD) | Evaluate during development |
-| **Payments** | Stripe | Subscription billing |
+| Layer            | Technology                  | Notes                                  |
+| ---------------- | --------------------------- | -------------------------------------- |
+| **Framework**    | Next.js 16 / React 19       | SSR + API routes, single repo          |
+| **Language**     | TypeScript                  |                                        |
+| **Database**     | Neon (PostgreSQL)           | Serverless Postgres                    |
+| **ORM**          | Prisma 7                    | Migrations only — **never `db push`**  |
+| **Auth**         | NextAuth v5                 | Email/password + GitHub OAuth          |
+| **File Storage** | Cloudflare R2               | S3-compatible                          |
+| **AI**           | OpenAI `gpt-5-nano`         | Auto-tag, summarize, explain, optimize |
+| **Styling**      | Tailwind CSS v4 + shadcn/ui |                                        |
+| **Caching**      | Redis (TBD)                 | Evaluate during development            |
+| **Payments**     | Stripe                      | Subscription billing                   |
 
 ---
 
@@ -245,9 +245,19 @@ model Tag {
 **Style:** Modern, minimal, developer-focused. Dark mode default. Reference: Notion × Linear × Raycast. Syntax highlighting for code.
 
 **Layout:**
+
 - **Sidebar** (collapsible) — item type links, recent collections
 - **Main** — grid of collection cards (color-coded by dominant type); item cards use type color as border
 - **Drawer** — quick-access for viewing/creating/editing items
 - **Mobile** — sidebar collapses to drawer
 
 **Micro-interactions:** Smooth transitions, hover states, toast notifications, loading skeletons.
+
+### Screenshots
+
+Refer to screenshots below as a base for the dashboard UI.
+It does not have to be exact. Use it as a reference:
+
+@context\screenshots\dashboard-ui-dashboard.jpg
+@context\screenshots\dashboard-ui-drawer-1.jpg
+@context\screenshots\dashboard-ui-drawer-2.jpg
