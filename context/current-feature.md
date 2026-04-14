@@ -1,10 +1,25 @@
 # Current Feature
 
-Neon PostgreSQL + Prisma Setup
+Seed Data
 
 # Status
 
-Completed
+In Progress
+
+## Requirements
+
+- Demo user: `demo@devstash.io`, password `12345678` (bcryptjs, 12 rounds), `isPro: false`, `emailVerified: now`
+- System item types: Snippet, Prompt, Command, Note, File, Image, Link (all `isSystem: true`)
+- Collections with items:
+  - **React Patterns** — 3 snippets (TypeScript: custom hooks, component patterns, utility functions)
+  - **AI Workflows** — 3 prompts (code review, documentation generation, refactoring assistance)
+  - **DevOps** — 1 snippet, 1 command, 2 links (real URLs)
+  - **Terminal Commands** — 4 commands (git, docker, process management, package manager)
+  - **Design Resources** — 4 links (real URLs: CSS/Tailwind, component libraries, design systems, icon libraries)
+
+## References
+
+- `context/features/seed-spec.md`
 
 ## Requirements
 
