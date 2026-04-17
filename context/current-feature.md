@@ -1,52 +1,20 @@
 # Current Feature
 
-Seed Data
+<!-- Feature Name -->
 
-# Status
+## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
 
-## Requirements
+Not Started
 
-- Demo user: `demo@devstash.io`, password `12345678` (bcryptjs, 12 rounds), `isPro: false`, `emailVerified: now`
-- System item types: Snippet, Prompt, Command, Note, File, Image, Link (all `isSystem: true`)
-- Collections with items:
-  - **React Patterns** — 3 snippets (TypeScript: custom hooks, component patterns, utility functions)
-  - **AI Workflows** — 3 prompts (code review, documentation generation, refactoring assistance)
-  - **DevOps** — 1 snippet, 1 command, 2 links (real URLs)
-  - **Terminal Commands** — 4 commands (git, docker, process management, package manager)
-  - **Design Resources** — 4 links (real URLs: CSS/Tailwind, component libraries, design systems, icon libraries)
+## Goals
 
-## References
+<!-- Goals & requirements -->
 
-- `context/features/seed-spec.md`
+## Notes
 
-## Requirements
-
-- Use Neon PostgreSQL (serverless) as the database
-- Set up Prisma 7 ORM (note: has breaking changes vs v6)
-- Create initial schema based on data models in `project-overview.md`
-- Include NextAuth models (Account, Session, VerificationToken)
-- Add appropriate indexes and cascade deletes
-- Use `DATABASE_URL` for development branch, separate production branch
-- Always create migrations (`prisma migrate dev`) — never `db push`
-
-## References
-
-- `context/features/database-spec.md`
-- `context/project-overview.md`
-- Prisma 7 upgrade guide: https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
-- Prisma quickstart: https://www.prisma.io/docs/getting-started/prisma-orm/quickstart/prisma-postgres
-
----
-
-# Previous Feature
-
-Dashboard UI Phase 3 — Main Area Content
-
-# Status
-
-Completed
+<!-- Any extra notes -->
 
 ## History
 
@@ -65,6 +33,17 @@ Completed
 - TopBar with DevStash logo/title, centered search (Ctrl+K shortcut), and New Item button
 - Placeholder sidebar and main area
 
+### 2026-04-09 — Dashboard UI Phase 2 Completed
+- Collapsible sidebar (icon-only when collapsed on desktop, overlay drawer on mobile)
+- Item type links to `/items/TYPE` with color-coded icons, counts, and PRO badge
+- Collections section collapsible as a whole, with Favourites and All Collections subsections
+- Favourite collections show star icon + item count; All Collections indented with item count
+- User avatar area at bottom with name, email, and settings icon
+- Mobile hamburger button in TopBar to open sidebar drawer
+- New Collection button moved to TopBar (outline style) beside New Item
+- Buttons icon-only on mobile (`sm:` breakpoint)
+- TopBar background changed to `bg-background` for visual consistency
+
 ### 2026-04-09 — Dashboard UI Phase 3 Completed
 - 4 stats cards (total items, collections, favourite items/collections) using Card component
 - Collections section with item type icons, sorted by updatedAt, View all link
@@ -76,13 +55,33 @@ Completed
 - shadcn Card component installed
 - Mock data extended with `itemTypes` per collection and `isPinned` on 2 items
 
-### 2026-04-09 — Dashboard UI Phase 2 Completed
-- Collapsible sidebar (icon-only when collapsed on desktop, overlay drawer on mobile)
-- Item type links to `/items/TYPE` with color-coded icons, counts, and PRO badge
-- Collections section collapsible as a whole, with Favourites and All Collections subsections
-- Favourite collections show star icon + item count; All Collections indented with item count
-- User avatar area at bottom with name, email, and settings icon
-- Mobile hamburger button in TopBar to open sidebar drawer
-- New Collection button moved to TopBar (outline style) beside New Item
-- Buttons icon-only on mobile (`sm:` breakpoint)
-- TopBar background changed to `bg-background` for visual consistency
+### 2026-04-14 — Neon PostgreSQL + Prisma 7 Setup Completed
+- Upgraded Node.js to v24.14.1 (Prisma 7 requires 20.19+)
+- Installed Prisma 7 with `@prisma/adapter-neon` and `@neondatabase/serverless`
+- Schema with all models: User, Item, ItemType, Collection, ItemCollection, Tag, NextAuth models
+- All tables and columns use snake_case via `@@map` / `@map`
+- `prisma.config.ts` for datasource URL and seed command (Prisma 7 requirement)
+- `src/lib/prisma.ts` singleton using `PrismaNeon` driver adapter
+- `prisma/seed.ts` for system item types
+- 2 migrations: `init` + `snake_case_column_names`
+- `src/generated/` added to `.gitignore`
+
+### 2026-04-17 — Dashboard Collections — Real Data Completed
+- Created `src/lib/db/collections.ts` with `getRecentCollections(userId, limit)` function
+- Collections fetched from Neon DB via Prisma — includes item types and item count per collection
+- Dominant color computed from most-used item type in each collection (application layer, no DB change)
+- `CollectionCard` updated with `border-l-[3px]` accent using dominant color via inline style
+- Dashboard page made `async` — queries demo user by email, passes real collections to components
+- Collection stats (`totalCollections`, `favoriteCollections`) now derived from real DB data
+
+### 2026-04-14 — Seed Data Completed
+- Added `password` field to User model with migration
+- Demo user: `demo@devstash.io`, bcryptjs 12 rounds
+- 7 system item types seeded
+- 5 collections with 16 items total:
+  - React Patterns: 3 snippets (custom hooks, component patterns, utils)
+  - AI Workflows: 3 prompts (code review, docs generation, refactoring)
+  - DevOps: 1 snippet, 1 command, 2 links
+  - Terminal Commands: 4 commands (git, docker, process, npm)
+  - Design Resources: 4 links (Tailwind, shadcn, Radix, Lucide)
+- Seed is idempotent — skips existing records

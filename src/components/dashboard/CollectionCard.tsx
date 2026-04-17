@@ -39,6 +39,7 @@ interface CollectionCardProps {
     isFavorite: boolean;
     itemCount: number;
     itemTypes: ItemType[];
+    dominantColor?: string | null;
   };
 }
 
@@ -47,7 +48,8 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
 
   return (
     <Card
-      className="group cursor-pointer hover:border-muted-foreground/50 transition-colors"
+      className="group cursor-pointer hover:border-muted-foreground/50 transition-colors border-l-[3px]"
+      style={collection.dominantColor ? { borderLeftColor: collection.dominantColor } : undefined}
       onClick={() => router.push(`/collections/${collection.id}`)}
     >
       <CardContent className="px-5 py-5">

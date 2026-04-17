@@ -1,22 +1,28 @@
-import {
-  mockCollections,
-  mockItems,
-  mockItemTypeCounts,
-} from "@/lib/mock-data";
+import { mockItems, mockItemTypeCounts } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import { getRecentCollections } from "@/lib/db/collections";
 import StatsCards from "@/components/dashboard/StatsCards";
 import Collections from "@/components/dashboard/Collections";
 import PinnedItems from "@/components/dashboard/PinnedItems";
 import Items from "@/components/dashboard/Items";
 
-export default function DashboardPage() {
-  const totalItems = Object.values(mockItemTypeCounts).reduce((a, b) => a + b, 0);
-  const totalCollections = mockCollections.length;
-  const favoriteItems = mockItems.filter((i) => i.isFavorite).length;
-  const favoriteCollections = mockCollections.filter((c) => c.isFavorite).length;
+// TODO: replace with session user once auth is implemented
+const DEMO_USER_EMAIL = "demo@devstash.io";
 
-  const recentCollections = [...mockCollections]
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-    .slice(0, 6);
+export default async function DashboardPage() {
+  const user = await prisma.user.findUnique({
+    where: { email: DEMO_USER_EMAIL },
+    select: { id: true },
+  });
+
+  const recentCollections = user
+    ? await getRecentCollections(user.id)
+    : [];
+
+  const totalItems = Object.values(mockItemTypeCounts).reduce((a, b) => a + b, 0);
+  const totalCollections = recentCollections.length;
+  const favoriteItems = mockItems.filter((i) => i.isFavorite).length;
+  const favoriteCollections = recentCollections.filter((c) => c.isFavorite).length;
 
   const pinnedItems = mockItems.filter((i) => i.isPinned);
 

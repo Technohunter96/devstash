@@ -14,6 +14,7 @@ interface Collection {
   isFavorite: boolean;
   itemCount: number;
   itemTypes: ItemType[];
+  dominantColor?: string | null;
   updatedAt: Date;
 }
 
