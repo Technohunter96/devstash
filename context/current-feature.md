@@ -1,20 +1,24 @@
 # Current Feature
 
-<!-- Feature Name -->
+Stats & Sidebar — Real Data
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+Completed
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Display stats cards using real database data (keep current design/layout)
+- Display system item types in sidebar with icons, linking to `/items/[typename]`
+- Add "View all collections" link under the collections list linking to `/collections`
+- Keep star icons for favorite collections; recent collections show a colored circle based on most-used item type
+- Functions go in `src/lib/db/items.ts` (reference: `src/lib/db/collections.ts`)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Stats and item type counts in the sidebar currently use mock data
+- Sidebar item types are hardcoded — need to be fetched from DB (system types)
+- Collections list already uses real data; need "View all" link added
 
 ## History
 
@@ -85,6 +89,19 @@ Not Started
 - `CollectionCard` updated with `border-l-[3px]` accent using dominant color via inline style
 - Dashboard page made `async` — queries demo user by email, passes real collections to components
 - Collection stats (`totalCollections`, `favoriteCollections`) now derived from real DB data
+
+### 2026-04-17 — Stats & Sidebar — Real Data Completed
+- Created `src/lib/constants.ts` with `PRO_ITEM_TYPE_NAMES` as single source of truth
+- Created `src/lib/db/sidebar.ts` with `getSidebarItemTypes` and `getSidebarCollections` functions
+- `getSidebarItemTypes` fetches system item types from DB with per-user item counts; File/Image sorted to bottom
+- `getSidebarCollections` fetches collections ordered by favourite first, then updatedAt; includes dominant color
+- Created `src/components/dashboard/DashboardShell.tsx` — client shell with sidebar open/collapsed state
+- `layout.tsx` converted to async server component — fetches sidebar data, renders DashboardShell
+- `Sidebar.tsx` updated to accept real data as props, removed mock data dependency
+- PRO badge uses `PRO_ITEM_TYPE_NAMES.includes()` — no duplicate hardcoded names
+- Non-favourite collections show colored circle based on dominant item type instead of folder icon
+- "View all collections →" link added below collections list
+- Favourites and Recents sections aligned (same left indent, bigger gap between sections)
 
 ### 2026-04-17 — Dashboard Items — Real Data Completed
 - Created `src/lib/db/items.ts` with `getPinnedItems`, `getRecentItems`, `getItemStats` functions

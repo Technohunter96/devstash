@@ -1,31 +1,29 @@
-"use client";
+import DashboardShell from "@/components/dashboard/DashboardShell";
+import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
+import { prisma } from "@/lib/prisma";
 
-import { useState } from "react";
-import TopBar from "@/components/dashboard/TopBar";
-import Sidebar from "@/components/dashboard/Sidebar";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { email: "demo@devstash.io" },
+    select: { id: true, name: true, email: true },
+  });
+
+  const [itemTypes, collections] = await Promise.all([
+    getSidebarItemTypes(user.id),
+    getSidebarCollections(user.id),
+  ]);
 
   return (
-    <div className="flex flex-col h-full">
-      <TopBar onMenuToggle={() => setSidebarOpen((v) => !v)} />
-      <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar
-          isOpen={sidebarOpen}
-          isCollapsed={sidebarCollapsed}
-          onClose={() => setSidebarOpen(false)}
-          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
-        />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <DashboardShell
+      itemTypes={itemTypes}
+      collections={collections}
+      user={{ name: user.name ?? "User", email: user.email }}
+    >
+      {children}
+    </DashboardShell>
   );
 }

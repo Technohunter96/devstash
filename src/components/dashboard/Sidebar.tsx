@@ -15,11 +15,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  FolderOpen,
   Settings,
   X,
 } from "lucide-react";
-import { mockItemTypes, mockItemTypeCounts, mockCollections, mockUser } from "@/lib/mock-data";
+import { PRO_ITEM_TYPE_NAMES } from "@/lib/constants";
+import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 
 const lucideIconMap: Record<string, React.ElementType> = {
   Code,
@@ -36,14 +36,25 @@ interface SidebarProps {
   isCollapsed: boolean;
   onClose: () => void;
   onToggleCollapse: () => void;
+  itemTypes: SidebarItemType[];
+  collections: SidebarCollection[];
+  user: { name: string; email: string };
 }
 
-export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({
+  isOpen,
+  isCollapsed,
+  onClose,
+  onToggleCollapse,
+  itemTypes,
+  collections,
+  user,
+}: SidebarProps) {
   const pathname = usePathname();
   const [collectionsOpen, setCollectionsOpen] = useState(true);
 
-  const favoriteCollections = mockCollections.filter((c) => c.isFavorite);
-  const otherCollections = mockCollections.filter((c) => !c.isFavorite);
+  const favoriteCollections = collections.filter((c) => c.isFavorite);
+  const otherCollections = collections.filter((c) => !c.isFavorite);
 
   return (
     <>
@@ -98,18 +109,17 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
               </p>
             )}
             <nav className="space-y-0.5">
-              {mockItemTypes.map((type) => {
+              {itemTypes.map((type) => {
                 const Icon = lucideIconMap[type.icon] ?? File;
                 const slug = type.name.toLowerCase() + "s";
                 const href = `/items/${slug}`;
                 const isActive = pathname === href;
-                const count = mockItemTypeCounts[type.id] ?? 0;
 
                 return (
                   <Link
                     key={type.id}
                     href={href}
-                    title={isCollapsed ? `${type.name} (${count})` : undefined}
+                    title={isCollapsed ? `${type.name} (${type.itemCount})` : undefined}
                     className={[
                       "flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors",
                       isActive
@@ -123,12 +133,12 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
                       <>
                         <span className="flex-1 truncate">{type.name}</span>
                         <div className="flex items-center gap-1">
-                          {(type.name === "File" || type.name === "Image") && (
+                          {PRO_ITEM_TYPE_NAMES.includes(type.name) && (
                             <span className="text-[9px] font-bold bg-primary/20 text-primary rounded px-1 py-0.5 leading-none">
                               PRO
                             </span>
                           )}
-                          <span className="text-xs text-muted-foreground">{count}</span>
+                          <span className="text-xs text-muted-foreground">{type.itemCount}</span>
                         </div>
                       </>
                     )}
@@ -139,8 +149,7 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
           </div>
 
           {/* Divider */}
-          {!isCollapsed && <div className="mx-3 my-3 border-t border-border" />}
-          {isCollapsed && <div className="mx-3 my-3 border-t border-border" />}
+          <div className="mx-3 my-3 border-t border-border" />
 
           {/* Collections */}
           {!isCollapsed ? (
@@ -189,10 +198,10 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
                   </nav>
 
                   {/* All Collections subsection */}
-                  <p className="px-2 pt-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    All Collections
+                  <p className="px-2 pt-5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    Recents
                   </p>
-                  <nav className="space-y-0.5 pl-3">
+                  <nav className="space-y-0.5">
                     {otherCollections.map((col) => (
                       <Link
                         key={col.id}
@@ -204,18 +213,29 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
                             : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         ].join(" ")}
                       >
-                        <FolderOpen className="size-4 shrink-0" />
+                        <span
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: col.dominantColor ?? "#6b7280" }}
+                        />
                         <span className="flex-1 truncate">{col.name}</span>
                         <span className="text-xs text-muted-foreground shrink-0">{col.itemCount}</span>
                       </Link>
                     ))}
                   </nav>
+
+                  {/* View all collections link */}
+                  <Link
+                    href="/collections"
+                    className="block px-2 pt-2 pb-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    View all collections →
+                  </Link>
                 </div>
               )}
 
             </div>
           ) : (
-            /* Collapsed: just star icon for favourites */
+            /* Collapsed: star icon for favourites */
             <div className="px-3">
               <Link
                 href="/favourites"
@@ -233,17 +253,17 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
           {isCollapsed ? (
             <div className="flex justify-center">
               <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold uppercase">
-                {mockUser.name.charAt(0)}
+                {user.name.charAt(0)}
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold uppercase shrink-0">
-                {mockUser.name.charAt(0)}
+                {user.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{mockUser.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{mockUser.email}</p>
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
               <button className="size-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <Settings className="size-4" />
