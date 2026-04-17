@@ -1,6 +1,6 @@
-import { mockItems, mockItemTypeCounts } from "@/lib/mock-data";
 import { prisma } from "@/lib/prisma";
 import { getRecentCollections } from "@/lib/db/collections";
+import { getPinnedItems, getRecentItems, getItemStats } from "@/lib/db/items";
 import StatsCards from "@/components/dashboard/StatsCards";
 import Collections from "@/components/dashboard/Collections";
 import PinnedItems from "@/components/dashboard/PinnedItems";
@@ -15,24 +15,17 @@ export default async function DashboardPage() {
     select: { id: true },
   });
 
-  const recentCollections = user
-    ? await getRecentCollections(user.id)
-    : [];
+  const [recentCollections, pinnedItems, recentItems, itemStats] = user
+    ? await Promise.all([
+        getRecentCollections(user.id),
+        getPinnedItems(user.id),
+        getRecentItems(user.id),
+        getItemStats(user.id),
+      ])
+    : [[], [], [], { totalItems: 0, favoriteItems: 0 }];
 
-  const totalItems = Object.values(mockItemTypeCounts).reduce((a, b) => a + b, 0);
   const totalCollections = recentCollections.length;
-  const favoriteItems = mockItems.filter((i) => i.isFavorite).length;
   const favoriteCollections = recentCollections.filter((c) => c.isFavorite).length;
-
-  const pinnedItems = mockItems.filter((i) => i.isPinned);
-
-  const recentItems = [...mockItems]
-    .sort((a, b) => {
-      const aTime = a.lastUsedAt?.getTime() ?? 0;
-      const bTime = b.lastUsedAt?.getTime() ?? 0;
-      return bTime - aTime;
-    })
-    .slice(0, 10);
 
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
@@ -42,9 +35,9 @@ export default async function DashboardPage() {
       </div>
 
       <StatsCards
-        totalItems={totalItems}
+        totalItems={itemStats.totalItems}
         totalCollections={totalCollections}
-        favoriteItems={favoriteItems}
+        favoriteItems={itemStats.favoriteItems}
         favoriteCollections={favoriteCollections}
       />
 

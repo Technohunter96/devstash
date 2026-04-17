@@ -77,7 +77,6 @@ export default function ItemCard({ item }: { item: Item }) {
   return (
     <Card
       className="group relative cursor-pointer hover:border-muted-foreground/50 transition-colors"
-      style={{ borderLeftColor: item.itemType.color, borderLeftWidth: "3px" }}
       onClick={() => {
         // TODO: openDrawer(item.id)
       }}
@@ -96,7 +95,12 @@ export default function ItemCard({ item }: { item: Item }) {
             )}
             <span className="font-medium text-sm truncate">{item.title}</span>
             {item.isFavorite && (
-              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0 ml-auto" />
+              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0" />
+            )}
+            {item.lastUsedAt && (
+              <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                {timeAgo(item.lastUsedAt)}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -109,11 +113,6 @@ export default function ItemCard({ item }: { item: Item }) {
             >
               {item.itemType.name}
             </span>
-            {item.lastUsedAt && (
-              <span className="text-[10px] text-muted-foreground ml-auto">
-                {timeAgo(item.lastUsedAt)}
-              </span>
-            )}
           </div>
         </div>
       </CardContent>

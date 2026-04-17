@@ -62,8 +62,15 @@ async function main() {
     description: "Reusable React patterns and hooks",
   });
 
+  const now = new Date();
+  const minsAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
+  const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
+
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Custom Hooks",
+    lastUsedAt: minsAgo(12),
+    isFavorite: true,
     content: `import { useState, useEffect, useCallback, useRef } from "react";
 
 // useDebounce — delays updating a value until after a delay
@@ -109,6 +116,7 @@ export function usePrevious<T>(value: T): T | undefined {
 
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Component Patterns",
+    lastUsedAt: hoursAgo(3),
     content: `import { createContext, useContext, useState, type ReactNode } from "react";
 
 // ── Context Provider pattern ────────────────────────────────────────────────
@@ -153,6 +161,7 @@ export { Card };`,
 
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Utility Functions",
+    lastUsedAt: hoursAgo(7),
     content: `// cn — merge Tailwind classes safely (clsx + tailwind-merge)
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -197,6 +206,8 @@ export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]> {
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Code Review Prompt",
+    lastUsedAt: daysAgo(1),
+    isFavorite: true,
     content: `You are a senior software engineer conducting a thorough code review.
 
 Review the following code and provide feedback on:
@@ -219,6 +230,7 @@ Code to review:
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Documentation Generator",
+    lastUsedAt: daysAgo(2),
     content: `Generate comprehensive documentation for the following code.
 
 Include:
@@ -238,6 +250,7 @@ Code:
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Refactoring Assistant",
+    lastUsedAt: daysAgo(3),
     content: `You are an expert at refactoring code for clarity, maintainability, and performance.
 
 Refactor the code below following these principles:
@@ -263,6 +276,7 @@ Original code:
 
   await upsertItem(user.id, typeMap["Snippet"], devops.id, {
     title: "Docker + GitHub Actions CI",
+    lastUsedAt: daysAgo(4),
     content: `# .github/workflows/deploy.yml
 name: Build & Deploy
 
@@ -299,6 +313,7 @@ jobs:
 
   await upsertItem(user.id, typeMap["Command"], devops.id, {
     title: "Deploy to Production",
+    lastUsedAt: daysAgo(5),
     content: `# Pull latest image and restart container
 docker pull ghcr.io/your-org/your-app:latest
 docker stop app || true
@@ -314,12 +329,14 @@ docker run -d \\
 
   await upsertItem(user.id, typeMap["Link"], devops.id, {
     title: "Docker Documentation",
+    lastUsedAt: daysAgo(6),
     url: "https://docs.docker.com",
     contentType: "URL",
   });
 
   await upsertItem(user.id, typeMap["Link"], devops.id, {
     title: "GitHub Actions Docs",
+    lastUsedAt: daysAgo(7),
     url: "https://docs.github.com/en/actions",
     contentType: "URL",
   });
@@ -332,6 +349,8 @@ docker run -d \\
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Git Operations",
+    lastUsedAt: minsAgo(45),
+    isFavorite: true,
     content: `# Undo last commit but keep changes staged
 git reset --soft HEAD~1
 
@@ -353,6 +372,7 @@ git branch --merged main | grep -v main | xargs git branch -d`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Docker Commands",
+    lastUsedAt: hoursAgo(5),
     content: `# Remove all stopped containers, unused images, networks, caches
 docker system prune -af
 
@@ -372,6 +392,7 @@ docker cp <container>:/app/file.txt ./file.txt`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Process Management",
+    lastUsedAt: daysAgo(2),
     content: `# Find process using a port (Linux/Mac)
 lsof -i :3000
 
@@ -391,6 +412,7 @@ nohup node server.js > output.log 2>&1 &`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Package Manager Utilities",
+    lastUsedAt: daysAgo(3),
     content: `# List outdated packages
 npm outdated
 
@@ -419,24 +441,28 @@ rm -rf node_modules package-lock.json && npm install`,
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Tailwind CSS Docs",
+    lastUsedAt: hoursAgo(1),
     url: "https://tailwindcss.com/docs",
     contentType: "URL",
   });
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "shadcn/ui Components",
+    lastUsedAt: daysAgo(1),
     url: "https://ui.shadcn.com/docs/components",
     contentType: "URL",
   });
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Radix UI Primitives",
+    lastUsedAt: daysAgo(4),
     url: "https://www.radix-ui.com/primitives",
     contentType: "URL",
   });
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Lucide Icons",
+    lastUsedAt: daysAgo(6),
     url: "https://lucide.dev/icons",
     contentType: "URL",
   });
@@ -466,11 +492,20 @@ async function upsertItem(
     url?: string;
     language?: string;
     contentType?: "URL" | "TEXT" | "FILE";
+    lastUsedAt?: Date;
+    isFavorite?: boolean;
   }
 ) {
   const existing = await prisma.item.findFirst({ where: { userId, title: data.title } });
   if (existing) {
-    console.log(`    skip item: ${data.title}`);
+    console.log(`    update item: ${data.title}`);
+    await prisma.item.update({
+      where: { id: existing.id },
+      data: {
+        lastUsedAt: data.lastUsedAt ?? null,
+        isFavorite: data.isFavorite ?? false,
+      },
+    });
     if (!(await prisma.itemCollection.findUnique({ where: { itemId_collectionId: { itemId: existing.id, collectionId } } }))) {
       await prisma.itemCollection.create({ data: { itemId: existing.id, collectionId } });
     }
@@ -484,6 +519,8 @@ async function upsertItem(
       url: data.url,
       language: data.language,
       contentType: data.contentType ?? "TEXT",
+      lastUsedAt: data.lastUsedAt ?? null,
+      isFavorite: data.isFavorite ?? false,
       userId,
       itemTypeId,
       collections: { create: { collectionId } },

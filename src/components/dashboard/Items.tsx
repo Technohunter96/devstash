@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Clock } from "lucide-react";
 import ItemCard from "./ItemCard";
 
 interface Item {
@@ -26,9 +27,12 @@ export default function Items({ items }: ItemsProps) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Items
-        </h2>
+        <div className="flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Recent
+          </h2>
+        </div>
         <Link
           href="/items"
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -39,7 +43,7 @@ export default function Items({ items }: ItemsProps) {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">No items yet.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="flex flex-col gap-2">
           {items.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}

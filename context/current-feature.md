@@ -66,14 +66,6 @@ Not Started
 - 2 migrations: `init` + `snake_case_column_names`
 - `src/generated/` added to `.gitignore`
 
-### 2026-04-17 — Dashboard Collections — Real Data Completed
-- Created `src/lib/db/collections.ts` with `getRecentCollections(userId, limit)` function
-- Collections fetched from Neon DB via Prisma — includes item types and item count per collection
-- Dominant color computed from most-used item type in each collection (application layer, no DB change)
-- `CollectionCard` updated with `border-l-[3px]` accent using dominant color via inline style
-- Dashboard page made `async` — queries demo user by email, passes real collections to components
-- Collection stats (`totalCollections`, `favoriteCollections`) now derived from real DB data
-
 ### 2026-04-14 — Seed Data Completed
 - Added `password` field to User model with migration
 - Demo user: `demo@devstash.io`, bcryptjs 12 rounds
@@ -85,3 +77,21 @@ Not Started
   - Terminal Commands: 4 commands (git, docker, process, npm)
   - Design Resources: 4 links (Tailwind, shadcn, Radix, Lucide)
 - Seed is idempotent — skips existing records
+
+### 2026-04-17 — Dashboard Collections — Real Data Completed
+- Created `src/lib/db/collections.ts` with `getRecentCollections(userId, limit)` function
+- Collections fetched from Neon DB via Prisma — includes item types and item count per collection
+- Dominant color computed from most-used item type in each collection (application layer, no DB change)
+- `CollectionCard` updated with `border-l-[3px]` accent using dominant color via inline style
+- Dashboard page made `async` — queries demo user by email, passes real collections to components
+- Collection stats (`totalCollections`, `favoriteCollections`) now derived from real DB data
+
+### 2026-04-17 — Dashboard Items — Real Data Completed
+- Created `src/lib/db/items.ts` with `getPinnedItems`, `getRecentItems`, `getItemStats` functions
+- Dashboard page updated — all data fetched from Neon DB via `Promise.all`, mock data removed
+- Pinned Items section hidden when no pinned items exist
+- Stats cards (Total Items, Favourite Items) now use real DB counts
+- Items layout changed from 3-column grid to full-width list
+- "Items" section renamed to "Recent" with clock icon; "Pinned" section has pin icon
+- ItemCard: time ago displayed top-right, favourite star shown next to title when `isFavorite = true`
+- Seed updated with `lastUsedAt` values per item (minutes/hours/days ago) and `isFavorite` support
