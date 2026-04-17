@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { PRO_ITEM_TYPE_NAMES } from "@/lib/constants";
+import { ITEM_TYPE_ORDER } from "@/lib/db/items";
 
 export interface SidebarItemType {
   id: string;
@@ -43,8 +43,7 @@ export async function getSidebarItemTypes(
     }))
     .sort(
       (a, b) =>
-        Number(PRO_ITEM_TYPE_NAMES.includes(a.name)) -
-        Number(PRO_ITEM_TYPE_NAMES.includes(b.name))
+        ITEM_TYPE_ORDER.indexOf(a.name) - ITEM_TYPE_ORDER.indexOf(b.name)
     );
 }
 

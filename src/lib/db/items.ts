@@ -1,5 +1,15 @@
 import { prisma } from "@/lib/prisma";
 
+export const ITEM_TYPE_ORDER: string[] = [
+  "Snippet",
+  "Prompt",
+  "Command",
+  "Note",
+  "Link",
+  "File",
+  "Image",
+];
+
 export interface DashboardItem {
   id: string;
   title: string;

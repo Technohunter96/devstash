@@ -18,7 +18,6 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import { PRO_ITEM_TYPE_NAMES } from "@/lib/constants";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 
 const lucideIconMap: Record<string, React.ElementType> = {
@@ -133,7 +132,7 @@ export default function Sidebar({
                       <>
                         <span className="flex-1 truncate">{type.name}</span>
                         <div className="flex items-center gap-1">
-                          {PRO_ITEM_TYPE_NAMES.includes(type.name) && (
+                          {(type.name === "File" || type.name === "Image") && (
                             <span className="text-[9px] font-bold bg-primary/20 text-primary rounded px-1 py-0.5 leading-none">
                               PRO
                             </span>
