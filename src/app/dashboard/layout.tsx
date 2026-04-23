@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
 import { prisma } from "@/lib/prisma";
