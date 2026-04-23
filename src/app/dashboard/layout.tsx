@@ -9,21 +9,23 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: { email: "demo@devstash.io" },
     select: { id: true, name: true, email: true },
   });
 
-  const [itemTypes, collections] = await Promise.all([
-    getSidebarItemTypes(user.id),
-    getSidebarCollections(user.id),
-  ]);
+  const [itemTypes, collections] = user
+    ? await Promise.all([
+        getSidebarItemTypes(user.id),
+        getSidebarCollections(user.id),
+      ])
+    : [[], []];
 
   return (
     <DashboardShell
       itemTypes={itemTypes}
       collections={collections}
-      user={{ name: user.name ?? "User", email: user.email }}
+      user={{ name: user?.name ?? "User", email: user?.email ?? "" }}
     >
       {children}
     </DashboardShell>
