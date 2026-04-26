@@ -18,6 +18,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 
 const lucideIconMap: Record<string, React.ElementType> = {
@@ -58,12 +59,7 @@ export default function Sidebar({
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden"
-          onClick={onClose}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={onClose} />}
 
       {/* Sidebar panel */}
       <aside
@@ -86,7 +82,11 @@ export default function Sidebar({
               onClick={onToggleCollapse}
               className="hidden md:flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+              {isCollapsed ? (
+                <ChevronRight className="size-4" />
+              ) : (
+                <ChevronLeft className="size-4" />
+              )}
             </button>
             <button
               onClick={onClose}
@@ -99,7 +99,6 @@ export default function Sidebar({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
-
           {/* Item Types */}
           <div className="px-3">
             {!isCollapsed && (
@@ -130,15 +129,14 @@ export default function Sidebar({
                     <Icon className="size-4 shrink-0" style={{ color: type.color }} />
                     {!isCollapsed && (
                       <>
-                        <span className="flex-1 truncate">{type.name}</span>
-                        <div className="flex items-center gap-1">
-                          {(type.name === "File" || type.name === "Image") && (
-                            <span className="text-[9px] font-bold bg-primary/20 text-primary rounded px-1 py-0.5 leading-none">
-                              PRO
-                            </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">{type.itemCount}</span>
-                        </div>
+                        <span className="truncate">{type.name}</span>
+                        {(type.name === "File" || type.name === "Image") && (
+                          <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                            PRO
+                          </Badge>
+                        )}
+                        <span className="flex-1" />
+                        <span className="text-xs text-muted-foreground">{type.itemCount}</span>
                       </>
                     )}
                   </Link>
@@ -153,7 +151,6 @@ export default function Sidebar({
           {/* Collections */}
           {!isCollapsed ? (
             <div className="px-3 space-y-1">
-
               {/* Section title — collapsible */}
               <button
                 onClick={() => setCollectionsOpen((v) => !v)}
@@ -188,7 +185,9 @@ export default function Sidebar({
                       >
                         <Star className="size-3.5 text-yellow-400 fill-yellow-400 shrink-0" />
                         <span className="flex-1 truncate">{col.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{col.itemCount}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {col.itemCount}
+                        </span>
                       </Link>
                     ))}
                     {favoriteCollections.length === 0 && (
@@ -217,7 +216,9 @@ export default function Sidebar({
                           style={{ backgroundColor: col.dominantColor ?? "#6b7280" }}
                         />
                         <span className="flex-1 truncate">{col.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{col.itemCount}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {col.itemCount}
+                        </span>
                       </Link>
                     ))}
                   </nav>
@@ -231,7 +232,6 @@ export default function Sidebar({
                   </Link>
                 </div>
               )}
-
             </div>
           ) : (
             /* Collapsed: star icon for favourites */

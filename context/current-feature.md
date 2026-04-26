@@ -1,36 +1,36 @@
-# Current Feature
-
-Stats & Sidebar — Real Data
+# Current Feature — Add Pro Badge to Sidebar
 
 ## Status
 
-Completed
+<!-- Not Started|In Progress|Completed -->
+
+In Progress
 
 ## Goals
 
-- Display stats cards using real database data (keep current design/layout)
-- Display system item types in sidebar with icons, linking to `/items/[typename]`
-- Add "View all collections" link under the collections list linking to `/collections`
-- Keep star icons for favorite collections; recent collections show a colored circle based on most-used item type
-- Functions go in `src/lib/db/items.ts` (reference: `src/lib/db/collections.ts`)
+- Přidat PRO badge k položkám File a Image v sidebaru
+- Použít ShadCN UI Badge komponentu
+- Badge musí být čistý a jemný
+- Text badge je `PRO` (velká písmena)
 
 ## Notes
 
-- Stats and item type counts in the sidebar currently use mock data
-- Sidebar item types are hardcoded — need to be fetched from DB (system types)
-- Collections list already uses real data; need "View all" link added
+- PRO typy jsou definovány v `src/lib/constants.ts` jako `PRO_ITEM_TYPE_NAMES`
+- Sidebar přijímá data jako props — badge se přidává do `Sidebar.tsx`
 
 ## History
 
 <!-- Keep this updated. Earliest to latest -->
 
 ### 2026-04-08 — Initial Next.js & Tailwind Setup
+
 - Created Next.js project with Tailwind CSS v4
 - Removed default Next.js boilerplate (SVGs, demo page content)
 - Added `CLAUDE.md` and `context/` directory with project documentation
 - Pushed to GitHub: https://github.com/Technohunter96/devstash.git
 
 ### 2026-04-09 — Dashboard UI Phase 1 Completed
+
 - Initialized ShadCN UI with Button and Input components
 - Created dashboard route at `/dashboard` with layout
 - Dark mode set as default (`dark` class on `html`)
@@ -38,6 +38,7 @@ Completed
 - Placeholder sidebar and main area
 
 ### 2026-04-09 — Dashboard UI Phase 2 Completed
+
 - Collapsible sidebar (icon-only when collapsed on desktop, overlay drawer on mobile)
 - Item type links to `/items/TYPE` with color-coded icons, counts, and PRO badge
 - Collections section collapsible as a whole, with Favourites and All Collections subsections
@@ -49,6 +50,7 @@ Completed
 - TopBar background changed to `bg-background` for visual consistency
 
 ### 2026-04-09 — Dashboard UI Phase 3 Completed
+
 - 4 stats cards (total items, collections, favourite items/collections) using Card component
 - Collections section with item type icons, sorted by updatedAt, View all link
 - Pinned Items section
@@ -60,6 +62,7 @@ Completed
 - Mock data extended with `itemTypes` per collection and `isPinned` on 2 items
 
 ### 2026-04-14 — Neon PostgreSQL + Prisma 7 Setup Completed
+
 - Upgraded Node.js to v24.14.1 (Prisma 7 requires 20.19+)
 - Installed Prisma 7 with `@prisma/adapter-neon` and `@neondatabase/serverless`
 - Schema with all models: User, Item, ItemType, Collection, ItemCollection, Tag, NextAuth models
@@ -71,6 +74,7 @@ Completed
 - `src/generated/` added to `.gitignore`
 
 ### 2026-04-14 — Seed Data Completed
+
 - Added `password` field to User model with migration
 - Demo user: `demo@devstash.io`, bcryptjs 12 rounds
 - 7 system item types seeded
@@ -83,6 +87,7 @@ Completed
 - Seed is idempotent — skips existing records
 
 ### 2026-04-17 — Dashboard Collections — Real Data Completed
+
 - Created `src/lib/db/collections.ts` with `getRecentCollections(userId, limit)` function
 - Collections fetched from Neon DB via Prisma — includes item types and item count per collection
 - Dominant color computed from most-used item type in each collection (application layer, no DB change)
@@ -91,6 +96,7 @@ Completed
 - Collection stats (`totalCollections`, `favoriteCollections`) now derived from real DB data
 
 ### 2026-04-17 — Stats & Sidebar — Real Data Completed
+
 - Created `src/lib/constants.ts` with `PRO_ITEM_TYPE_NAMES` as single source of truth
 - Created `src/lib/db/sidebar.ts` with `getSidebarItemTypes` and `getSidebarCollections` functions
 - `getSidebarItemTypes` fetches system item types from DB with per-user item counts; File/Image sorted to bottom
@@ -104,6 +110,7 @@ Completed
 - Favourites and Recents sections aligned (same left indent, bigger gap between sections)
 
 ### 2026-04-17 — Dashboard Items — Real Data Completed
+
 - Created `src/lib/db/items.ts` with `getPinnedItems`, `getRecentItems`, `getItemStats` functions
 - Dashboard page updated — all data fetched from Neon DB via `Promise.all`, mock data removed
 - Pinned Items section hidden when no pinned items exist
