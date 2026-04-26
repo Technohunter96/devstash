@@ -1,22 +1,18 @@
-# Current Feature — Add Pro Badge to Sidebar
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Přidat PRO badge k položkám File a Image v sidebaru
-- Použít ShadCN UI Badge komponentu
-- Badge musí být čistý a jemný
-- Text badge je `PRO` (velká písmena)
+<!-- Goals & requirements -->
 
 ## Notes
 
-- PRO typy jsou definovány v `src/lib/constants.ts` jako `PRO_ITEM_TYPE_NAMES`
-- Sidebar přijímá data jako props — badge se přidává do `Sidebar.tsx`
+<!-- Any extra notes -->
 
 ## History
 
@@ -119,3 +115,9 @@ In Progress
 - "Items" section renamed to "Recent" with clock icon; "Pinned" section has pin icon
 - ItemCard: time ago displayed top-right, favourite star shown next to title when `isFavorite = true`
 - Seed updated with `lastUsedAt` values per item (minutes/hours/days ago) and `isFavorite` support
+
+### 2026-04-26 — Add Pro Badge to Sidebar Completed
+
+- Installed ShadCN UI Badge component (`src/components/ui/badge.tsx`)
+- Replaced custom PRO `<span>` in `Sidebar.tsx` with `<Badge variant="secondary">`
+- Badge displayed immediately after item name (File, Image) with count pushed to the right
