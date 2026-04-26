@@ -93,14 +93,12 @@ Not Started
 
 ### 2026-04-17 — Stats & Sidebar — Real Data Completed
 
-- Created `src/lib/constants.ts` with `PRO_ITEM_TYPE_NAMES` as single source of truth
 - Created `src/lib/db/sidebar.ts` with `getSidebarItemTypes` and `getSidebarCollections` functions
 - `getSidebarItemTypes` fetches system item types from DB with per-user item counts; File/Image sorted to bottom
 - `getSidebarCollections` fetches collections ordered by favourite first, then updatedAt; includes dominant color
 - Created `src/components/dashboard/DashboardShell.tsx` — client shell with sidebar open/collapsed state
 - `layout.tsx` converted to async server component — fetches sidebar data, renders DashboardShell
 - `Sidebar.tsx` updated to accept real data as props, removed mock data dependency
-- PRO badge uses `PRO_ITEM_TYPE_NAMES.includes()` — no duplicate hardcoded names
 - Non-favourite collections show colored circle based on dominant item type instead of folder icon
 - "View all collections →" link added below collections list
 - Favourites and Recents sections aligned (same left indent, bigger gap between sections)
