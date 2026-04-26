@@ -4,11 +4,21 @@
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
 <!-- Goals & requirements -->
+
+Code review quick wins — low-risk fixes identified during periodic audit.
+
+1. **Redirect `/` → `/dashboard`** — root route returns bare unstyled `<h1>`, should redirect immediately
+2. **`DATABASE_URL` runtime guard** — replace `process.env.DATABASE_URL!` with an explicit throw in `src/lib/prisma.ts`
+3. **Remove localhost fallback in `prisma.config.ts`** — silent fallback to localhost when `DATABASE_URL` is missing
+4. **Extract `timeAgo` to `src/lib/utils.ts`** — pure utility buried inside `ItemCard.tsx`
+5. **Extract icon map to `src/lib/icon-map.ts`** — `ICON_MAP`/`lucideIconMap` duplicated across `ItemCard.tsx`, `CollectionCard.tsx`, `Sidebar.tsx`
+6. **Fix `getSidebarItemTypes` N+1** — replace item-ID fetch with `_count` aggregate in `src/lib/db/sidebar.ts`
+7. **Fix collection stats derivation** — `totalCollections`/`favoriteCollections` counted from limited 6-item fetch; add `getCollectionStats()` alongside existing `getItemStats` pattern
 
 ## Notes
 

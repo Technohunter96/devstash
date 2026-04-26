@@ -1,29 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link2,
-  File,
-  Image,
-  Star,
-  FolderOpen,
-  LucideIcon,
-} from "lucide-react";
+import { File, Star, FolderOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link: Link2,
-  File,
-  Image,
-};
+import { ICON_MAP } from "@/lib/icon-map";
 
 interface ItemType {
   name: string;

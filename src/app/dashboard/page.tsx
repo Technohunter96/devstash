@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
-import { getRecentCollections } from "@/lib/db/collections";
+import { getRecentCollections, getCollectionStats } from "@/lib/db/collections";
 import { getPinnedItems, getRecentItems, getItemStats } from "@/lib/db/items";
 import StatsCards from "@/components/dashboard/StatsCards";
 import Collections from "@/components/dashboard/Collections";
@@ -17,17 +17,17 @@ export default async function DashboardPage() {
     select: { id: true },
   });
 
-  const [recentCollections, pinnedItems, recentItems, itemStats] = user
+  const [recentCollections, pinnedItems, recentItems, itemStats, collectionStats] = user
     ? await Promise.all([
         getRecentCollections(user.id),
         getPinnedItems(user.id),
         getRecentItems(user.id),
         getItemStats(user.id),
+        getCollectionStats(user.id),
       ])
-    : [[], [], [], { totalItems: 0, favoriteItems: 0 }];
+    : [[], [], [], { totalItems: 0, favoriteItems: 0 }, { totalCollections: 0, favoriteCollections: 0 }];
 
-  const totalCollections = recentCollections.length;
-  const favoriteCollections = recentCollections.filter((c) => c.isFavorite).length;
+  const { totalCollections, favoriteCollections } = collectionStats;
 
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">

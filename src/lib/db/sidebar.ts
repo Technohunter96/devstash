@@ -24,9 +24,8 @@ export async function getSidebarItemTypes(
   const itemTypes = await prisma.itemType.findMany({
     where: { isSystem: true },
     include: {
-      items: {
-        where: { userId },
-        select: { id: true },
+      _count: {
+        select: { items: { where: { userId } } },
       },
     },
     orderBy: { name: "asc" },
@@ -39,7 +38,7 @@ export async function getSidebarItemTypes(
       icon: t.icon,
       color: t.color,
       isSystem: t.isSystem,
-      itemCount: t.items.length,
+      itemCount: t._count.items,
     }))
     .sort(
       (a, b) =>
