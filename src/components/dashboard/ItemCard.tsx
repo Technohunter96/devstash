@@ -1,34 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link2,
-  File,
-  Image,
-  Star,
-  Pin,
-  Copy,
-  Check,
-  LucideIcon,
-} from "lucide-react";
+import { Star, Pin, Copy, Check, File } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { timeAgo } from "@/lib/utils";
+import { ICON_MAP } from "@/lib/icon-map";
 
 // TODO: replace with useItemDrawer() context when drawer is implemented
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link: Link2,
-  File,
-  Image,
-};
 
 interface Item {
   id: string;
@@ -45,16 +24,6 @@ interface Item {
     icon: string;
     color: string;
   };
-}
-
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }
 
 export default function ItemCard({ item }: { item: Item }) {

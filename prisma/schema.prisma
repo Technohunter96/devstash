@@ -75,6 +75,9 @@ model Item {
 
   @@index([userId])
   @@index([itemTypeId])
+  @@index([userId, lastUsedAt])
+  @@index([userId, isPinned])
+  @@index([userId, isFavorite])
   @@map("items")
 }
 
@@ -113,6 +116,8 @@ model Collection {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
+  @@index([userId, updatedAt])
+  @@index([userId, isFavorite, updatedAt])
   @@map("collections")
 }
 
@@ -125,6 +130,7 @@ model ItemCollection {
   addedAt DateTime @default(now()) @map("added_at")
 
   @@id([itemId, collectionId])
+  @@index([collectionId])
   @@map("item_collections")
 }
 

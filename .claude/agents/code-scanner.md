@@ -60,7 +60,25 @@ DevStash is a Next.js 16 / React 19 app using:
 - Missing error handling in Server Actions (must return `{ success, data, error }`)
 - Missing try/catch in Server Actions
 
-### 4. Structure
+### 4. Database Schema
+
+Read `prisma/schema.prisma` and cross-reference with query patterns in `src/lib/db/`:
+
+- **Missing composite indexes** — FK column used alone when queries also filter/sort by a second column (e.g. `userId + lastUsedAt`, `userId + isPinned`, `userId + isFavorite`)
+- **Join table reverse lookup** — many-to-many pivot tables where the PK leads with one FK; check whether the other FK has its own index for reverse lookups
+- **Sort column not indexed** — `orderBy` on a column not covered by an index alongside the `where` FK
+- **Boolean filter columns** — boolean columns used in `WHERE` without a composite index with the owning FK
+- **Never suggest `db push`** — all schema changes must go through `prisma migrate dev`
+
+### 5. Next.js Route Completeness
+
+For each route segment under `src/app/` that has a `page.tsx`:
+
+- **Missing `loading.tsx`** — async server components that fetch data should have a sibling `loading.tsx` for Suspense skeleton UI; flag its absence as a medium issue
+- **Missing `error.tsx`** — routes with DB or external calls should have a sibling `error.tsx` (must be `"use client"`) to handle runtime errors gracefully; flag its absence as a medium issue
+- **`error.tsx` not a client component** — Next.js requires error boundaries to be client components; flag if `"use client"` is missing
+
+### 6. Structure
 
 - Components over 200 lines that should be split
 - Business logic mixed into UI components

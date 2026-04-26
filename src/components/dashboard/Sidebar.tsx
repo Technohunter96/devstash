@@ -3,33 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link2,
-  File,
-  Image,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Settings,
-  X,
-} from "lucide-react";
+import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, Settings, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
-
-const lucideIconMap: Record<string, React.ElementType> = {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  Link: Link2,
-  File,
-  Image,
-};
+import { ICON_MAP as lucideIconMap } from "@/lib/icon-map";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -80,12 +57,12 @@ export default function Sidebar({
           <div className={isCollapsed ? "w-full flex justify-center" : ""}>
             <button
               onClick={onToggleCollapse}
-              className="hidden md:flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden md:flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               {isCollapsed ? (
-                <ChevronRight className="size-4" />
+                <PanelLeftOpen className="size-4" />
               ) : (
-                <ChevronLeft className="size-4" />
+                <PanelLeftClose className="size-4" />
               )}
             </button>
             <button
