@@ -4,21 +4,11 @@
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals & requirements -->
-
-Code review quick wins — low-risk fixes identified during periodic audit.
-
-1. **Redirect `/` → `/dashboard`** — root route returns bare unstyled `<h1>`, should redirect immediately
-2. **`DATABASE_URL` runtime guard** — replace `process.env.DATABASE_URL!` with an explicit throw in `src/lib/prisma.ts`
-3. **Remove localhost fallback in `prisma.config.ts`** — silent fallback to localhost when `DATABASE_URL` is missing
-4. **Extract `timeAgo` to `src/lib/utils.ts`** — pure utility buried inside `ItemCard.tsx`
-5. **Extract icon map to `src/lib/icon-map.ts`** — `ICON_MAP`/`lucideIconMap` duplicated across `ItemCard.tsx`, `CollectionCard.tsx`, `Sidebar.tsx`
-6. **Fix `getSidebarItemTypes` N+1** — replace item-ID fetch with `_count` aggregate in `src/lib/db/sidebar.ts`
-7. **Fix collection stats derivation** — `totalCollections`/`favoriteCollections` counted from limited 6-item fetch; add `getCollectionStats()` alongside existing `getItemStats` pattern
 
 ## Notes
 
@@ -129,3 +119,16 @@ Code review quick wins — low-risk fixes identified during periodic audit.
 - Installed ShadCN UI Badge component (`src/components/ui/badge.tsx`)
 - Replaced custom PRO `<span>` in `Sidebar.tsx` with `<Badge variant="secondary">`
 - Badge displayed immediately after item name (File, Image) with count pushed to the right
+
+### 2026-04-26 — Code Review Quick Wins Completed
+
+- Root `/` redirects to `/dashboard` instead of rendering bare `<h1>`
+- `DATABASE_URL` explicit runtime throw in `src/lib/prisma.ts`; removed localhost fallback in `prisma.config.ts`
+- `timeAgo` extracted to `src/lib/utils.ts` (removed from `ItemCard.tsx`)
+- Shared `ICON_MAP` extracted to `src/lib/icon-map.ts` — removed 3 duplicate definitions across `ItemCard.tsx`, `CollectionCard.tsx`, `Sidebar.tsx`
+- `getSidebarItemTypes` N+1 fixed: replaced item-ID `include` with `_count` aggregate
+- `getCollectionStats()` added to `collections.ts` — `totalCollections`/`favoriteCollections` now from dedicated DB counts, not limited fetch
+- 6 performance indexes added via Prisma migration `20260426121420_add_performance_indexes`: composite indexes on `Item (userId+lastUsedAt, userId+isPinned, userId+isFavorite)`, `Collection (userId+updatedAt, userId+isFavorite+updatedAt)`, `ItemCollection (collectionId)`
+- `loading.tsx` skeleton and `error.tsx` boundary added for `/dashboard` route; `skeleton` shadcn component installed
+- Sidebar collapse button: `cursor-pointer` + `PanelLeftClose`/`PanelLeftOpen` Lucide icons
+- code-scanner agent extended with `### 4. Database Schema` and `### 5. Next.js Route Completeness` audit sections
