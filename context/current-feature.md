@@ -1,46 +1,18 @@
-# Current Feature: Auth Setup — NextAuth + GitHub Provider
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Install NextAuth v5 (`next-auth@beta`) a `@auth/prisma-adapter`
-- Nastavit split auth config pattern pro edge kompatibilitu
-- Přidat GitHub OAuth provider
-- Chránit `/dashboard/*` routes pomocí Next.js 16 proxy
-- Přesměrovat neautentizované uživatele na sign-in stránku
+<!-- Goals & requirements -->
 
 ## Notes
 
-**Soubory k vytvoření:**
-1. `src/auth.config.ts` — edge-compatible config (jen providers, bez adapteru)
-2. `src/auth.ts` — plný config s Prisma adapterem a JWT strategií
-3. `src/app/api/auth/[...nextauth]/route.ts` — export handlerů z auth.ts
-4. `src/proxy.ts` — ochrana routes s redirect logikou
-5. `src/types/next-auth.d.ts` — rozšíření Session typu o user.id
-
-**Důležité gotchas:**
-- Použít `next-auth@beta` (ne `@latest`, které instaluje v4)
-- Proxy soubor musí být na `src/proxy.ts` (stejná úroveň jako `app/`)
-- Pojmenovaný export: `export const proxy = auth(...)` — ne default export
-- `session: { strategy: 'jwt' }` se split config patternem
-- Nenastavovat vlastní `pages.signIn` — použít výchozí stránku NextAuth
-
-**Environment Variables:**
-```
-AUTH_SECRET=
-AUTH_GITHUB_ID=
-AUTH_GITHUB_SECRET=
-```
-
-**Testování:**
-1. Jít na `/dashboard` — mělo by přesměrovat na sign-in
-2. Kliknout na "Sign in with GitHub"
-3. Ověřit přesměrování zpět na `/dashboard` po autentizaci
+<!-- Any extra notes -->
 
 ## History
 
@@ -160,3 +132,12 @@ AUTH_GITHUB_SECRET=
 - `loading.tsx` skeleton and `error.tsx` boundary added for `/dashboard` route; `skeleton` shadcn component installed
 - Sidebar collapse button: `cursor-pointer` + `PanelLeftClose`/`PanelLeftOpen` Lucide icons
 - code-scanner agent extended with `### 4. Database Schema` and `### 5. Next.js Route Completeness` audit sections
+
+### 2026-04-30 — Auth Setup — NextAuth + GitHub Provider Completed
+
+- Installed `next-auth@beta` and `@auth/prisma-adapter`
+- Created `src/auth.config.ts` — edge-compatible config with GitHub provider only
+- Created `src/auth.ts` — PrismaAdapter, JWT session strategy, `user.id` populated via session callback
+- Created `src/app/api/auth/[...nextauth]/route.ts` — GET/POST handlers exported from auth.ts
+- Created `src/proxy.ts` — named export protecting `/dashboard/:path*` routes, redirects unauthenticated to sign-in
+- Created `src/types/next-auth.d.ts` — extends `Session` type with `user.id`
