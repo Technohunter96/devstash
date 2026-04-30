@@ -19,3 +19,9 @@ Read the following to get the full context of the project:
 - **Lint**: `npm run lint`
 
 **IMPORTANT:** Do not add Claude to any commit messages
+
+## Neon MCP
+
+- Project: `devstash` (ID: `dawn-brook-79132643`)
+- Default branch: `development` (ID: `br-green-tooth-alfp95zz`)
+- **NEVER** query or modify the `production` branch unless explicitly instructed
