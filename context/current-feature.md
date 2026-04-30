@@ -1,28 +1,18 @@
-# Current Feature: Auth UI — Sign In, Register & Sign Out
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Vytvořit vlastní stránku `/sign-in` s email/password formulářem a tlačítkem "Sign in with GitHub"
-- Vytvořit vlastní stránku `/register` s polem name, email, password, confirm password
-- Formulář na `/register` odesílá na `/api/auth/register`, po úspěchu přesměruje na `/sign-in`
-- Formuláře mají validaci a zobrazení chybových zpráv
-- Spodní část sidebaru zobrazuje skutečného přihlášeného uživatele (avatar, jméno)
-- Avatar: GitHub image pokud existuje, jinak iniciály z jména (např. "Brad Traversy" → "BT")
-- Kliknutí na avatar otevře dropdown s odkazem "Sign out" a odkazem na "/profile"
-- Vytvořit znovupoužitelný avatar komponent pro oba případy (image i iniciály)
+<!-- Goals & requirements -->
 
 ## Notes
 
-- NextAuth defaultní stránky nahradit vlastním UI
-- Avatar logika: `user.image` (GitHub) nebo iniciály z `user.name`
-- Dropdown/up při kliknutí na avatar v sidebaru
-- Kliknutí na ikonu uživatele naviguje na `/profile`
+<!-- Any extra notes -->
 
 ## History
 
@@ -157,3 +147,19 @@ In Progress
 - Updated `src/auth.config.ts` — added Credentials provider with `authorize: () => null` placeholder (edge runtime neumí bcrypt)
 - Updated `src/auth.ts` — plný Credentials provider s `bcrypt.compare` validací a DB lookupem uživatele
 - Created `src/app/api/auth/register/route.ts` — POST endpoint pro registraci: validace polí, kontrola duplicit, bcrypt hash (12 rounds), vytvoření uživatele
+
+### 2026-05-01 — Auth UI — Sign In, Register & Sign Out Completed
+
+- Created `src/app/sign-in/page.tsx` — server component with `Suspense` wrapper
+- Created `src/components/auth/sign-in-form.tsx` — client form with email/password, GitHub OAuth button, error display
+- Created `src/app/register/page.tsx` — server component
+- Created `src/components/auth/register-form.tsx` — client form with name/email/password/confirm, validation, redirect to sign-in on success
+- Created `src/components/ui/user-avatar.tsx` — reusable avatar: GitHub image or initials fallback
+- Created `src/components/icons/github-icon.tsx` — standalone GitHub SVG icon component
+- Updated `Sidebar.tsx` — real session user in bottom area, avatar with initials/image, dropdown with Profile link and red Sign out button
+- Updated `layout.tsx` — fetches user from session via `auth()` instead of hardcoded demo email
+- Updated `auth.ts` — added `pages: { signIn: "/sign-in" }`; `auth.config.ts` — removed redundant `pages` (middleware redirects manually)
+- Updated `proxy.ts` — redirects unauthenticated users to `/sign-in`
+- Updated `next.config.ts` — added `avatars.githubusercontent.com` to `remotePatterns` for `next/image`
+- Added `cursor-pointer` to `Button` component globally; same added to custom plain buttons in sidebar
+- Updated `coding-standards.md` — pages must be server components, `cursor-pointer` required on all interactive elements
