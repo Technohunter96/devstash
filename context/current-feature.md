@@ -1,18 +1,44 @@
-# Current Feature
+# Current Feature: Auth Credentials — Email/Password Provider
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Přidat Credentials provider pro email/password autentizaci
+- Ověřit heslo pomocí bcryptjs (už nainstalováno)
+- Aktualizovat `auth.config.ts` s Credentials providerem (placeholder)
+- Aktualizovat `auth.ts` s bcrypt validací
+- Vytvořit registrační API route `POST /api/auth/register`
 
 ## Notes
 
-<!-- Any extra notes -->
+**Registrační API route (`POST /api/auth/register`):**
+- Přijímá: `name`, `email`, `password`, `confirmPassword`
+- Validuje shodu hesel
+- Kontroluje, zda uživatel již existuje
+- Hashuje heslo bcryptjs
+- Vytváří uživatele v DB
+- Vrací success/error response
+
+**Split config pattern pro Credentials:**
+- `auth.config.ts`: Credentials provider s `authorize: () => null` (placeholder — edge runtime neumí bcrypt)
+- `auth.ts`: Override Credentials provideru se skutečnou bcrypt validací
+
+**Testování:**
+1. Registrace přes curl:
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@test.com","password":"password123","confirmPassword":"password123"}'
+```
+2. Přejít na `/api/auth/signin`
+3. Přihlásit se email/heslem
+4. Ověřit přesměrování na `/dashboard`
+5. Ověřit, že GitHub OAuth stále funguje
 
 ## History
 
