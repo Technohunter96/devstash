@@ -9,7 +9,7 @@ interface DashboardShellProps {
   children: React.ReactNode;
   itemTypes: SidebarItemType[];
   collections: SidebarCollection[];
-  user: { name: string; email: string };
+  user: { name: string; email: string; image?: string | null };
 }
 
 export default function DashboardShell({

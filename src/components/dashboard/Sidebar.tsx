@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, Settings, X } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import UserAvatar from "@/components/ui/user-avatar";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 import { ICON_MAP as lucideIconMap } from "@/lib/icon-map";
 
@@ -15,7 +17,7 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   itemTypes: SidebarItemType[];
   collections: SidebarCollection[];
-  user: { name: string; email: string };
+  user: { name: string; email: string; image?: string | null };
 }
 
 export default function Sidebar({
@@ -29,6 +31,18 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const [collectionsOpen, setCollectionsOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const favoriteCollections = collections.filter((c) => c.isFavorite);
   const otherCollections = collections.filter((c) => !c.isFavorite);
@@ -225,27 +239,52 @@ export default function Sidebar({
         </div>
 
         {/* User avatar area */}
-        <div className="border-t border-border p-3 shrink-0">
-          {isCollapsed ? (
-            <div className="flex justify-center">
-              <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold uppercase">
-                {user.name.charAt(0)}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold uppercase shrink-0">
-                {user.name.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              </div>
-              <button className="size-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                <Settings className="size-4" />
+        <div className="border-t border-border p-3 shrink-0 relative" ref={userMenuRef}>
+          {/* Dropdown menu */}
+          {userMenuOpen && (
+            <div className="absolute bottom-full left-2 right-2 mb-1 bg-popover border border-border rounded-md shadow-md overflow-hidden z-50">
+              <Link
+                href="/profile"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                <User className="size-4 text-muted-foreground" />
+                Profile
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-destructive/10 text-destructive transition-colors text-left cursor-pointer"
+              >
+                <LogOut className="size-4" />
+                Sign out
               </button>
             </div>
           )}
+
+          <button
+            onClick={() => setUserMenuOpen((v) => !v)}
+            className="w-full cursor-pointer"
+          >
+            {isCollapsed ? (
+              <div className="flex justify-center">
+                <UserAvatar name={user.name} image={user.image} size={32} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <UserAvatar name={user.name} image={user.image} size={32} />
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium truncate">{user.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+                <ChevronDown
+                  className={[
+                    "size-4 text-muted-foreground transition-transform duration-200 shrink-0",
+                    userMenuOpen ? "rotate-180" : "",
+                  ].join(" ")}
+                />
+              </div>
+            )}
+          </button>
         </div>
       </aside>
     </>

@@ -8,5 +8,5 @@
    - Clear Goals and Notes sections (keep placeholder comments)
    - Add feature summary to the END of History
 5. Commit the reset: `chore: reset current-feature.md after completing [feature]`
-6. Push main to origin ONCE (single push with all changes)
+6. **Push main to origin ONCE** — only after the reset commit in step 5 is done, never earlier
 7. If feature branch was previously pushed, delete it from origin

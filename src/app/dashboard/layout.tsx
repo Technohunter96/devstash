@@ -1,31 +1,37 @@
 export const dynamic = "force-dynamic";
 
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
-import { prisma } from "@/lib/prisma";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await prisma.user.findUnique({
-    where: { email: "demo@devstash.io" },
-    select: { id: true, name: true, email: true },
-  });
+  const session = await auth();
 
-  const [itemTypes, collections] = user
-    ? await Promise.all([
-        getSidebarItemTypes(user.id),
-        getSidebarCollections(user.id),
-      ])
-    : [[], []];
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
+  const userId = session.user.id;
+
+  const [itemTypes, collections] = await Promise.all([
+    getSidebarItemTypes(userId),
+    getSidebarCollections(userId),
+  ]);
 
   return (
     <DashboardShell
       itemTypes={itemTypes}
       collections={collections}
-      user={{ name: user?.name ?? "User", email: user?.email ?? "" }}
+      user={{
+        name: session.user.name ?? "User",
+        email: session.user.email ?? "",
+        image: session.user.image,
+      }}
     >
       {children}
     </DashboardShell>

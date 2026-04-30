@@ -16,8 +16,8 @@
 
 ## Next.js
 
-- Server components by default
-- Only use `'use client'` when needed (interactivity, hooks, browser APIs)
+- Server components by default — all `page.tsx` files must be server components
+- Only use `'use client'` when needed (interactivity, hooks, browser APIs) — extract into a separate child component, never at the page level
 - Use Server Actions for form submissions and simple mutations
 - Use API routes when you need:
   - Webhooks (Stripe, GitHub, etc.)
@@ -69,6 +69,7 @@ Example v4 configuration:
 - Use shadcn/ui components where applicable
 - No inline styles
 - Dark mode first, light mode as option
+- All interactive elements (`button`, `[role="button"]`, custom clickable divs) must have `cursor-pointer`
 
 ## Database
 

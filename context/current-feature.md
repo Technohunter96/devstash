@@ -1,18 +1,28 @@
-# Current Feature
+# Current Feature: Auth UI — Sign In, Register & Sign Out
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Vytvořit vlastní stránku `/sign-in` s email/password formulářem a tlačítkem "Sign in with GitHub"
+- Vytvořit vlastní stránku `/register` s polem name, email, password, confirm password
+- Formulář na `/register` odesílá na `/api/auth/register`, po úspěchu přesměruje na `/sign-in`
+- Formuláře mají validaci a zobrazení chybových zpráv
+- Spodní část sidebaru zobrazuje skutečného přihlášeného uživatele (avatar, jméno)
+- Avatar: GitHub image pokud existuje, jinak iniciály z jména (např. "Brad Traversy" → "BT")
+- Kliknutí na avatar otevře dropdown s odkazem "Sign out" a odkazem na "/profile"
+- Vytvořit znovupoužitelný avatar komponent pro oba případy (image i iniciály)
 
 ## Notes
 
-<!-- Any extra notes -->
+- NextAuth defaultní stránky nahradit vlastním UI
+- Avatar logika: `user.image` (GitHub) nebo iniciály z `user.name`
+- Dropdown/up při kliknutí na avatar v sidebaru
+- Kliknutí na ikonu uživatele naviguje na `/profile`
 
 ## History
 
