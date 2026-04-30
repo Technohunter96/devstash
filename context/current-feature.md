@@ -1,44 +1,18 @@
-# Current Feature: Auth Credentials — Email/Password Provider
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Přidat Credentials provider pro email/password autentizaci
-- Ověřit heslo pomocí bcryptjs (už nainstalováno)
-- Aktualizovat `auth.config.ts` s Credentials providerem (placeholder)
-- Aktualizovat `auth.ts` s bcrypt validací
-- Vytvořit registrační API route `POST /api/auth/register`
+<!-- Goals & requirements -->
 
 ## Notes
 
-**Registrační API route (`POST /api/auth/register`):**
-- Přijímá: `name`, `email`, `password`, `confirmPassword`
-- Validuje shodu hesel
-- Kontroluje, zda uživatel již existuje
-- Hashuje heslo bcryptjs
-- Vytváří uživatele v DB
-- Vrací success/error response
-
-**Split config pattern pro Credentials:**
-- `auth.config.ts`: Credentials provider s `authorize: () => null` (placeholder — edge runtime neumí bcrypt)
-- `auth.ts`: Override Credentials provideru se skutečnou bcrypt validací
-
-**Testování:**
-1. Registrace přes curl:
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test","email":"test@test.com","password":"password123","confirmPassword":"password123"}'
-```
-2. Přejít na `/api/auth/signin`
-3. Přihlásit se email/heslem
-4. Ověřit přesměrování na `/dashboard`
-5. Ověřit, že GitHub OAuth stále funguje
+<!-- Any extra notes -->
 
 ## History
 
@@ -167,3 +141,9 @@ curl -X POST http://localhost:3000/api/auth/register \
 - Created `src/app/api/auth/[...nextauth]/route.ts` — GET/POST handlers exported from auth.ts
 - Created `src/proxy.ts` — named export protecting `/dashboard/:path*` routes, redirects unauthenticated to sign-in
 - Created `src/types/next-auth.d.ts` — extends `Session` type with `user.id`
+
+### 2026-05-01 — Auth Credentials — Email/Password Provider Completed
+
+- Updated `src/auth.config.ts` — added Credentials provider with `authorize: () => null` placeholder (edge runtime neumí bcrypt)
+- Updated `src/auth.ts` — plný Credentials provider s `bcrypt.compare` validací a DB lookupem uživatele
+- Created `src/app/api/auth/register/route.ts` — POST endpoint pro registraci: validace polí, kontrola duplicit, bcrypt hash (12 rounds), vytvoření uživatele
