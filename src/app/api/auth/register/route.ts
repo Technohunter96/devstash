@@ -4,16 +4,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { name, email, password, confirmPassword } = body;
+  const { name, email, password } = body;
 
-  // Ensure all required fields are present
-  if (!name || !email || !password || !confirmPassword) {
+  if (!name || !email || !password) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
-  }
-
-  // Passwords must match before we do anything with them
-  if (password !== confirmPassword) {
-    return NextResponse.json({ error: "Passwords do not match" }, { status: 400 });
   }
 
   // Prevent duplicate accounts
