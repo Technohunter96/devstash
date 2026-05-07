@@ -7,13 +7,9 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   const verifyUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-  // In dev without a verified domain, Resend only allows sending to the account email.
-  // Set RESEND_TEST_EMAIL to redirect all emails there during local development.
-  const recipient = process.env.RESEND_TEST_EMAIL ?? email;
-
   const { error } = await resend.emails.send({
     from: "onboarding@resend.dev",
-    to: recipient,
+    to: email,
     subject: "Verify your DevStash email",
     html: `
 <!DOCTYPE html>

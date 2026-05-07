@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
+import { isEmailVerificationEnabled } from "@/lib/feature-flags";
 
 export default async function DashboardLayout({
   children,
@@ -16,8 +17,8 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
-  // Redirect unverified users — middleware handles unauthenticated, layout handles unverified
-  if (!session.user.emailVerified) {
+  // Redirect unverified users only when verification is enabled
+  if (isEmailVerificationEnabled() && !session.user.emailVerified) {
     const email = session.user.email ?? "";
     redirect(`/verify-email-sent?email=${encodeURIComponent(email)}`);
   }

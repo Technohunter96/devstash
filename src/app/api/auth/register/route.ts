@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/email";
+import { isEmailVerificationEnabled } from "@/lib/feature-flags";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -22,16 +23,23 @@ export async function POST(req: Request) {
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword },
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      // Skip email verification in dev — set EMAIL_VERIFICATION_ENABLED=true in prod
+      ...(!isEmailVerificationEnabled() && { emailVerified: new Date() }),
+    },
   });
 
-  const token = await createVerificationToken(email);
-
-  try {
-    await sendVerificationEmail(email, token);
-  } catch (err) {
-    // Account created but email failed — user can resend from verify-email-sent page
-    console.error("Verification email failed:", err);
+  if (isEmailVerificationEnabled()) {
+    const token = await createVerificationToken(email);
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (err) {
+      // Account created but email failed — user can resend from verify-email-sent page
+      console.error("Verification email failed:", err);
+    }
   }
 
   return NextResponse.json({ success: true, userId: user.id }, { status: 201 });

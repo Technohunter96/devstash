@@ -1,4 +1,4 @@
-# Current Feature: Email Verification on Register
+# Current Feature: Email Verification Toggle
 
 ## Status
 
@@ -8,20 +8,22 @@ In Progress
 
 ## Goals
 
-- Send a verification email via Resend after successful registration
-- Email contains a unique link with a token (e.g. `/verify-email?token=...`)
-- User must click the link to verify their account (`emailVerified` set in DB)
-- Unverified users cannot access the dashboard — redirect to a "check your email" page
-- After clicking the link, user is redirected to `/sign-in` with a success message
-- Tokens expire after 24 hours and are single-use (deleted after verification)
+<!-- Goals & requirements -->
+
+- Add `EMAIL_VERIFICATION_ENABLED` env variable to toggle email verification on/off
+- When disabled: registration sets `emailVerified` immediately so the user can sign in right away
+- When enabled: existing behaviour — sends verification email, blocks sign-in until verified
+- `dashboard/layout.tsx` must not redirect to `/verify-email-sent` when verification is disabled
+- Change must be centralised (single source of truth, not scattered across files)
 
 ## Notes
 
-- Resend SDK — `RESEND_API_KEY` is in `.env`
-- From email: `onboarding@resend.dev`
-- Use the existing NextAuth `VerificationToken` Prisma model (`identifier`, `token`, `expires`)
-- Registration endpoint: `src/app/api/auth/register/route.ts`
-- Middleware (`proxy.ts`) must block unverified users from `/dashboard`
+<!-- Any extra notes -->
+
+- Use `EMAIL_VERIFICATION_ENABLED=true/false` in `.env`
+- Default when env var is absent: `false` (verification off) — safe for local dev
+- Before production launch: set to `true` and add a verified Resend domain
+- Extract flag logic into a helper (e.g. `src/lib/feature-flags.ts`) so all callers read one place
 
 ## History
 
@@ -172,3 +174,17 @@ In Progress
 - Updated `next.config.ts` — added `avatars.githubusercontent.com` to `remotePatterns` for `next/image`
 - Added `cursor-pointer` to `Button` component globally; same added to custom plain buttons in sidebar
 - Updated `coding-standards.md` — pages must be server components, `cursor-pointer` required on all interactive elements
+
+### 2026-05-07 — Email Verification on Register Completed
+
+- Installed Resend SDK; created `src/lib/resend.ts`, `src/lib/tokens.ts`, `src/lib/email.ts` (styled HTML template)
+- Updated register route — generates token, sends verification email (graceful fallback on send failure)
+- Added `POST /api/auth/resend-verification` — resends email for unverified accounts
+- Created `(auth)` route group with shared layout; moved all auth pages into it (sign-in, register, verify-email, verify-email-sent)
+- Created `/verify-email` — validates token, sets `emailVerified`, redirects to `/email-verified`
+- Created `/email-verified` — success page with Sign in button
+- Created `/verify-email-sent` — shows email address, inline "resend email" link (`ResendVerificationButton`)
+- Updated `auth.ts` — jwt callback reads `emailVerified` from DB; session exposes it
+- Updated `proxy.ts` — edge-compatible using `authConfig`; added `callbackUrl` on redirect
+- Updated `dashboard/layout.tsx` — redirects unverified users to `/verify-email-sent?email=...`
+- `RESEND_TEST_EMAIL` in `.env` for local dev (Resend sandbox restriction — replace `from` with verified domain before launch)
