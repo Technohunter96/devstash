@@ -13,6 +13,7 @@ export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const invalidToken = searchParams.get("error") === "InvalidToken";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +47,11 @@ export default function SignInForm() {
 
   return (
     <>
+      {invalidToken && (
+        <p className="text-sm text-destructive text-center">
+          Verification link is invalid or expired. Please register again.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input
           type="email"

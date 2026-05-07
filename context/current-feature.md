@@ -1,18 +1,27 @@
-# Current Feature
+# Current Feature: Email Verification on Register
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Send a verification email via Resend after successful registration
+- Email contains a unique link with a token (e.g. `/verify-email?token=...`)
+- User must click the link to verify their account (`emailVerified` set in DB)
+- Unverified users cannot access the dashboard — redirect to a "check your email" page
+- After clicking the link, user is redirected to `/sign-in` with a success message
+- Tokens expire after 24 hours and are single-use (deleted after verification)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Resend SDK — `RESEND_API_KEY` is in `.env`
+- From email: `onboarding@resend.dev`
+- Use the existing NextAuth `VerificationToken` Prisma model (`identifier`, `token`, `expires`)
+- Registration endpoint: `src/app/api/auth/register/route.ts`
+- Middleware (`proxy.ts`) must block unverified users from `/dashboard`
 
 ## History
 

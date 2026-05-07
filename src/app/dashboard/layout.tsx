@@ -16,6 +16,12 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
+  // Redirect unverified users — middleware handles unauthenticated, layout handles unverified
+  if (!session.user.emailVerified) {
+    const email = session.user.email ?? "";
+    redirect(`/verify-email-sent?email=${encodeURIComponent(email)}`);
+  }
+
   const userId = session.user.id;
 
   const [itemTypes, collections] = await Promise.all([

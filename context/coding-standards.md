@@ -95,4 +95,6 @@ Example v4 configuration:
 - No commented-out code unless specified
 - No unused imports or variables
 - Keep functions under 50 lines when possible
+- Keep short, meaningful single-line comments that explain WHY — don't strip them
+- Only remove comments that are excessively verbose or explain obvious code
 ```

@@ -12,10 +12,22 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     signIn: "/sign-in",
   },
   callbacks: {
+    async jwt({ token }) {
+      if (token.sub) {
+        // Refresh emailVerified on every token refresh so the session stays accurate
+        const user = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { emailVerified: true },
+        });
+        token.emailVerified = user?.emailVerified ?? null;
+      }
+      return token;
+    },
     session({ session, token }) {
       if (token.sub) {
         session.user.id = token.sub;
       }
+      session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
       return session;
     },
   },

@@ -47,7 +47,7 @@ export default function RegisterForm() {
     setLoading(false);
 
     if (res.ok) {
-      router.push("/sign-in");
+      router.push(`/verify-email-sent?email=${encodeURIComponent(email)}`);
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Registration failed. Please try again.");

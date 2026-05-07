@@ -23,6 +23,9 @@ This is the common workflow that we will use for every single feature/fix:
 9. **Delete Branch** - Delete branch after merge
 10. **Review** - Review AI-generated code periodically and on demand.
 11. Mark as completed in @context/current-feature.md and add to history
+    - Reset Status/Goals/Notes to placeholders (keep the HTML comments)
+    - Append new entry to History — never rewrite existing history, only add to the end
+    - History must stay chronological (oldest → newest)
 
 Do NOT commit without permission and until the build passes. If build fails, fix the issues first.
 
@@ -36,8 +39,10 @@ We will create a new branch for every feature/fix. Name branch **feature/[featur
 - Use conventional commit messages (feat:, fix:, chore:, etc.)
 - Keep commits focused (one feature/fix per commit)
 - Never put "Generated With Claude" in the commit messages
+- Never add Co-Authored-By or any AI attribution lines to commit messages
 - On feature branches, always use `git add .` to stage all changes
 - Always include bullet points in the commit message body summarizing what was done
+- Push to origin only once — after all local commits are done (feature commit + reset commit). Never push mid-flow.
 
 ## When Stuck
 
