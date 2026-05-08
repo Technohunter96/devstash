@@ -10,5 +10,6 @@
    - Write goals as bullet points under ## Goals
    - Write any additional notes/context under ## Notes
    - Set Status to "Not Started"
+   - **Always write in English** — current-feature.md and all project files must be in English only
 
 3. Confirm spec loaded and show the feature summary

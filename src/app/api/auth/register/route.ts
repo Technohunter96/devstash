@@ -4,8 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { createVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/email";
 import { isEmailVerificationEnabled } from "@/lib/feature-flags";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const ip = await getClientIP();
+  const rl = await checkRateLimit("register", ip);
+  if (!rl.success) return rateLimitResponse(rl.retryAfter);
+
   const body = await req.json();
   const { name, email, password } = body;
 

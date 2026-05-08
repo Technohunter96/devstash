@@ -43,6 +43,20 @@ const [email, setEmail] = useState("");
     }
 
     setLoading(true);
+
+    const rlRes = await fetch("/api/auth/login-ratelimit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!rlRes.ok) {
+      const data = await rlRes.json().catch(() => ({}));
+      setError(data.error ?? "Too many attempts. Please try again later.");
+      setLoading(false);
+      return;
+    }
+
     const result = await signIn("credentials", {
       email,
       password,

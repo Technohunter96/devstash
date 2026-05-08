@@ -9,9 +9,11 @@ interface Props {
 
 export default function ResendVerificationButton({ email }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleResend() {
     setStatus("loading");
+    setErrorMessage("");
 
     const res = await fetch("/api/auth/resend-verification", {
       method: "POST",
@@ -19,7 +21,13 @@ export default function ResendVerificationButton({ email }: Props) {
       body: JSON.stringify({ email }),
     });
 
-    setStatus(res.ok ? "sent" : "error");
+    if (res.ok) {
+      setStatus("sent");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setErrorMessage(data.error ?? "Something went wrong. Please try again later.");
+      setStatus("error");
+    }
   }
 
   // No email available — show plain text without resend option
@@ -51,7 +59,7 @@ export default function ResendVerificationButton({ email }: Props) {
         {status === "loading" ? "sending..." : "resend email"}
       </button>
       {status === "error" && (
-        <span className="text-destructive"> — something went wrong, try again.</span>
+        <span className="text-destructive"> — {errorMessage}</span>
       )}
     </p>
   );

@@ -241,7 +241,7 @@ export default function Sidebar({
         {/* User avatar area */}
         <div className="border-t border-border p-3 shrink-0 relative" ref={userMenuRef}>
           {/* Dropdown menu */}
-          {userMenuOpen && (
+          {userMenuOpen && !isCollapsed && (
             <div className="absolute bottom-full left-2 right-2 mb-1 bg-popover border border-border rounded-md shadow-md overflow-hidden z-50">
               <Link
                 href="/profile"
@@ -257,6 +257,27 @@ export default function Sidebar({
               >
                 <LogOut className="size-4" />
                 Sign out
+              </button>
+            </div>
+          )}
+
+          {/* Collapsed: icon-only menu positioned to the right of the sidebar */}
+          {userMenuOpen && isCollapsed && (
+            <div className="absolute bottom-0 left-full ml-2 bg-popover border border-border rounded-md shadow-md overflow-hidden z-50">
+              <Link
+                href="/profile"
+                onClick={() => setUserMenuOpen(false)}
+                title="Profile"
+                className="flex items-center justify-center size-9 hover:bg-muted transition-colors"
+              >
+                <User className="size-4 text-muted-foreground" />
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                title="Sign out"
+                className="flex items-center justify-center size-9 hover:bg-destructive/10 text-destructive transition-colors cursor-pointer"
+              >
+                <LogOut className="size-4" />
               </button>
             </div>
           )}
