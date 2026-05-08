@@ -14,6 +14,7 @@ export default function SignInForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
   const invalidToken = searchParams.get("error") === "InvalidToken";
+  const passwordReset = searchParams.get("reset") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +53,11 @@ export default function SignInForm() {
           Verification link is invalid or expired. Please register again.
         </p>
       )}
+      {passwordReset && (
+        <p className="text-sm text-green-500 text-center">
+          Password updated. You can now sign in with your new password.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input
           type="email"
@@ -61,24 +67,31 @@ export default function SignInForm() {
           autoComplete="email"
           disabled={loading}
         />
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            disabled={loading}
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-            tabIndex={-1}
-          >
-            {showPassword ? <Eye size={16} /> : <EyeClosed size={16} />}
-          </button>
+        <div className="space-y-1">
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              disabled={loading}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              tabIndex={-1}
+            >
+              {showPassword ? <Eye size={16} /> : <EyeClosed size={16} />}
+            </button>
+          </div>
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
+              Forgot password?
+            </Link>
+          </div>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
@@ -95,14 +108,16 @@ export default function SignInForm() {
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => signIn("github", { callbackUrl })}
-      >
-        <GitHubIcon className="size-4 mr-2" />
-        Sign in with GitHub
-      </Button>
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => signIn("github", { callbackUrl })}
+          aria-label="Sign in with GitHub"
+        >
+          <GitHubIcon className="size-4" />
+        </Button>
+      </div>
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}

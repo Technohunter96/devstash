@@ -1,4 +1,4 @@
-# Current Feature: Email Verification Toggle
+# Current Feature: Forgot Password
 
 ## Status
 
@@ -10,20 +10,24 @@ In Progress
 
 <!-- Goals & requirements -->
 
-- Add `EMAIL_VERIFICATION_ENABLED` env variable to toggle email verification on/off
-- When disabled: registration sets `emailVerified` immediately so the user can sign in right away
-- When enabled: existing behaviour — sends verification email, blocks sign-in until verified
-- `dashboard/layout.tsx` must not redirect to `/verify-email-sent` when verification is disabled
-- Change must be centralised (single source of truth, not scattered across files)
+- "Forgot password?" link on sign-in form routes to `/forgot-password`
+- `/forgot-password` page with email input — sends password reset email using Resend
+- Reset token stored in existing `VerificationToken` model (reuse `identifier` as email, `token` as reset token)
+- `/reset-password?token=...` page — validates token, accepts new password + confirm, updates user password (bcrypt 12 rounds), deletes token
+- Token expires in 1 hour (reuse existing `expires` field)
+- Security: token is single-use (deleted after successful reset), expired tokens rejected
+- Graceful fallback if email send fails (same pattern as email verification)
+- Error and success states shown in-form (no separate pages needed)
+- Only users with `password` set (Credentials accounts) can reset via email — GitHub OAuth users have no password
 
 ## Notes
 
 <!-- Any extra notes -->
 
-- Use `EMAIL_VERIFICATION_ENABLED=true/false` in `.env`
-- Default when env var is absent: `false` (verification off) — safe for local dev
-- Before production launch: set to `true` and add a verified Resend domain
-- Extract flag logic into a helper (e.g. `src/lib/feature-flags.ts`) so all callers read one place
+- Reuse existing `VerificationToken` Prisma model — no schema migration needed
+- Reuse `src/lib/tokens.ts` for token generation, `src/lib/resend.ts` for sending, `src/lib/email.ts` for template
+- New pages go in the `(auth)` route group alongside sign-in/register
+- Token type distinction: use a prefix or separate identifier to avoid collisions with email verification tokens (e.g. `password-reset:email@example.com` as identifier)
 
 ## History
 
@@ -188,3 +192,11 @@ In Progress
 - Updated `proxy.ts` — edge-compatible using `authConfig`; added `callbackUrl` on redirect
 - Updated `dashboard/layout.tsx` — redirects unverified users to `/verify-email-sent?email=...`
 - `RESEND_TEST_EMAIL` in `.env` for local dev (Resend sandbox restriction — replace `from` with verified domain before launch)
+
+### 2026-05-07 — Email Verification Toggle Completed
+
+- Created `src/lib/feature-flags.ts` with `isEmailVerificationEnabled()` — reads `EMAIL_VERIFICATION_ENABLED` env var, defaults to `false`
+- Register route: when disabled, sets `emailVerified: new Date()` on user create and skips token/email logic
+- `dashboard/layout.tsx`: unverified redirect wrapped in `isEmailVerificationEnabled()` check
+- Removed `RESEND_TEST_EMAIL` workaround from `src/lib/email.ts` and `.env` — no longer needed
+- Added `EMAIL_VERIFICATION_ENABLED=false` to `.env` and `.env.example`
