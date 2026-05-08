@@ -1,33 +1,18 @@
-# Current Feature: Forgot Password
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- "Forgot password?" link on sign-in form routes to `/forgot-password`
-- `/forgot-password` page with email input — sends password reset email using Resend
-- Reset token stored in existing `VerificationToken` model (reuse `identifier` as email, `token` as reset token)
-- `/reset-password?token=...` page — validates token, accepts new password + confirm, updates user password (bcrypt 12 rounds), deletes token
-- Token expires in 1 hour (reuse existing `expires` field)
-- Security: token is single-use (deleted after successful reset), expired tokens rejected
-- Graceful fallback if email send fails (same pattern as email verification)
-- Error and success states shown in-form (no separate pages needed)
-- Only users with `password` set (Credentials accounts) can reset via email — GitHub OAuth users have no password
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Reuse existing `VerificationToken` Prisma model — no schema migration needed
-- Reuse `src/lib/tokens.ts` for token generation, `src/lib/resend.ts` for sending, `src/lib/email.ts` for template
-- New pages go in the `(auth)` route group alongside sign-in/register
-- Token type distinction: use a prefix or separate identifier to avoid collisions with email verification tokens (e.g. `password-reset:email@example.com` as identifier)
 
 ## History
 
@@ -200,3 +185,13 @@ In Progress
 - `dashboard/layout.tsx`: unverified redirect wrapped in `isEmailVerificationEnabled()` check
 - Removed `RESEND_TEST_EMAIL` workaround from `src/lib/email.ts` and `.env` — no longer needed
 - Added `EMAIL_VERIFICATION_ENABLED=false` to `.env` and `.env.example`
+
+### 2026-05-08 — Forgot Password Completed
+
+- Refactored `src/lib/tokens.ts` — shared `createToken(identifier, ttlMs)` helper; added `createPasswordResetToken` (1h TTL, `password-reset:` identifier prefix) and helper functions `isPasswordResetToken`, `emailFromPasswordResetIdentifier`
+- Added `sendPasswordResetEmail` to `src/lib/email.ts` with matching HTML template
+- Created `POST /api/auth/forgot-password` — generates token, sends email; always returns 200 (no account enumeration); only processes accounts with `password` set (Credentials only)
+- Created `POST /api/auth/reset-password` — validates token prefix + expiry, updates password (bcrypt 12 rounds), deletes token (single-use); returns descriptive 400 on invalid/expired token
+- Created `/forgot-password` page + `ForgotPasswordForm` — email input with in-form success state
+- Created `/reset-password` page + `ResetPasswordForm` — new password + confirm, validates client-side, redirects to `/sign-in?reset=1` on success
+- Updated `sign-in-form.tsx` — `Forgot password?` link right-aligned under password field; success message on `?reset=1`; GitHub button as small icon-only at bottom; `Register` link moved to very bottom
