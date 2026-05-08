@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GitHubIcon from "@/components/icons/github-icon";
@@ -15,12 +16,22 @@ export default function SignInForm() {
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
   const invalidToken = searchParams.get("error") === "InvalidToken";
   const passwordReset = searchParams.get("reset") === "1";
-
-  const [email, setEmail] = useState("");
+const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (!passwordReset && !invalidToken) return;
+
+    if (passwordReset) toast.success("Password updated. You can now sign in.");
+    if (invalidToken) toast.error("Verification link is invalid or expired. Please register again.");
+
+    // Strip query params so the toast can't fire again on re-render
+    router.replace("/sign-in", { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,16 +59,6 @@ export default function SignInForm() {
 
   return (
     <>
-      {invalidToken && (
-        <p className="text-sm text-destructive text-center">
-          Verification link is invalid or expired. Please register again.
-        </p>
-      )}
-      {passwordReset && (
-        <p className="text-sm text-green-500 text-center">
-          Password updated. You can now sign in with your new password.
-        </p>
-      )}
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input
           type="email"
