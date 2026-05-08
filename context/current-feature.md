@@ -1,30 +1,18 @@
-# Current Feature: Profile Page
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- Create profile page at `/profile` route (server component, auth-protected)
-- Display user info: name, email, avatar (GitHub or initials), account creation date
-- Show usage stats: total items, total collections, breakdown by item type (snippets, prompts, notes, commands, links, files, images)
-- "Change Password" button only for email/password users (not GitHub OAuth)
-- Delete account with confirmation dialog
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Avatar: reuse existing `UserAvatar` component — GitHub avatar if available, otherwise initials from name/email
-- Change password: show only if user has a `password` field set (Credentials users)
-- Delete account: use shadcn `AlertDialog` for confirmation; cascade delete handled by Prisma `onDelete: Cascade`
-- Item type breakdown: show count per type from the user's actual items
-- Route must redirect to `/sign-in` if unauthenticated
 
 ## History
 
@@ -207,3 +195,17 @@ In Progress
 - Created `/forgot-password` page + `ForgotPasswordForm` — email input with in-form success state
 - Created `/reset-password` page + `ResetPasswordForm` — new password + confirm, validates client-side, redirects to `/sign-in?reset=1` on success
 - Updated `sign-in-form.tsx` — `Forgot password?` link right-aligned under password field; success message on `?reset=1`; GitHub button as small icon-only at bottom; `Register` link moved to very bottom
+
+### 2026-05-08 — Profile Page Completed
+
+- Created `/profile` route — `src/app/profile/layout.tsx` (auth + email verification check + DashboardShell) and `src/app/profile/page.tsx` (server component)
+- `AccountInfoCard` — avatar, name, account type (Email/GitHub), email + member since with icons, separator, action buttons
+- `ChangePasswordDialog` — inline dialog with current/new/confirm fields, eye toggle on all fields, same-password validation (client + server), success toast via Sonner
+- `DeleteAccountDialog` — AlertDialog confirmation, redirects to `/sign-in` on success
+- `ProfileStats` — two stat cards (Total Items, Collections) with colored icon squares; Items by Type grid showing all 7 system types (including 0-count), sorted by system order
+- `POST /api/auth/change-password` — validates current password, same-password check, bcrypt 12 rounds
+- `DELETE /api/auth/delete-account` — session-guarded, cascade delete via Prisma
+- `src/lib/db/profile.ts` — `getProfileUser` (hasPassword flag), `getProfileStats` (all system types merged with user counts)
+- Installed shadcn AlertDialog, Dialog, Label, Sonner; `<Toaster>` added to root layout (`top-right`, `richColors`)
+- `sign-in-form.tsx` — toasts for `?reset=1` (password updated) and `?error=InvalidToken` (invalid verification link); strips query params via `router.replace` after firing
+- `proxy.ts` — added `/profile` and `/profile/:path*` to middleware matcher
