@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { signInWithGitHub } from "@/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
@@ -124,14 +125,16 @@ const [email, setEmail] = useState("");
       </div>
 
       <div className="flex justify-center">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => signIn("github", { callbackUrl })}
-          aria-label="Sign in with GitHub"
-        >
-          <GitHubIcon className="size-4" />
-        </Button>
+        <form action={signInWithGitHub}>
+          <Button
+            type="submit"
+            variant="outline"
+            size="icon"
+            aria-label="Sign in with GitHub"
+          >
+            <GitHubIcon className="size-4" />
+          </Button>
+        </form>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">

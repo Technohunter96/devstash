@@ -1,28 +1,18 @@
-# Current Feature — Rate Limiting for Auth
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add rate limiting to auth API routes using Upstash Redis + `@upstash/ratelimit`
-- Protect: login (5/15min), register (3/1h), forgot-password (3/1h), reset-password (5/15min), resend-verification (3/15min)
-- Create reusable `src/lib/rate-limit.ts` utility
-- Return 429 with `Retry-After` header and descriptive error message
-- Display error on the frontend via toast notification
-- Fail open — if Upstash is unavailable, allow the request through
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Use sliding window algorithm
-- Extract IP from `x-forwarded-for` header (Vercel)
-- Key login by IP + email; all others by IP only
-- Upstash free tier: 10k requests/day — sufficient for auth limiting
-- Login rate limiting with NextAuth credentials is tricky — may need a custom sign-in handler
-- Env vars required: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
+<!-- Any extra notes -->
 
 ## History
 
@@ -219,3 +209,12 @@ In Progress
 - Installed shadcn AlertDialog, Dialog, Label, Sonner; `<Toaster>` added to root layout (`top-right`, `richColors`)
 - `sign-in-form.tsx` — toasts for `?reset=1` (password updated) and `?error=InvalidToken` (invalid verification link); strips query params via `router.replace` after firing
 - `proxy.ts` — added `/profile` and `/profile/:path*` to middleware matcher
+
+### 2026-05-08 — Rate Limiting for Auth Completed
+
+- Created `src/lib/rate-limit.ts` — lazy Redis singleton, `checkRateLimit(type, identifier)`, `rateLimitResponse()`, `formatRetryTime()` helpers; fail open if Upstash unavailable
+- Added `POST /api/auth/login-ratelimit` — IP-only pre-check (5 attempts / 15 min); prevents account lockout attacks from email enumeration
+- Protected `register` (3/1h), `forgot-password` (3/1h), `reset-password` (5/15min), `resend-verification` (3/15min by IP+email) — all return 429 with `Retry-After` header and formatted retry time
+- `sign-in-form.tsx` calls `/api/auth/login-ratelimit` before `signIn()`; shows descriptive error with retry time on 429
+- `forgot-password-form.tsx` and `resend-verification-button.tsx` updated to display API error message instead of hardcoded fallback
+- Collapsed sidebar user menu fixed: icon-only dropdown (`User`, `LogOut`) positioned `left-full` outside the 60px sidebar
