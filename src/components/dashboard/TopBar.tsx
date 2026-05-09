@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { Search, Plus, Archive, Menu, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +33,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         >
           <Menu className="size-5" />
         </button>
-        <Archive className="size-5 text-primary" />
-        <span className="font-semibold text-base tracking-tight">DevStash</span>
+        <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+          <Archive className="size-5 text-primary" />
+          <span className="font-semibold text-base tracking-tight">DevStash</span>
+        </Link>
       </div>
 
       <div className="flex-1 flex justify-center">
