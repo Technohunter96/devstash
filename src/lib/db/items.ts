@@ -10,9 +10,21 @@ export const ITEM_TYPE_ORDER: string[] = [
   "Image",
 ];
 
+// Maps URL slug (e.g. "snippets") to system type name (e.g. "Snippet")
+export const SLUG_TO_TYPE_NAME: Record<string, string> = {
+  snippets: "Snippet",
+  prompts: "Prompt",
+  commands: "Command",
+  notes: "Note",
+  links: "Link",
+  files: "File",
+  images: "Image",
+};
+
 export interface DashboardItem {
   id: string;
   title: string;
+  description: string | null;
   contentType: "TEXT" | "URL" | "FILE";
   content: string | null;
   url: string | null;
@@ -30,6 +42,7 @@ export interface DashboardItem {
 const itemSelect = {
   id: true,
   title: true,
+  description: true,
   contentType: true,
   content: true,
   url: true,
@@ -58,6 +71,17 @@ export async function getRecentItems(
     where: { userId },
     orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
     take: limit,
+    select: itemSelect,
+  });
+}
+
+export async function getItemsByType(
+  userId: string,
+  typeName: string
+): Promise<DashboardItem[]> {
+  return prisma.item.findMany({
+    where: { userId, itemType: { name: typeName } },
+    orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
     select: itemSelect,
   });
 }

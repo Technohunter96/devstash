@@ -33,7 +33,7 @@ export default function PinnedItems({ items }: PinnedItemsProps) {
           Pinned
         </h2>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {items.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}

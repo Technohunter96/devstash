@@ -12,6 +12,7 @@ import { ICON_MAP } from "@/lib/icon-map";
 interface Item {
   id: string;
   title: string;
+  description?: string | null;
   contentType: "TEXT" | "URL" | "FILE";
   content?: string | null;
   url?: string | null;
@@ -51,15 +52,23 @@ export default function ItemCard({ item }: { item: Item }) {
         // TODO: openDrawer(item.id)
       }}
     >
-      <CardContent className="flex items-start gap-3 px-4 py-4">
-        <div
-          className="rounded-md p-1.5 shrink-0"
-          style={{ backgroundColor: item.itemType.color + "20" }}
-        >
-          <Icon className="w-4 h-4" style={{ color: item.itemType.color }} />
+      <CardContent className="flex items-start gap-3 px-4 py-3">
+        <div className="flex flex-col items-center gap-1 shrink-0 w-12">
+          <div
+            className="rounded-md p-1.5"
+            style={{ backgroundColor: item.itemType.color + "20" }}
+          >
+            <Icon className="w-4 h-4" style={{ color: item.itemType.color }} />
+          </div>
+          <span
+            className="text-[9px] font-medium leading-none"
+            style={{ color: item.itemType.color }}
+          >
+            {item.itemType.name}
+          </span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
+          <div className="flex items-center gap-1.5">
             {item.isPinned && (
               <Pin className="w-3 h-3 text-muted-foreground shrink-0" />
             )}
@@ -73,17 +82,11 @@ export default function ItemCard({ item }: { item: Item }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span
-              className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-              style={{
-                backgroundColor: item.itemType.color + "20",
-                color: item.itemType.color,
-              }}
-            >
-              {item.itemType.name}
-            </span>
-          </div>
+          {item.description && (
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+              {item.description}
+            </p>
+          )}
         </div>
       </CardContent>
       {copyableContent && (

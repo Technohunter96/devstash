@@ -43,7 +43,7 @@ export default function Items({ items }: ItemsProps) {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">No items yet.</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {items.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}

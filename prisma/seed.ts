@@ -56,19 +56,20 @@ async function main() {
   // 3. Collections + Items
   console.log("\n→ Collections & items");
 
+  const now = new Date();
+  const minsAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
+  const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
+
   // ── React Patterns ──────────────────────────────────────────────────────────
   const reactPatterns = await upsertCollection(user.id, {
     name: "React Patterns",
     description: "Reusable React patterns and hooks",
   });
 
-  const now = new Date();
-  const minsAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
-  const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
-  const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
-
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Custom Hooks",
+    description: "useDebounce, useLocalStorage, and usePrevious hooks",
     lastUsedAt: minsAgo(12),
     isFavorite: true,
     content: `import { useState, useEffect, useCallback, useRef } from "react";
@@ -116,6 +117,7 @@ export function usePrevious<T>(value: T): T | undefined {
 
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Component Patterns",
+    description: "Context Provider and Compound Component patterns",
     lastUsedAt: hoursAgo(3),
     content: `import { createContext, useContext, useState, type ReactNode } from "react";
 
@@ -161,6 +163,7 @@ export { Card };`,
 
   await upsertItem(user.id, typeMap["Snippet"], reactPatterns.id, {
     title: "Utility Functions",
+    description: "cn, formatDate, truncate, sleep, groupBy helpers",
     lastUsedAt: hoursAgo(7),
     content: `// cn — merge Tailwind classes safely (clsx + tailwind-merge)
 import { clsx, type ClassValue } from "clsx";
@@ -206,6 +209,7 @@ export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]> {
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Code Review Prompt",
+    description: "Structured review with Critical / Warning / Suggestion severity levels",
     lastUsedAt: daysAgo(1),
     isFavorite: true,
     content: `You are a senior software engineer conducting a thorough code review.
@@ -230,6 +234,7 @@ Code to review:
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Documentation Generator",
+    description: "Generates Markdown docs with params, return value, examples, and edge cases",
     lastUsedAt: daysAgo(2),
     content: `Generate comprehensive documentation for the following code.
 
@@ -250,6 +255,7 @@ Code:
 
   await upsertItem(user.id, typeMap["Prompt"], aiWorkflows.id, {
     title: "Refactoring Assistant",
+    description: "Refactor for clarity, maintainability, and performance without changing behavior",
     lastUsedAt: daysAgo(3),
     content: `You are an expert at refactoring code for clarity, maintainability, and performance.
 
@@ -276,6 +282,7 @@ Original code:
 
   await upsertItem(user.id, typeMap["Snippet"], devops.id, {
     title: "Docker + GitHub Actions CI",
+    description: "Build, push, and deploy Docker image via GitHub Actions on push to main",
     lastUsedAt: daysAgo(4),
     content: `# .github/workflows/deploy.yml
 name: Build & Deploy
@@ -313,6 +320,7 @@ jobs:
 
   await upsertItem(user.id, typeMap["Command"], devops.id, {
     title: "Deploy to Production",
+    description: "Pull latest Docker image, stop old container, restart with env file",
     lastUsedAt: daysAgo(5),
     content: `# Pull latest image and restart container
 docker pull ghcr.io/your-org/your-app:latest
@@ -329,6 +337,7 @@ docker run -d \\
 
   await upsertItem(user.id, typeMap["Link"], devops.id, {
     title: "Docker Documentation",
+    description: "Official Docker docs — CLI reference, Compose, networking, and more",
     lastUsedAt: daysAgo(6),
     url: "https://docs.docker.com",
     contentType: "URL",
@@ -336,6 +345,7 @@ docker run -d \\
 
   await upsertItem(user.id, typeMap["Link"], devops.id, {
     title: "GitHub Actions Docs",
+    description: "Workflows, triggers, runners, secrets, and marketplace actions",
     lastUsedAt: daysAgo(7),
     url: "https://docs.github.com/en/actions",
     contentType: "URL",
@@ -349,6 +359,7 @@ docker run -d \\
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Git Operations",
+    description: "Undo commits, interactive staging, log graph, bisect, branch cleanup",
     lastUsedAt: minsAgo(45),
     isFavorite: true,
     content: `# Undo last commit but keep changes staged
@@ -372,6 +383,7 @@ git branch --merged main | grep -v main | xargs git branch -d`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Docker Commands",
+    description: "System prune, stats, exec shell, tail logs, copy files from container",
     lastUsedAt: hoursAgo(5),
     content: `# Remove all stopped containers, unused images, networks, caches
 docker system prune -af
@@ -392,6 +404,7 @@ docker cp <container>:/app/file.txt ./file.txt`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Process Management",
+    description: "Find and kill processes by port, monitor CPU usage and log files",
     lastUsedAt: daysAgo(2),
     content: `# Find process using a port (Linux/Mac)
 lsof -i :3000
@@ -412,6 +425,7 @@ nohup node server.js > output.log 2>&1 &`,
 
   await upsertItem(user.id, typeMap["Command"], terminal.id, {
     title: "Package Manager Utilities",
+    description: "Outdated check, security audit, bundle analysis, clean install",
     lastUsedAt: daysAgo(3),
     content: `# List outdated packages
 npm outdated
@@ -441,6 +455,7 @@ rm -rf node_modules package-lock.json && npm install`,
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Tailwind CSS Docs",
+    description: "Utility-first CSS framework — v4 config, theme, and class reference",
     lastUsedAt: hoursAgo(1),
     url: "https://tailwindcss.com/docs",
     contentType: "URL",
@@ -448,6 +463,7 @@ rm -rf node_modules package-lock.json && npm install`,
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "shadcn/ui Components",
+    description: "Copy-paste components built on Radix UI and Tailwind CSS",
     lastUsedAt: daysAgo(1),
     url: "https://ui.shadcn.com/docs/components",
     contentType: "URL",
@@ -455,6 +471,7 @@ rm -rf node_modules package-lock.json && npm install`,
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Radix UI Primitives",
+    description: "Unstyled, accessible component primitives for React",
     lastUsedAt: daysAgo(4),
     url: "https://www.radix-ui.com/primitives",
     contentType: "URL",
@@ -462,6 +479,7 @@ rm -rf node_modules package-lock.json && npm install`,
 
   await upsertItem(user.id, typeMap["Link"], design.id, {
     title: "Lucide Icons",
+    description: "Open-source icon library — 1000+ consistent SVG icons for React",
     lastUsedAt: daysAgo(6),
     url: "https://lucide.dev/icons",
     contentType: "URL",
@@ -488,6 +506,7 @@ async function upsertItem(
   collectionId: string,
   data: {
     title: string;
+    description?: string;
     content?: string;
     url?: string;
     language?: string;
@@ -502,6 +521,7 @@ async function upsertItem(
     await prisma.item.update({
       where: { id: existing.id },
       data: {
+        description: data.description ?? null,
         lastUsedAt: data.lastUsedAt ?? null,
         isFavorite: data.isFavorite ?? false,
       },
@@ -515,6 +535,7 @@ async function upsertItem(
   return prisma.item.create({
     data: {
       title: data.title,
+      description: data.description ?? null,
       content: data.content,
       url: data.url,
       language: data.language,

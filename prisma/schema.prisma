@@ -60,7 +60,7 @@ model Item {
   language   String?
   isFavorite Boolean   @default(false) @map("is_favorite")
   isPinned   Boolean   @default(false) @map("is_pinned")
-  lastUsedAt DateTime? @map("last_used_at")
+  lastUsedAt DateTime? @default(now()) @map("last_used_at")
 
   userId     String   @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
