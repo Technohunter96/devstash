@@ -1,26 +1,10 @@
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import ItemCard from "./ItemCard";
-
-interface Item {
-  id: string;
-  title: string;
-  contentType: "TEXT" | "URL" | "FILE";
-  content?: string | null;
-  url?: string | null;
-  language?: string | null;
-  isFavorite: boolean;
-  isPinned: boolean;
-  lastUsedAt: Date | null;
-  itemType: {
-    name: string;
-    icon: string;
-    color: string;
-  };
-}
+import type { DashboardItem } from "@/lib/db/items";
 
 interface ItemsProps {
-  items: Item[];
+  items: DashboardItem[];
 }
 
 export default function Items({ items }: ItemsProps) {

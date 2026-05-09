@@ -1,4 +1,4 @@
-# Current Feature — Items List View
+# Current Feature
 
 ## Status
 
@@ -10,18 +10,9 @@ Not Started
 
 <!-- Goals & requirements -->
 
-- Dynamic route `/items/[type]` (e.g., /items/snippets, /items/notes)
-- Fetch and display items filtered by type
-- Responsive grid of ItemCard components
-- Two columns on `md` and above
-- Each card has left border colored by item type
-- Follow existing codebase patterns
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Spec file: `context/features/item-list-view-spec.md`
 
 ## History
 
@@ -218,6 +209,19 @@ Not Started
 - Installed shadcn AlertDialog, Dialog, Label, Sonner; `<Toaster>` added to root layout (`top-right`, `richColors`)
 - `sign-in-form.tsx` — toasts for `?reset=1` (password updated) and `?error=InvalidToken` (invalid verification link); strips query params via `router.replace` after firing
 - `proxy.ts` — added `/profile` and `/profile/:path*` to middleware matcher
+
+### 2026-05-09 — Items List View Completed
+
+- Created dynamic route `/items/[type]` (snippets, prompts, commands, notes, links, files, images)
+- `src/app/items/[type]/layout.tsx` — auth-guarded layout with DashboardShell (same pattern as profile)
+- `src/app/items/[type]/page.tsx` — server component: slug → type name resolution, `notFound()` for unknown slugs, two-column grid on `md+`
+- `SLUG_TO_TYPE_NAME` map and `getItemsByType(userId, typeName)` added to `src/lib/db/items.ts`
+- `/items/:path*` added to `proxy.ts` middleware matcher
+- DevStash logo in TopBar wrapped in `<Link href="/dashboard">` for navigation back
+- `description` field added to `DashboardItem` interface, `itemSelect`, and all 16 seed items
+- `lastUsedAt @default(now())` added to schema via migration — new items always have a timestamp
+- ItemCard redesigned: description below title, type name + icon as fixed-width (`w-12`) left column, badge removed from text area
+- Card gap increased: `gap-3` in dashboard lists, `gap-4` on items page grid
 
 ### 2026-05-08 — Rate Limiting for Auth Completed
 

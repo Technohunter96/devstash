@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -39,9 +38,7 @@ export default async function VerifyEmailSentPage({ searchParams }: Props) {
         </p>
       </div>
 
-      <Suspense>
-        <ResendVerificationButton email={email} />
-      </Suspense>
+      <ResendVerificationButton email={email} />
 
       <Link
         href="/sign-in"

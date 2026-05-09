@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, X } from "lucide-react";
+import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, X, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
@@ -90,6 +90,24 @@ export default function Sidebar({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+          {/* Dashboard link */}
+          <div className="px-3 mb-3">
+            <Link
+              href="/dashboard"
+              title={isCollapsed ? "Dashboard" : undefined}
+              className={[
+                "flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors",
+                pathname === "/dashboard"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                isCollapsed ? "justify-center" : "",
+              ].join(" ")}
+            >
+              <LayoutDashboard className="size-4 shrink-0" />
+              {!isCollapsed && <span>Dashboard</span>}
+            </Link>
+          </div>
+
           {/* Item Types */}
           <div className="px-3">
             {!isCollapsed && (

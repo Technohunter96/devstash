@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getItemsByType, SLUG_TO_TYPE_NAME } from "@/lib/db/items";
@@ -13,6 +15,7 @@ export default async function ItemsTypePage({ params }: Props) {
 
   if (!typeName) notFound();
 
+  // auth() is request-cached — layout already verified the session
   const session = await auth();
   const userId = session?.user?.id;
 

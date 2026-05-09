@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import ForgotPasswordForm from "@/components/auth/forgot-password-form";
 
 export default function ForgotPasswordPage() {
@@ -10,9 +9,7 @@ export default function ForgotPasswordPage() {
           Enter your email and we&apos;ll send you a reset link.
         </p>
       </div>
-      <Suspense>
-        <ForgotPasswordForm />
-      </Suspense>
+      <ForgotPasswordForm />
     </>
   );
 }
