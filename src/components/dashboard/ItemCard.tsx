@@ -45,7 +45,8 @@ export default function ItemCard({ item }: { item: Item }) {
 
   return (
     <Card
-      className="group relative cursor-pointer hover:border-muted-foreground/50 transition-colors"
+      className="group relative cursor-pointer hover:border-muted-foreground/50 transition-colors border-l-[3px]"
+      style={{ borderLeftColor: item.itemType.color }}
       onClick={() => {
         // TODO: openDrawer(item.id)
       }}
