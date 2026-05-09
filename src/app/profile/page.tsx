@@ -9,13 +9,9 @@ import ProfileStats from "@/components/profile/ProfileStats";
 export default async function ProfilePage() {
   const session = await auth();
 
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
-
   const [profileUser, stats] = await Promise.all([
-    getProfileUser(session.user.id),
-    getProfileStats(session.user.id),
+    getProfileUser(session!.user!.id),
+    getProfileStats(session!.user!.id),
   ]);
 
   if (!profileUser) {

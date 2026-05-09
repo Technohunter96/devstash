@@ -14,7 +14,8 @@ import GitHubIcon from "@/components/icons/github-icon";
 export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const raw = searchParams.get("callbackUrl") ?? "/dashboard";
+  const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
   const invalidToken = searchParams.get("error") === "InvalidToken";
   const passwordReset = searchParams.get("reset") === "1";
 const [email, setEmail] = useState("");

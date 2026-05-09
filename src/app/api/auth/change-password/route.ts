@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -9,6 +10,9 @@ export async function POST(req: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = await checkRateLimit("changePassword", session.user.id);
+  if (!rl.success) return rateLimitResponse(rl.retryAfter);
 
   const { currentPassword, newPassword } = await req.json();
 

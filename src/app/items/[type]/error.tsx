@@ -2,7 +2,7 @@
 
 import ErrorPage from "@/components/ui/error-page";
 
-export default function DashboardError({
+export default function ItemsTypeError({
   error,
   reset,
 }: {
@@ -13,7 +13,7 @@ export default function DashboardError({
     <ErrorPage
       error={error}
       reset={reset}
-      message="Failed to load your dashboard. This is usually a temporary issue."
+      message="Failed to load items. This is usually a temporary issue."
     />
   );
 }

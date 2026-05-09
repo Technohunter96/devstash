@@ -1,8 +1,6 @@
 import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
-export async function POST(req: Request) {
-  const { email } = await req.json();
-
+export async function POST() {
   const ip = await getClientIP();
   const rl = await checkRateLimit("login", ip);
   if (!rl.success) return rateLimitResponse(rl.retryAfter);

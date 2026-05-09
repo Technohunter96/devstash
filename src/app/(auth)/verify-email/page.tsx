@@ -14,8 +14,8 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
 
   const record = await prisma.verificationToken.findUnique({ where: { token } });
 
-  // Token not found or expired
-  if (!record || record.expires < new Date()) {
+  // Token not found, expired, or wrong type (e.g. a password-reset token submitted here)
+  if (!record || record.expires < new Date() || record.identifier.startsWith("password-reset:")) {
     if (record) {
       await prisma.verificationToken.delete({ where: { token } });
     }

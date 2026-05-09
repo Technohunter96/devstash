@@ -30,6 +30,7 @@ const rateLimitConfigs = {
   forgotPassword:      { limiter: Ratelimit.slidingWindow(3, "1 h"),  prefix: "devstash:rl:forgot-password" },
   resetPassword:       { limiter: Ratelimit.slidingWindow(5, "15 m"), prefix: "devstash:rl:reset-password" },
   resendVerification:  { limiter: Ratelimit.slidingWindow(3, "15 m"), prefix: "devstash:rl:resend-verification" },
+  changePassword:      { limiter: Ratelimit.slidingWindow(5, "15 m"), prefix: "devstash:rl:change-password" },
 } as const;
 
 export type RateLimitType = keyof typeof rateLimitConfigs;

@@ -17,9 +17,7 @@ export default async function ItemsTypePage({ params }: Props) {
 
   // auth() is request-cached — layout already verified the session
   const session = await auth();
-  const userId = session?.user?.id;
-
-  const items = userId ? await getItemsByType(userId, typeName) : [];
+  const items = await getItemsByType(session!.user!.id, typeName);
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">

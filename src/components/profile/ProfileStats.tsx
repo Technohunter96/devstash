@@ -1,4 +1,4 @@
-import { Layers } from "lucide-react";
+import { Layers, Code } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ICON_MAP } from "@/lib/icon-map";
 import type { ProfileStats as ProfileStatsType } from "@/lib/db/profile";
@@ -16,7 +16,7 @@ export default function ProfileStats({ stats }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div className="border border-border rounded-lg p-4 flex items-center gap-4">
           <div className="size-10 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#3b82f620" }}>
-            <ICON_MAP.Code className="size-5" style={{ color: "#3b82f6" }} />
+            <Code className="size-5" style={{ color: "#3b82f6" }} />
           </div>
           <div>
             <p className="text-2xl font-bold leading-none">{stats.totalItems}</p>

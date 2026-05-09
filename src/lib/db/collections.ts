@@ -38,43 +38,56 @@ export async function getRecentCollections(
     where: { userId },
     orderBy: { updatedAt: "desc" },
     take: limit,
-    include: {
-      items: {
-        include: {
-          item: {
-            select: {
-              itemType: {
-                select: { name: true, icon: true, color: true },
-              },
-            },
-          },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isFavorite: true,
+      updatedAt: true,
+      _count: { select: { items: true } },
+    },
+  });
+
+  const collectionIds = collections.map((c) => c.id);
+
+  const itemTypeLinks = await prisma.itemCollection.findMany({
+    where: { collectionId: { in: collectionIds } },
+    select: {
+      collectionId: true,
+      item: {
+        select: {
+          itemType: { select: { name: true, icon: true, color: true } },
         },
       },
     },
   });
 
-  return collections.map((col) => {
-    const itemCount = col.items.length;
-
-    // Count occurrences per item type to find dominant type
-    const typeCountMap = new Map<
-      string,
-      { count: number; type: CollectionItemType }
-    >();
-    for (const ic of col.items) {
-      const { name, icon, color } = ic.item.itemType;
-      const existing = typeCountMap.get(name);
-      if (existing) {
-        existing.count++;
-      } else {
-        typeCountMap.set(name, { count: 1, type: { name, icon, color } });
-      }
+  // Build per-collection type count maps
+  const typesByCollection = new Map<
+    string,
+    Map<string, { count: number; type: CollectionItemType }>
+  >();
+  for (const link of itemTypeLinks) {
+    let typeCountMap = typesByCollection.get(link.collectionId);
+    if (!typeCountMap) {
+      typeCountMap = new Map();
+      typesByCollection.set(link.collectionId, typeCountMap);
     }
+    const { name, icon, color } = link.item.itemType;
+    const existing = typeCountMap.get(name);
+    if (existing) {
+      existing.count++;
+    } else {
+      typeCountMap.set(name, { count: 1, type: { name, icon, color } });
+    }
+  }
 
-    // Sort by count desc — dominant type first, rest follow
-    const sortedTypes = [...typeCountMap.values()].sort(
-      (a, b) => b.count - a.count
-    );
+  return collections.map((col) => {
+    const typeCountMap = typesByCollection.get(col.id);
+    // Sort by count desc — dominant type first
+    const sortedTypes = typeCountMap
+      ? [...typeCountMap.values()].sort((a, b) => b.count - a.count)
+      : [];
     const itemTypes = sortedTypes.map(({ type }) => type);
     const dominantColor = sortedTypes.length > 0 ? sortedTypes[0].type.color : null;
 
@@ -83,7 +96,7 @@ export async function getRecentCollections(
       name: col.name,
       description: col.description,
       isFavorite: col.isFavorite,
-      itemCount,
+      itemCount: col._count.items,
       itemTypes,
       dominantColor,
       updatedAt: col.updatedAt,

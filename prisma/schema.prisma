@@ -75,6 +75,7 @@ model Item {
 
   @@index([userId])
   @@index([itemTypeId])
+  @@index([userId, itemTypeId])
   @@index([userId, lastUsedAt])
   @@index([userId, isPinned])
   @@index([userId, isFavorite])

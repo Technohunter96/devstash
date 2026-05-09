@@ -29,7 +29,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       <div className="flex items-center gap-2 w-48 shrink-0">
         <button
           onClick={onMenuToggle}
-          className="md:hidden flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          className="md:hidden flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           <Menu className="size-5" />
         </button>

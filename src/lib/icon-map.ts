@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export const ICON_MAP: Record<string, LucideIcon> = {
+export const ICON_MAP: Record<string, LucideIcon | undefined> = {
   Code,
   Sparkles,
   Terminal,

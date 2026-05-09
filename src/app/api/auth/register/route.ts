@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, sendDuplicateRegistrationEmail } from "@/lib/email";
 import { isEmailVerificationEnabled } from "@/lib/feature-flags";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -18,10 +18,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
 
-  // Prevent duplicate accounts
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return NextResponse.json({ error: "User already exists" }, { status: 409 });
+    // Notify the real owner; silently return 200 so the attacker learns nothing
+    if (isEmailVerificationEnabled()) {
+      sendDuplicateRegistrationEmail(email).catch((err) =>
+        console.error("Duplicate registration email failed:", err)
+      );
+    }
+    return NextResponse.json({ success: true }, { status: 200 });
   }
 
   // Hash the password before storing — never store plaintext

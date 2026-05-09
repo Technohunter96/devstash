@@ -54,42 +54,56 @@ export async function getSidebarCollections(
     where: { userId },
     orderBy: [{ isFavorite: "desc" }, { updatedAt: "desc" }],
     take: limit,
-    include: {
-      items: {
-        include: {
-          item: {
-            select: {
-              itemType: { select: { name: true, color: true } },
-            },
-          },
+    select: {
+      id: true,
+      name: true,
+      isFavorite: true,
+      _count: { select: { items: true } },
+    },
+  });
+
+  const collectionIds = collections.map((c) => c.id);
+
+  const itemTypeLinks = await prisma.itemCollection.findMany({
+    where: { collectionId: { in: collectionIds } },
+    select: {
+      collectionId: true,
+      item: {
+        select: {
+          itemType: { select: { name: true, color: true } },
         },
       },
     },
   });
 
-  return collections.map((col) => {
-    const itemCount = col.items.length;
-
-    // Find dominant color from most-used item type
-    const typeCountMap = new Map<string, { count: number; color: string }>();
-    for (const ic of col.items) {
-      const { name, color } = ic.item.itemType;
-      const existing = typeCountMap.get(name);
-      if (existing) {
-        existing.count++;
-      } else {
-        typeCountMap.set(name, { count: 1, color });
-      }
+  // Find dominant color per collection
+  const typeCountsByCollection = new Map<string, Map<string, { count: number; color: string }>>();
+  for (const link of itemTypeLinks) {
+    let typeCountMap = typeCountsByCollection.get(link.collectionId);
+    if (!typeCountMap) {
+      typeCountMap = new Map();
+      typeCountsByCollection.set(link.collectionId, typeCountMap);
     }
-    const sorted = [...typeCountMap.values()].sort((a, b) => b.count - a.count);
-    const dominantColor = sorted.length > 0 ? sorted[0].color : null;
+    const { name, color } = link.item.itemType;
+    const existing = typeCountMap.get(name);
+    if (existing) {
+      existing.count++;
+    } else {
+      typeCountMap.set(name, { count: 1, color });
+    }
+  }
 
-    return {
-      id: col.id,
-      name: col.name,
-      isFavorite: col.isFavorite,
-      itemCount,
-      dominantColor,
-    };
-  });
+  const dominantColorMap = new Map<string, string | null>();
+  for (const [collectionId, typeCountMap] of typeCountsByCollection) {
+    const sorted = [...typeCountMap.values()].sort((a, b) => b.count - a.count);
+    dominantColorMap.set(collectionId, sorted.length > 0 ? sorted[0].color : null);
+  }
+
+  return collections.map((col) => ({
+    id: col.id,
+    name: col.name,
+    isFavorite: col.isFavorite,
+    itemCount: col._count.items,
+    dominantColor: dominantColorMap.get(col.id) ?? null,
+  }));
 }

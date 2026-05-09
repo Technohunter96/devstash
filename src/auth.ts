@@ -4,6 +4,7 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIP, formatRetryTime } from "@/lib/rate-limit";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -32,6 +33,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   providers: [
+    // Links GitHub accounts to existing email/password accounts with matching email.
+    // Only safe when email verification is enforced — ensure EMAIL_VERIFICATION_ENABLED=true before launch.
     GitHub({ allowDangerousEmailAccountLinking: true }),
     Credentials({
       credentials: {
@@ -40,6 +43,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // Server-side rate limit — fires regardless of client (bypasses pre-flight endpoint)
+        const ip = await getClientIP();
+        const rl = await checkRateLimit("login", ip);
+        if (!rl.success) {
+          throw new Error(`Too many sign-in attempts. Try again in ${formatRetryTime(rl.retryAfter)}.`);
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },

@@ -52,29 +52,26 @@ const SYSTEM_TYPE_ORDER = [
 ];
 
 export async function getProfileStats(userId: string): Promise<ProfileStats> {
-  const [totalItems, totalCollections, systemTypes, itemsWithTypes] = await Promise.all([
+  const [totalItems, totalCollections, systemTypes, itemCountsByType] = await Promise.all([
     prisma.item.count({ where: { userId } }),
     prisma.collection.count({ where: { userId } }),
     prisma.itemType.findMany({
       where: { isSystem: true },
-      select: { name: true, icon: true, color: true },
+      select: { id: true, name: true, icon: true, color: true },
     }),
-    prisma.item.findMany({
+    prisma.item.groupBy({
+      by: ["itemTypeId"],
       where: { userId },
-      select: {
-        itemType: { select: { name: true } },
-      },
+      _count: { id: true },
     }),
   ]);
 
-  // Count items per type name
+  // Map itemTypeId → count
   const countMap = new Map<string, number>();
-  for (const item of itemsWithTypes) {
-    const name = item.itemType.name;
-    countMap.set(name, (countMap.get(name) ?? 0) + 1);
+  for (const row of itemCountsByType) {
+    countMap.set(row.itemTypeId, row._count.id);
   }
 
-  // Merge all system types (including 0-count ones), sorted by SYSTEM_TYPE_ORDER
   const order = (name: string) => {
     const i = SYSTEM_TYPE_ORDER.indexOf(name);
     return i === -1 ? 99 : i;
@@ -82,11 +79,11 @@ export async function getProfileStats(userId: string): Promise<ProfileStats> {
 
   const itemTypeCounts: ItemTypeCount[] = systemTypes
     .sort((a, b) => order(a.name) - order(b.name))
-    .map(({ name, icon, color }) => ({
+    .map(({ id, name, icon, color }) => ({
       name,
       icon,
       color,
-      count: countMap.get(name) ?? 0,
+      count: countMap.get(id) ?? 0,
     }));
 
   return { totalItems, totalCollections, itemTypeCounts };

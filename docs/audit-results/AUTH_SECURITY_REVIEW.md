@@ -1,6 +1,6 @@
 # Auth Security Review
 
-**Last audited:** 2026-05-08  
+**Last audited:** 2026-05-09  
 **Audited by:** auth-auditor agent  
 **Scope:** NextAuth v5 — Credentials, GitHub OAuth, Email Verification, Password Reset, Profile Page
 
@@ -11,252 +11,184 @@
 | Severity | Count |
 |----------|-------|
 | CRITICAL | 0 |
-| HIGH     | 3 |
+| HIGH     | 1 |
 | MEDIUM   | 3 |
-| LOW      | 1 |
+| LOW      | 3 |
 
 ---
 
 ## Findings
 
-### [HIGH] No Rate Limiting on Any Auth Endpoint
+### [HIGH] Open Redirect via Unvalidated `callbackUrl`
 
-**File:** `src/app/api/auth/register/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/change-password/route.ts`  
-**Issue:** None of the auth API routes implement rate limiting. There is no rate limiting library present anywhere in the codebase (`upstash`, `redis`, any custom limiter).  
-**Risk:**
-- `/api/auth/forgot-password` — attacker can flood with arbitrary emails, triggering unlimited password reset emails (spam/abuse of Resend quota, and email bombing a target user).
-- `/api/auth/resend-verification` — same: unlimited verification emails sent to any address.
-- `/api/auth/register` — unlimited account creation; bcrypt at 12 rounds costs ~300ms per call, so ~3 req/s per core can saturate CPU.
-- `/api/auth/reset-password` — token brute-force is impractical given 256-bit entropy, but the endpoint still has no protection.
-- NextAuth's built-in Credentials `signIn` (handled by `src/app/api/auth/[...nextauth]/route.ts`) is also unprotected against password brute-force.
+**File:** `src/components/auth/sign-in-form.tsx` (lines 17, 71)  
+**Issue:** The `callbackUrl` query parameter is read from `searchParams` and passed directly to `router.push()` without any origin validation. In Next.js App Router, `router.push('https://evil.com')` performs a full-page navigation to that external URL.
 
-**Fix:** Add rate limiting at the middleware or route level. Upstash Rate Limit is the standard choice for Vercel/edge deployments:
-
-```ts
-// src/lib/rate-limit.ts
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
-export const authRateLimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, "15 m"),
-  prefix: "rl:auth",
-});
-
-// Usage in a route handler:
-const ip = req.headers.get("x-forwarded-for") ?? "unknown";
-const { success } = await authRateLimit.limit(ip);
-if (!success) {
-  return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-}
+An attacker sends a phishing link such as:
 ```
+https://devstash.app/sign-in?callbackUrl=https://evil.com/steal-session
+```
+After a legitimate sign-in the user is silently redirected to the attacker's site.
 
-Apply limits:
-- `forgot-password`, `resend-verification`: 5 requests / 15 min per IP
-- `register`: 10 requests / hour per IP
-- Credentials sign-in: 10 attempts / 15 min per IP (apply in `proxy.ts` or a wrapper)
+**Risk:** Post-login open redirect; useful for phishing, token theft, or credential harvesting pages that impersonate DevStash.  
+**Fix:**
+```ts
+// In sign-in-form.tsx — validate callbackUrl is same-origin before using it
+const raw = searchParams.get("callbackUrl") ?? "/dashboard";
+const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+```
 
 ---
 
-### [HIGH] Account Enumeration on Register Endpoint
+### [MEDIUM] No Zod Validation on Auth API Routes — Unbounded Inputs
 
-**File:** `src/app/api/auth/register/route.ts` (line 18–20)  
-**Issue:** When a user attempts to register with an email that already exists, the endpoint returns HTTP 409 with the message `"User already exists"`. This allows an unauthenticated attacker to enumerate which email addresses have accounts by probing the register endpoint.  
-**Risk:** An attacker can build a list of registered email addresses. Combined with credential stuffing or phishing, this reduces the cost of targeted attacks against known users.  
-**Fix:** Return a generic 200 response and send a "someone tried to register with your email" notification to the existing account, or return a 400 with a non-disclosing message:
+**Files:** `src/app/api/auth/register/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/change-password/route.ts`, `src/app/api/auth/resend-verification/route.ts`  
+**Issue:** Every auth API route calls `req.json()` and performs manual presence checks only. There is no Zod schema enforcing types, max lengths, or email format server-side. The `register` route passes the raw `name`, `email`, and `password` values directly to `bcrypt.hash()` and `prisma.user.create()` without bounding their length. A request body with a very large `password` string will cause bcrypt to spend time processing it before its internal 72-byte truncation, and an unbounded `name` will reach Prisma without constraint.
 
+**Risk:** Application-layer DoS via oversized bcrypt inputs; unexpected type coercion errors surfacing to the client; bypassing format expectations on email fields.  
+**Fix:**
 ```ts
-// Option A — non-disclosing 400 (simpler, acceptable for most apps)
-if (existing) {
-  return NextResponse.json(
-    { error: "Unable to create account with that email address." },
-    { status: 400 }
-  );
-}
+// Example for register/route.ts — apply the same pattern to all auth routes
+import { z } from "zod";
 
-// Option B — silent 200 + notify existing user (stronger)
+const RegisterSchema = z.object({
+  name:     z.string().min(1).max(100),
+  email:    z.string().email().max(254),
+  password: z.string().min(8).max(72), // bcrypt hard limit
+});
+
+const result = RegisterSchema.safeParse(await req.json());
+if (!result.success) {
+  return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+}
+const { name, email, password } = result.data;
+```
+
+---
+
+### [MEDIUM] Account Enumeration on Registration Endpoint
+
+**File:** `src/app/api/auth/register/route.ts` (lines 22-25)  
+**Issue:** When a duplicate email is submitted, the route returns HTTP 409 with the body `{ "error": "User already exists" }`. This allows an attacker to enumerate valid registered email addresses by automating registration requests and inspecting the response code or message.
+
+The `forgot-password` and `resend-verification` routes correctly return 200 in all cases — the register endpoint is the inconsistent one.
+
+**Risk:** An attacker can build a list of valid DevStash accounts by submitting candidate emails to `/api/auth/register`. Enables targeted phishing and credential stuffing against known accounts.  
+**Fix:** Return the same success-shaped response regardless of whether the email already exists. Optionally send a "you already have an account" notification email to the existing address out-of-band.
+```ts
+// Replace the 409 branch with a generic 200
 if (existing) {
-  // Optionally: send "someone tried to register with your email" email
+  // Optionally: await sendAlreadyRegisteredEmail(email);
   return NextResponse.json({ success: true }, { status: 200 });
 }
 ```
 
 ---
 
-### [HIGH] Open Redirect via Unvalidated `callbackUrl`
+### [MEDIUM] Login Rate Limit is Client-Bypass-able — Credentials Endpoint Unprotected
 
-**File:** `src/components/auth/sign-in-form.tsx` (line 16, 56)  
-**Issue:** The sign-in form reads `callbackUrl` from the query string and passes it directly to `router.push(callbackUrl)` after successful authentication. There is no check that the URL is relative (same origin).
+**Files:** `src/app/api/auth/login-ratelimit/route.ts`, `src/components/auth/sign-in-form.tsx` (lines 48-59)  
+**Issue:** The rate limit for login is implemented as a separate pre-flight API call (`POST /api/auth/login-ratelimit`) that the browser form calls before invoking NextAuth's `signIn()`. This design has two structural weaknesses:
 
+1. An attacker using curl or any HTTP client calls NextAuth's own `POST /api/auth/callback/credentials` directly, completely bypassing the pre-flight check.
+2. The `email` field is parsed from the request body in `login-ratelimit/route.ts` (line 4) but is never used — the rate limit key is IP-only, so all users behind a shared IP (e.g., corporate NAT) share one limit bucket.
+
+**Risk:** Brute-force of arbitrary user passwords is possible by any client that targets NextAuth's credential callback endpoint directly rather than going through the app form.  
+**Fix:** Move rate limiting into NextAuth's `authorize` callback in `src/auth.ts`, where it cannot be bypassed regardless of which client is used:
 ```ts
-const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard"; // line 16
-// ...
-router.push(callbackUrl); // line 56 — attacker-controlled destination
-```
+// In src/auth.ts — top of Credentials authorize()
+import { headers } from "next/headers";
 
-An attacker can craft a link like `/sign-in?callbackUrl=https://evil.com` and send it to a user. After the user authenticates, they are silently redirected to the attacker's site. This enables phishing for session tokens or credentials.  
-**Risk:** Post-authentication open redirect usable for credential phishing and session hijacking.  
-**Fix:** Validate that `callbackUrl` is a relative path before using it:
+async authorize(credentials) {
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
+  const email = (credentials?.email as string | undefined) ?? "";
+  const rl = await checkRateLimit("login", `${ip}:${email}`);
+  if (!rl.success) throw new Error("TooManyAttempts");
 
-```ts
-function isSafeCallbackUrl(url: string): boolean {
-  return url.startsWith("/") && !url.startsWith("//");
+  // ... existing bcrypt validation
 }
-
-const raw = searchParams.get("callbackUrl") ?? "/dashboard";
-const callbackUrl = isSafeCallbackUrl(raw) ? raw : "/dashboard";
 ```
-
-Note: NextAuth itself validates `callbackUrl` for its own OAuth redirects, but the manual `router.push` in this client component bypasses that protection entirely.
+The browser pre-flight endpoint (`/api/auth/login-ratelimit`) can be removed once the authorize callback enforces the limit.
 
 ---
 
-### [MEDIUM] No Input Validation (Zod) on API Routes
+### [LOW] `allowDangerousEmailAccountLinking` Enabled on GitHub Provider
 
-**File:** All routes in `src/app/api/auth/`  
-**Issue:** No route uses Zod (or any schema validation library) to validate request bodies. Validation is done with manual `if (!field)` checks that only test for presence — not type, format, or length.
+**File:** `src/auth.ts` (line 35)  
+**Issue:** `GitHub({ allowDangerousEmailAccountLinking: true })` allows an existing credentials account to be silently linked to a GitHub OAuth identity if both share the same email address. While GitHub verifies email addresses before exposing them in the OAuth profile, the option name is a documented warning that the developer accepts the risk. If GitHub were ever to return an unverified email matching an existing DevStash credentials account, the GitHub account holder would gain full access to the credentials account without knowing the password.
 
-Examples of what is not validated:
-- `register`: `name` and `email` are not validated for format or maximum length. A 10 MB string sent as `name` will be stored in the database.
-- `change-password`: `currentPassword` and `newPassword` have no maximum length check. An extremely long string (e.g., 100,000 characters) forces bcrypt to process it, causing a CPU spike (bcrypt DoS — see LOW finding below for the direct bcrypt angle).
-- `forgot-password`: `email` is checked for presence and `typeof` but not validated as a properly formatted email address.
-- `reset-password`: `password` minimum length checked (8 chars) but no maximum.
-
-**Risk:** Malformed input reaching business logic; potential for DoS via large payloads; inconsistent state in the database.  
-**Fix:** Add Zod schemas at the top of each route handler:
-
+**Risk:** Low probability given GitHub's email verification practices, but the impact if triggered is full account takeover with no credentials required.  
+**Fix:** Remove the flag and handle the `OAuthAccountNotLinked` error in the sign-in form with a user-friendly message, or add a `signIn` callback guard:
 ```ts
-import { z } from "zod";
+// Option A: Remove the flag entirely
+GitHub, // no allowDangerousEmailAccountLinking
 
-const RegisterSchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email().max(255),
-  password: z.string().min(8).max(72), // 72 is bcrypt's effective max
-});
-
-export async function POST(req: Request) {
-  const body = await req.json();
-  const parsed = RegisterSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
-  }
-  const { name, email, password } = parsed.data;
-  // ...
+// Option B: Keep automatic linking but verify the profile email is present
+callbacks: {
+  async signIn({ account, profile }) {
+    if (account?.provider === "github" && !profile?.email) return false;
+    return true;
+  },
 }
 ```
 
 ---
 
-### [MEDIUM] Verification Tokens Stored in Plaintext
+### [LOW] Verify-Email Page Does Not Reject Password-Reset Tokens — Unhandled Crash
 
-**File:** `src/lib/tokens.ts` (lines 6–13)  
-**Issue:** Verification tokens (both email verification and password reset) are generated with `randomBytes(32).toString("hex")` — giving strong 256-bit entropy — and then stored verbatim in the `verificationToken` table. The token value is also the Prisma lookup key (`findUnique({ where: { token } })`).
+**File:** `src/app/(auth)/verify-email/page.tsx` (lines 25-31)  
+**Issue:** The page accepts any token from the `verificationToken` table without checking whether it belongs to the email-verification flow (plain email identifier) or the password-reset flow (`password-reset:` prefix). If a valid, non-expired password-reset token is submitted to `/verify-email?token=<reset-token>`, the code reaches `prisma.user.update({ where: { email: "password-reset:user@example.com" } })`. Prisma throws `P2025` (record not found) because no user has that string as their email address. The error is unhandled, resulting in a 500 response. The token is also not deleted because the delete statement follows the failed update.
 
-If an attacker gains read access to the database (SQL injection elsewhere, backup exposure, misconfigured Neon branch permissions), they obtain valid, unexpired tokens that can be immediately used to take over accounts via the password reset flow.  
-**Risk:** Database read access translates directly to account takeover for any user with a pending password reset token.  
-**Fix:** Store a SHA-256 hash of the token in the database; send the raw token in the email. On redemption, hash the incoming token and compare:
-
+**Risk:** No security bypass — no account gets incorrectly verified. The crash leaks a 500 error and leaves the password-reset token orphaned in the database until it naturally expires.  
+**Fix:**
 ```ts
-import { randomBytes, createHash } from "crypto";
-
-function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
+// In verify-email/page.tsx — add after the record lookup succeeds:
+if (record.identifier.startsWith("password-reset:")) {
+  await prisma.verificationToken.delete({ where: { token } });
+  redirect("/sign-in?error=InvalidToken");
 }
-
-async function createToken(identifier: string, ttlMs: number): Promise<string> {
-  const rawToken = randomBytes(32).toString("hex");
-  const hashedToken = hashToken(rawToken);
-  const expires = new Date(Date.now() + ttlMs);
-
-  await prisma.verificationToken.deleteMany({ where: { identifier } });
-  await prisma.verificationToken.create({
-    data: { identifier, token: hashedToken, expires },
-  });
-
-  return rawToken; // send this in the email
-}
-
-// In reset-password route:
-const hashedIncoming = hashToken(token);
-const record = await prisma.verificationToken.findUnique({
-  where: { token: hashedIncoming },
-});
 ```
 
 ---
 
-### [MEDIUM] `resend-verification` Leaks Internal Error Details to Client
+### [LOW] Change-Password Endpoint Has No Rate Limiting
 
-**File:** `src/app/api/auth/resend-verification/route.ts` (lines 25–28)  
-**Issue:** When `sendVerificationEmail` throws, the route returns a 500 response with `{ error: "Failed to send email" }`. Unlike the `register` and `forgot-password` routes (which silently absorb send failures), this endpoint surfaces a 500 that tells the caller exactly what failed.
+**File:** `src/app/api/auth/change-password/route.ts`  
+**Issue:** The endpoint correctly requires a valid session, but there is no limit on the number of `currentPassword` attempts per session. An attacker who gains access to a session token (e.g., via XSS in a future feature) can brute-force the current password at full API throughput.
 
-More specifically: the endpoint correctly returns 200 for "user not found" and "already verified" cases (no enumeration there), but a send failure on a valid unverified account will return 500. An attacker making sequential requests to this endpoint can distinguish "valid unverified account" (500 on send failure) from "no account / already verified" (200), partially undermining the enumeration protection.  
-**Risk:** Partial account enumeration when email sending is broken; reveals internal service failure mode.  
-**Fix:** Absorb the error the same way the register route does:
-
+**Risk:** Low exploitability in isolation — requires prior session theft. Meaningful as a second-stage attack primitive if session compromise occurs.  
+**Fix:**
 ```ts
-try {
-  await sendVerificationEmail(email, token);
-} catch (err) {
-  console.error("Resend verification email failed:", err);
-  // Fall through — return 200 so the caller cannot distinguish failure modes
-}
-
-return NextResponse.json({ success: true });
+// Top of change-password/route.ts, after the session check
+const ip = await getClientIP();
+const rl = await checkRateLimit("resetPassword", `${session.user.id}:change-password`);
+if (!rl.success) return rateLimitResponse(rl.retryAfter);
 ```
-
----
-
-### [LOW] No Maximum Password Length (bcrypt DoS Vector)
-
-**File:** `src/app/api/auth/register/route.ts` (line 23), `src/app/api/auth/change-password/route.ts` (line 48), `src/app/api/auth/reset-password/route.ts` (line 26)  
-**Issue:** Passwords are validated for a minimum length (8 characters) but have no maximum length. bcrypt truncates input at 72 bytes, so passwords longer than 72 bytes provide no additional security — but the CPU cost of running `bcrypt.hash` is the same regardless. An attacker who can call these endpoints (unauthenticated for register/reset-password) can send arbitrarily large strings, causing a CPU spike per request.
-
-This is low severity because: (a) the lack of rate limiting is the primary concern (HIGH finding above), and (b) bcrypt itself does not scale with input length beyond 72 bytes.  
-**Risk:** CPU exhaustion on the server if combined with concurrent requests; requires rate limiting to be fully mitigated.  
-**Fix:** Add a maximum password length of 72 in all Zod schemas (per the bcrypt effective maximum) or independently:
-
-```ts
-if (password.length > 72) {
-  return NextResponse.json({ error: "Password is too long." }, { status: 400 });
-}
-```
-
-This is best handled by adding `z.string().min(8).max(72)` in the Zod schemas from the [MEDIUM] finding above — one fix addresses both issues.
+The existing `resetPassword` limiter (5 per 15 min) is appropriate, or add a dedicated `changePassword` entry to `rateLimitConfigs` in `rate-limit.ts`.
 
 ---
 
 ## Passed Checks
 
-- **Password hashing** (`src/app/api/auth/register/route.ts`, `change-password/route.ts`, `reset-password/route.ts`) — bcrypt with 12 rounds used consistently across all three locations where passwords are hashed. bcryptjs is used correctly with `bcrypt.compare` for verification.
-
-- **Token entropy** (`src/lib/tokens.ts`) — `randomBytes(32).toString("hex")` produces 256-bit cryptographically secure tokens. `crypto.randomBytes` is Node's CSPRNG, not `Math.random`.
-
-- **Token expiration** (`src/lib/tokens.ts`, `src/app/(auth)/verify-email/page.tsx`, `src/app/api/auth/reset-password/route.ts`) — both token types are checked against `expires < new Date()` before use and expired tokens are deleted from the database.
-
-- **Token single-use enforcement** (`src/app/(auth)/verify-email/page.tsx` line 31, `src/app/api/auth/reset-password/route.ts` line 33) — tokens are deleted immediately after successful use. Expired tokens found during a redemption attempt are also deleted.
-
-- **Password reset: no account enumeration** (`src/app/api/auth/forgot-password/route.ts`) — always returns HTTP 200 regardless of whether the email exists. Error from `sendPasswordResetEmail` is silently swallowed. The success UI message is correctly worded with "if an account exists...".
-
-- **Password reset: Credentials-only guard** (`src/app/api/auth/forgot-password/route.ts` line 16) — checks `user?.password` before issuing a reset token. GitHub OAuth accounts without a password are silently skipped, preventing reset tokens being issued for accounts that have no password to reset.
-
-- **Password reset token prefix isolation** (`src/lib/tokens.ts`) — the `password-reset:` identifier prefix prevents a verification token from being redeemed as a password reset token and vice versa, enforced in `isPasswordResetToken()` and checked in `reset-password/route.ts` line 18.
-
-- **Session verification on protected API routes** (`src/app/api/auth/change-password/route.ts` line 7–10, `src/app/api/auth/delete-account/route.ts` line 7–10) — both routes call `auth()` and return 401 if `session.user.id` is absent before performing any action.
-
-- **Session verification on profile page** (`src/app/profile/layout.tsx` line 16–18, `src/app/profile/page.tsx` line 11–13) — auth check is performed at both layout and page levels. Middleware (`src/proxy.ts`) also covers `/profile` and `/profile/:path*`.
-
-- **Middleware route protection** (`src/proxy.ts`) — all protected routes (`/dashboard/:path*`, `/profile`, `/profile/:path*`) are covered. The middleware uses the edge-compatible `authConfig` correctly, without exposing Prisma or bcrypt to the edge runtime.
-
-- **Email verification enforcement** (`src/app/dashboard/layout.tsx` via `isEmailVerificationEnabled()`, `src/app/profile/layout.tsx`) — when the feature flag is on, unverified users are redirected before they can access any protected page.
-
-- **Verify-email page: token validated before DB write** (`src/app/(auth)/verify-email/page.tsx`) — token existence and expiry are checked before `user.update` is called. The user lookup uses `record.identifier` (the stored email) rather than a client-supplied value.
-
-- **Old tokens replaced on re-issue** (`src/lib/tokens.ts` line 10) — `deleteMany({ where: { identifier } })` runs before creating a new token, ensuring only one active token exists per identifier at any time.
-
-- **Generic credential error message** (`src/components/auth/sign-in-form.tsx` line 54) — sign-in displays `"Invalid email or password."` for any auth failure, not distinguishing between unknown email and wrong password.
-
-- **`hasPassword` flag computed server-side** (`src/lib/db/profile.ts`) — the raw `password` hash is never sent to the client; only a boolean `hasPassword` is exposed.
+- **Password hashing** (`src/app/api/auth/register/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/change-password/route.ts`) — bcrypt with 12 rounds on every path that stores or updates a password; bcryptjs used consistently; no plaintext passwords stored anywhere.
+- **Timing-safe password comparison** (`src/auth.ts`, `src/app/api/auth/change-password/route.ts`) — `bcrypt.compare()` used in all cases; no `===` string comparison of passwords or hashes.
+- **Token entropy** (`src/lib/tokens.ts`) — tokens are `crypto.randomBytes(32).toString("hex")` — 256 bits of entropy, unpredictable.
+- **Token expiration** (`src/lib/tokens.ts`) — email-verification tokens expire in 24 hours; password-reset tokens expire in 1 hour; both checked at consumption time.
+- **Token single-use enforcement** (`src/app/(auth)/verify-email/page.tsx`, `src/app/api/auth/reset-password/route.ts`) — both flows delete the token immediately after successful use; `createToken` also deletes any prior token for the same identifier before inserting a new one.
+- **Token namespace separation** (`src/lib/tokens.ts`) — password-reset tokens use the `password-reset:` identifier prefix, distinguishing them from email-verification tokens at the DB level.
+- **No account enumeration on forgot-password** (`src/app/api/auth/forgot-password/route.ts`) — always returns `{ ok: true }` with HTTP 200 regardless of whether the email exists; UI shows a generic confirmation.
+- **No account enumeration on resend-verification** (`src/app/api/auth/resend-verification/route.ts`) — returns `{ success: true }` for both non-existent users and already-verified accounts.
+- **Session validation on protected API routes** (`src/app/api/auth/change-password/route.ts`, `src/app/api/auth/delete-account/route.ts`) — both call `auth()` and check `session?.user?.id` before acting, returning 401 otherwise.
+- **Session validation on protected pages** (`src/app/profile/layout.tsx`, `src/app/profile/page.tsx`) — both check session and redirect unauthenticated users.
+- **Middleware route protection** (`src/proxy.ts`) — `/dashboard/:path*`, `/profile`, `/profile/:path*`, `/items/:path*` all redirect unauthenticated users to `/sign-in` with a `callbackUrl`.
+- **Email verification enforcement** (`src/app/profile/layout.tsx`, dashboard layout) — when `EMAIL_VERIFICATION_ENABLED=true`, unverified users are redirected to `/verify-email-sent` before accessing protected routes.
+- **Password reset scoped to credentials accounts** (`src/app/api/auth/forgot-password/route.ts`) — `user?.password` check prevents OAuth-only accounts from receiving a reset link.
+- **Same-password prevention on change-password** (`src/app/api/auth/change-password/route.ts`) — `bcrypt.compare(newPassword, user.password)` rejects reuse of the current password.
+- **Rate limiting coverage** (`src/lib/rate-limit.ts`) — registration (3/1h), forgot-password (3/1h), reset-password (5/15m), and resend-verification (3/15m per IP+email) all enforced.
+- **Rate limit fail-open with logging** (`src/lib/rate-limit.ts`) — Redis unavailability does not block users; errors are logged server-side only.
+- **Profile data isolation** (`src/lib/db/profile.ts`) — `getProfileUser` and `getProfileStats` scope all queries by `userId` from the session; no cross-user data access possible.
+- **Expired token cleanup** (`src/app/(auth)/verify-email/page.tsx`, `src/app/api/auth/reset-password/route.ts`) — expired tokens are deleted from the database when encountered, preventing indefinite accumulation.
 
 ---
 
@@ -264,8 +196,8 @@ This is best handled by adding `z.string().min(8).max(72)` in the Zod schemas fr
 
 The following are handled automatically by NextAuth v5 and were not audited:
 
-- **CSRF protection** — NextAuth built-in for all `signIn`/`signOut` actions
-- **Secure/HttpOnly cookie flags** — NextAuth sets these on session cookies automatically
-- **OAuth state parameter** — NextAuth generates and validates the state param for the GitHub OAuth flow
-- **Session cookie rotation** — NextAuth handles this internally
-- **JWT signing and verification** — NextAuth signs JWTs with `AUTH_SECRET`; tampering is detected automatically
+- CSRF protection (NextAuth built-in for all auth endpoints)
+- Secure and HttpOnly cookie flags (NextAuth built-in)
+- OAuth state parameter validation (NextAuth built-in)
+- Session cookie rotation on sign-in (NextAuth built-in)
+- JWT signing and verification (NextAuth built-in via jose)
