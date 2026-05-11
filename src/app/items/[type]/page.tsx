@@ -31,7 +31,7 @@ export default async function ItemsTypePage({ params }: Props) {
       {items.length === 0 ? (
         <p className="text-muted-foreground text-sm">No {typeName.toLowerCase()}s yet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}
