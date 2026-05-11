@@ -231,3 +231,9 @@ Not Started
 - `sign-in-form.tsx` calls `/api/auth/login-ratelimit` before `signIn()`; shows descriptive error with retry time on 429
 - `forgot-password-form.tsx` and `resend-verification-button.tsx` updated to display API error message instead of hardcoded fallback
 - Collapsed sidebar user menu fixed: icon-only dropdown (`User`, `LogOut`) positioned `left-full` outside the 60px sidebar
+
+### 2026-05-11 — Three-Column Item Grid Completed
+
+- `/items/[type]` page grid updated from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
+- Responsive breakpoints: 1 column (mobile) → 2 columns (md, 768px+) → 3 columns (lg, 1024px+)
+- Dashboard lists unchanged
