@@ -90,6 +90,15 @@ Example v4 configuration:
 - Return `{ success, data, error }` pattern from actions
 - Display user-friendly error messages via toast
 
+## Testing
+
+- Framework: Vitest — tests live alongside source files (`*.test.ts`)
+- Scope: utilities and server actions only — no component tests
+- Test files use `.test.ts` extension, never `.spec.ts`
+- Mock external dependencies at module level with `vi.mock()` (Prisma, `next/headers`, third-party SDKs)
+- Pure functions are tested directly without mocking
+- Do not test implementation details — test behavior and return values
+
 ## Code Quality
 
 - No commented-out code unless specified
