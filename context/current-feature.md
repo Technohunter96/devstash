@@ -1,31 +1,18 @@
-# Current Feature: Item Drawer
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- shadcn Sheet component, slides in from the right
-- Clicking an ItemCard opens the drawer with that item's full data
-- Works on both dashboard and items list pages
-- Action bar with: Favorite (star, yellow when active), Pin, Copy, Edit (pencil), Delete (trash, right-aligned)
-- Client wrapper component to manage drawer state (pages are server components)
-- Fetch item detail on click via `/api/items/[id]` — no page navigation
-- Drawer shows skeleton/loading state while fetching
-- Query function in `lib/db/items.ts`, API route with auth check
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Card data (title, description, tags) already fetched by server component — only full detail (content, collections, language) fetched on click
-- Code editor and item-specific content will come in a later phase — focus on detail display and action bar
-- Reference: `context/screenshots/dashboard-ui-drawer.png` for visual design
 
 ## History
 
@@ -250,3 +237,15 @@ In Progress
 - `/items/[type]` page grid updated from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
 - Responsive breakpoints: 1 column (mobile) → 2 columns (md, 768px+) → 3 columns (lg, 1024px+)
 - Dashboard lists unchanged
+
+### 2026-05-18 — Item Drawer Completed
+
+- Installed shadcn Sheet component (`src/components/ui/sheet.tsx`)
+- `getItemById(userId, itemId)` added to `src/lib/db/items.ts` — full item detail with tags and flattened collections (defaultType color)
+- `GET /api/items/[id]` route with `auth()` guard and userId scoping (no IDOR)
+- `ItemDrawerProvider` + `useItemDrawer()` context in `src/components/dashboard/ItemDrawerProvider.tsx` — manages open state, fetch, race condition guard via `requestIdRef`
+- `ItemDrawer` component in `src/components/dashboard/ItemDrawer.tsx` — skeleton/error/body states; action bar (Favorite yellow, Pin blue, Copy functional, Edit, Delete right-aligned); sections: Description, Content (monospace block), URL (styled link card with type color), Tags, Collections
+- `DashboardShell` wraps children in `ItemDrawerProvider` — drawer works on both `/dashboard` and `/items/[type]`
+- `ItemCard` wired: `onClick={() => open(item.id)}`, copy button retains `e.stopPropagation()`
+- Drawer width: `data-[side=right]:w-1/3` to correctly override base Sheet CSS specificity
+- 6 unit tests for `getItemById` collection transformation (`src/lib/db/items.test.ts`)
