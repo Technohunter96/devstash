@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
-
-// TODO: replace with useItemDrawer() context when drawer is implemented
+import { useItemDrawer } from "./ItemDrawerProvider";
 
 interface Item {
   id: string;
@@ -29,6 +28,7 @@ interface Item {
 
 export default function ItemCard({ item }: { item: Item }) {
   const [copied, setCopied] = useState(false);
+  const { open } = useItemDrawer();
   const Icon = ICON_MAP[item.itemType.icon] ?? File;
   const copyableContent = item.content ?? item.url;
 
@@ -48,9 +48,7 @@ export default function ItemCard({ item }: { item: Item }) {
     <Card
       className="group relative cursor-pointer hover:border-muted-foreground/50 transition-colors border-l-[3px]"
       style={{ borderLeftColor: item.itemType.color }}
-      onClick={() => {
-        // TODO: openDrawer(item.id)
-      }}
+      onClick={() => open(item.id)}
     >
       <CardContent className="flex items-start gap-3 px-4 py-3">
         <div className="flex flex-col items-center gap-1 shrink-0 w-12">
