@@ -1,16 +1,13 @@
 "use client";
 
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface ItemDeleteDialogProps {
   open: boolean;
@@ -29,27 +26,35 @@ export default function ItemDeleteDialog({
 }: ItemDeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete item?</AlertDialogTitle>
-          <AlertDialogDescription>
-            <span className="font-medium text-foreground">&ldquo;{itemTitle}&rdquo;</span> will be
-            permanently deleted. This action cannot be undone.
-          </AlertDialogDescription>
+      <AlertDialogContent className="max-w-md gap-0 p-0 overflow-hidden">
+        <AlertDialogHeader className="px-5 pt-5 pb-4">
+          <AlertDialogTitle>
+            <span className="text-destructive">Delete</span> &ldquo;{itemTitle}&rdquo;
+          </AlertDialogTitle>
+          <p className="text-sm text-orange-400/80">
+            It will be permanently deleted and it cannot be undone.
+          </p>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting} className="cursor-pointer">
+
+        <div className="flex gap-2 border-t px-5 py-4">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isDeleting}
+            className="cursor-pointer flex-1"
+          >
             Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction
+          </Button>
+          <Button
+            variant="destructive"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+            className="cursor-pointer flex-1"
           >
-            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            {isDeleting && <Loader2 className="animate-spin" />}
             {isDeleting ? "Deleting…" : "Delete"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+          </Button>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );
