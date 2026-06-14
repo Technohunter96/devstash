@@ -1,30 +1,16 @@
-# Current Feature — Item Delete Functionality
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
-
 ## Goals
 
-- Delete button in the item drawer action bar opens a shadcn AlertDialog confirmation
-- Confirmation dialog displays the item title to prevent accidental deletion
-- On confirm, a server action deletes the item from the database with auth + ownership check
-- On success: drawer closes, `router.refresh()` updates item cards in the background, success toast fires
-- On error: error toast fires, dialog closes
-- `deleteItem(itemId)` server action in `src/actions/items.ts` — `{ success, error }` pattern, `auth()` session + ownership check
-- DB query function `deleteItem(userId, itemId)` added to `src/lib/db/items.ts`
+<!-- Goals go here -->
 
 ## Notes
 
 <!-- Any extra notes -->
-
-- AlertDialog from shadcn/ui (already installed)
-- Sonner toast (already installed)
-- Server action must verify item ownership before deletion (no IDOR)
-- Delete button already exists in `ItemDrawer.tsx` action bar but is not yet wired up
-- After deletion, close the drawer and refresh — no need to navigate away
 
 ## History
 
@@ -261,3 +247,29 @@ In Progress
 - `ItemCard` wired: `onClick={() => open(item.id)}`, copy button retains `e.stopPropagation()`
 - Drawer width: `data-[side=right]:w-1/3` to correctly override base Sheet CSS specificity
 - 6 unit tests for `getItemById` collection transformation (`src/lib/db/items.test.ts`)
+
+### 2026-06-14 — Item Drawer Edit Mode Completed
+
+- Edit button in action bar switches drawer to inline edit mode (same drawer, no navigation)
+- Action bar replaced by Save and Cancel buttons in edit mode
+- Editable fields for all types: Title (required), Description, Tags (comma-separated)
+- Type-specific fields: Content (Snippet/Prompt/Command/Note), Language (Snippet/Command), URL (Link)
+- Non-editable: item type, collections, created/updated dates
+- `updateItem(itemId, data)` server action in `src/actions/items.ts` — Zod validation, `auth()` + ownership check, `{ success, data, error }` pattern
+- `updateItemById(userId, itemId, data)` in `src/lib/db/items.ts` — tag handling: disconnect all + connect-or-create
+- Save returns updated `ItemDetail` — drawer refreshes without a second fetch; `router.refresh()` updates cards in background
+- Disable Save when title is empty (client-side guard)
+- Cancel discards changes and returns to view mode
+- Success and error toasts via Sonner
+- 10 unit tests for `updateItem` in `src/actions/items.test.ts`
+
+### 2026-06-14 — Item Delete Functionality Completed
+
+- Delete button in item drawer action bar opens `ItemDeleteDialog` (shadcn AlertDialog)
+- Dialog displays item title to prevent accidental deletion
+- `deleteItem(itemId)` server action in `src/actions/items.ts` — `auth()` + ownership check, `{ success, error }` pattern
+- `deleteItemById(userId, itemId)` in `src/lib/db/items.ts` — atomic `deleteMany` with userId scope (no IDOR, no race condition)
+- `ItemDeleteDialog` extracted as standalone component (`src/components/dashboard/ItemDeleteDialog.tsx`) with 5 props
+- `handleItemDeleted` in `ItemDrawerProvider` — invalidates in-flight fetch, resets drawer state, calls `router.refresh()`
+- Success and error toasts via Sonner; spinner on Delete button during deletion
+- 5 unit tests for `deleteItem` in `src/actions/items.test.ts`
