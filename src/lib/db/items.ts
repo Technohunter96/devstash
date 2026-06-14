@@ -119,6 +119,92 @@ export interface ItemDetail {
   collections: { id: string; name: string; color: string | null }[];
 }
 
+export interface UpdateItemData {
+  title: string;
+  description: string | null;
+  content: string | null;
+  url: string | null;
+  language: string | null;
+  tags: string[];
+}
+
+export async function updateItemById(
+  userId: string,
+  itemId: string,
+  data: UpdateItemData
+): Promise<ItemDetail | null> {
+  const existing = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { id: true },
+  });
+  if (!existing) return null;
+
+  const updated = await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      title: data.title,
+      description: data.description,
+      content: data.content,
+      url: data.url,
+      language: data.language,
+      tags: {
+        set: [],
+        connectOrCreate: data.tags.map((name) => ({
+          where: { name_userId: { name, userId } },
+          create: { name, userId },
+        })),
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      contentType: true,
+      content: true,
+      url: true,
+      fileUrl: true,
+      fileName: true,
+      fileSize: true,
+      language: true,
+      isFavorite: true,
+      isPinned: true,
+      lastUsedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      itemType: { select: { name: true, icon: true, color: true } },
+      tags: { select: { id: true, name: true } },
+      collections: {
+        select: {
+          collection: {
+            select: {
+              id: true,
+              name: true,
+              defaultType: { select: { color: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    ...updated,
+    collections: updated.collections.map((c) => ({
+      id: c.collection.id,
+      name: c.collection.name,
+      color: c.collection.defaultType?.color ?? null,
+    })),
+  };
+}
+
+export async function deleteItemById(
+  userId: string,
+  itemId: string
+): Promise<boolean> {
+  const result = await prisma.item.deleteMany({ where: { id: itemId, userId } });
+  return result.count > 0;
+}
+
 export async function getItemById(
   userId: string,
   itemId: string

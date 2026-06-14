@@ -1,12 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import ItemDrawer from "./ItemDrawer";
 import type { ItemDetail } from "@/lib/db/items";
 
 interface ItemDrawerContextValue {
   open: (itemId: string) => void;
   close: () => void;
+  onItemDeleted: () => void;
 }
 
 const ItemDrawerContext = createContext<ItemDrawerContextValue | null>(null);
@@ -38,6 +40,7 @@ export default function ItemDrawerProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<State>(INITIAL_STATE);
   // Track latest request to ignore stale responses if a newer fetch (or close) overtakes it
   const requestIdRef = useRef(0);
@@ -81,8 +84,22 @@ export default function ItemDrawerProvider({
     setState((s) => ({ ...s, isOpen: false }));
   }, []);
 
+  const handleItemUpdated = useCallback(
+    (updated: ItemDetail) => {
+      setState((s) => ({ ...s, item: updated }));
+      router.refresh();
+    },
+    [router],
+  );
+
+  const handleItemDeleted = useCallback(() => {
+    requestIdRef.current++;
+    setState(INITIAL_STATE);
+    router.refresh();
+  }, [router]);
+
   return (
-    <ItemDrawerContext.Provider value={{ open, close }}>
+    <ItemDrawerContext.Provider value={{ open, close, onItemDeleted: handleItemDeleted }}>
       {children}
       <ItemDrawer
         isOpen={state.isOpen}
@@ -92,6 +109,8 @@ export default function ItemDrawerProvider({
         onOpenChange={(o) => {
           if (!o) close();
         }}
+        onItemUpdated={handleItemUpdated}
+        onItemDeleted={handleItemDeleted}
       />
     </ItemDrawerContext.Provider>
   );

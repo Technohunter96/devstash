@@ -1,18 +1,30 @@
-# Current Feature
+# Current Feature — Item Delete Functionality
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Delete button in the item drawer action bar opens a shadcn AlertDialog confirmation
+- Confirmation dialog displays the item title to prevent accidental deletion
+- On confirm, a server action deletes the item from the database with auth + ownership check
+- On success: drawer closes, `router.refresh()` updates item cards in the background, success toast fires
+- On error: error toast fires, dialog closes
+- `deleteItem(itemId)` server action in `src/actions/items.ts` — `{ success, error }` pattern, `auth()` session + ownership check
+- DB query function `deleteItem(userId, itemId)` added to `src/lib/db/items.ts`
 
 ## Notes
 
 <!-- Any extra notes -->
+
+- AlertDialog from shadcn/ui (already installed)
+- Sonner toast (already installed)
+- Server action must verify item ownership before deletion (no IDOR)
+- Delete button already exists in `ItemDrawer.tsx` action bar but is not yet wired up
+- After deletion, close the drawer and refresh — no need to navigate away
 
 ## History
 

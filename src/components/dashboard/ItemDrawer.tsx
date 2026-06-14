@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink } from "lucide-react";
+import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -12,8 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import ItemDeleteDialog from "./ItemDeleteDialog";
 import { cn } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
+import { updateItem, deleteItem } from "@/actions/items";
+import { toast } from "sonner";
 import type { ItemDetail } from "@/lib/db/items";
 
 interface ItemDrawerProps {
@@ -22,6 +25,8 @@ interface ItemDrawerProps {
   isLoading: boolean;
   error: string | null;
   onOpenChange: (open: boolean) => void;
+  onItemUpdated: (item: ItemDetail) => void;
+  onItemDeleted: () => void;
 }
 
 export default function ItemDrawer({
@@ -30,6 +35,8 @@ export default function ItemDrawer({
   isLoading,
   error,
   onOpenChange,
+  onItemUpdated,
+  onItemDeleted,
 }: ItemDrawerProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -37,7 +44,9 @@ export default function ItemDrawer({
       <SheetContent className="data-[side=right]:w-1/3 data-[side=right]:sm:max-w-none p-0 flex flex-col gap-0">
         {isLoading && <ItemDrawerSkeleton />}
         {!isLoading && error && <ItemDrawerError message={error} />}
-        {!isLoading && !error && item && <ItemDrawerBody item={item} />}
+        {!isLoading && !error && item && (
+          <ItemDrawerBody item={item} onItemUpdated={onItemUpdated} onItemDeleted={onItemDeleted} />
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -47,10 +56,52 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-medium text-muted-foreground mb-2">{children}</h3>;
 }
 
-function ItemDrawerBody({ item }: { item: ItemDetail }) {
+// Fields that show Content textarea
+const CONTENT_TYPES = ["Snippet", "Prompt", "Command", "Note"];
+// Fields that show Language input
+const LANGUAGE_TYPES = ["Snippet", "Command"];
+
+interface EditState {
+  title: string;
+  description: string;
+  content: string;
+  url: string;
+  language: string;
+  tags: string; // comma-separated
+}
+
+function itemToEditState(item: ItemDetail): EditState {
+  return {
+    title: item.title,
+    description: item.description ?? "",
+    content: item.content ?? "",
+    url: item.url ?? "",
+    language: item.language ?? "",
+    tags: item.tags.map((t) => t.name).join(", "),
+  };
+}
+
+function ItemDrawerBody({
+  item,
+  onItemUpdated,
+  onItemDeleted,
+}: {
+  item: ItemDetail;
+  onItemUpdated: (item: ItemDetail) => void;
+  onItemDeleted: () => void;
+}) {
   const Icon = ICON_MAP[item.itemType.icon] ?? File;
   const copyableContent = item.content ?? item.url;
   const [copied, setCopied] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editState, setEditState] = useState<EditState>(() => itemToEditState(item));
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const showContent = CONTENT_TYPES.includes(item.itemType.name);
+  const showLanguage = LANGUAGE_TYPES.includes(item.itemType.name);
+  const showUrl = item.contentType === "URL";
 
   const handleCopy = async () => {
     if (!copyableContent) return;
@@ -63,6 +114,75 @@ function ItemDrawerBody({ item }: { item: ItemDetail }) {
     }
   };
 
+  const handleEdit = () => {
+    setEditState(itemToEditState(item));
+    setIsEditMode(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditMode(false);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const tags = editState.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const result = await updateItem(item.id, {
+        title: editState.title,
+        description: editState.description || null,
+        content: editState.content || null,
+        url: editState.url || null,
+        language: editState.language || null,
+        tags,
+      });
+
+      if (!result.success) {
+        const msg =
+          typeof result.error === "string"
+            ? result.error
+            : Object.values(result.error).flat().join(", ");
+        toast.error(msg);
+        return;
+      }
+
+      toast.success("Item saved");
+      setIsEditMode(false);
+      onItemUpdated(result.data);
+    } catch {
+      toast.error("Failed to save item");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteItem(item.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Item deleted");
+      onItemDeleted();
+    } catch {
+      toast.error("Failed to delete item");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const field = (key: keyof EditState) => ({
+    value: editState[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setEditState((s) => ({ ...s, [key]: e.target.value })),
+  });
+
   return (
     <>
       <SheetHeader className="border-b p-4">
@@ -74,7 +194,15 @@ function ItemDrawerBody({ item }: { item: ItemDetail }) {
             <Icon className="w-4 h-4" style={{ color: item.itemType.color }} />
           </div>
           <div className="flex-1 min-w-0">
-            <SheetTitle className="truncate">{item.title}</SheetTitle>
+            {isEditMode ? (
+              <input
+                className="w-full bg-transparent text-sm font-semibold outline-none border-b border-border focus:border-primary pb-0.5"
+                placeholder="Title"
+                {...field("title")}
+              />
+            ) : (
+              <SheetTitle className="truncate">{item.title}</SheetTitle>
+            )}
             <SheetDescription className="text-xs" style={{ color: item.itemType.color }}>
               {item.itemType.name}
             </SheetDescription>
@@ -82,102 +210,188 @@ function ItemDrawerBody({ item }: { item: ItemDetail }) {
         </div>
       </SheetHeader>
 
+      {/* Action bar */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              item.isFavorite &&
-                "border-yellow-400/40 text-yellow-400 hover:text-yellow-300 dark:bg-yellow-400/10",
-            )}
-          >
-            <Star className={cn(item.isFavorite && "fill-yellow-400 text-yellow-400")} />
-            {item.isFavorite ? "Favorited" : "Favorite"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              item.isPinned &&
-                "border-blue-400/40 text-blue-400 hover:text-blue-300 dark:bg-blue-400/10",
-            )}
-          >
-            <Pin className={cn(item.isPinned && "fill-blue-400 text-blue-400")} />
-            {item.isPinned ? "Pinned" : "Pin"}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleCopy} disabled={!copyableContent}>
-            {copied ? <Check className="text-green-500" /> : <Copy />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-          <Button variant="outline" size="sm">
-            <Pencil />
-            Edit
-          </Button>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Delete item"
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
-        >
-          <Trash2 />
-        </Button>
+        {isEditMode ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving || !editState.title.trim()}
+                className="cursor-pointer"
+              >
+                <Save />
+                {isSaving ? "Saving…" : "Save"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="cursor-pointer"
+              >
+                <X />
+                Cancel
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  item.isFavorite &&
+                    "border-yellow-400/40 text-yellow-400 hover:text-yellow-300 dark:bg-yellow-400/10",
+                )}
+              >
+                <Star className={cn(item.isFavorite && "fill-yellow-400 text-yellow-400")} />
+                {item.isFavorite ? "Favorited" : "Favorite"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  item.isPinned &&
+                    "border-blue-400/40 text-blue-400 hover:text-blue-300 dark:bg-blue-400/10",
+                )}
+              >
+                <Pin className={cn(item.isPinned && "fill-blue-400 text-blue-400")} />
+                {item.isPinned ? "Pinned" : "Pin"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCopy} disabled={!copyableContent}>
+                {copied ? <Check className="text-green-500" /> : <Copy />}
+                {copied ? "Copied" : "Copy"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleEdit} className="cursor-pointer">
+                <Pencil />
+                Edit
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Delete item"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 />
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {item.description && (
-          <section>
-            <SectionLabel>Description</SectionLabel>
-            <p className="text-sm leading-relaxed">{item.description}</p>
-          </section>
-        )}
+        {/* Description */}
+        <section>
+          <SectionLabel>Description</SectionLabel>
+          {isEditMode ? (
+            <textarea
+              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none min-h-[60px]"
+              placeholder="Description (optional)"
+              {...field("description")}
+              rows={3}
+            />
+          ) : (
+            item.description && (
+              <p className="text-sm leading-relaxed">{item.description}</p>
+            )
+          )}
+        </section>
 
-        {item.contentType === "TEXT" && item.content && (
+        {/* Content (text types) */}
+        {(isEditMode ? showContent : item.contentType === "TEXT" && item.content) && (
           <section>
             <SectionLabel>Content</SectionLabel>
-            <pre className="text-xs font-mono bg-background border border-border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-              {item.content}
-            </pre>
+            {isEditMode ? (
+              <textarea
+                className="w-full bg-background border border-border rounded-md p-3 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none min-h-[120px]"
+                placeholder="Content"
+                {...field("content")}
+                rows={6}
+              />
+            ) : (
+              <pre className="text-xs font-mono bg-background border border-border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
+                {item.content}
+              </pre>
+            )}
           </section>
         )}
 
-        {item.contentType === "URL" && item.url && (
+        {/* Language (snippet/command only) */}
+        {isEditMode && showLanguage && (
+          <section>
+            <SectionLabel>Language</SectionLabel>
+            <input
+              className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
+              placeholder="e.g. typescript, bash"
+              {...field("language")}
+            />
+          </section>
+        )}
+
+        {/* URL (link type) */}
+        {(isEditMode ? showUrl : item.contentType === "URL" && item.url) && (
           <section>
             <SectionLabel>URL</SectionLabel>
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50"
-              style={{ borderColor: item.itemType.color + "40" }}
-            >
-              <div
-                className="rounded p-1.5 shrink-0"
-                style={{ backgroundColor: item.itemType.color + "20" }}
+            {isEditMode ? (
+              <input
+                className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
+                placeholder="https://…"
+                type="url"
+                {...field("url")}
+              />
+            ) : (
+              <a
+                href={item.url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50"
+                style={{ borderColor: item.itemType.color + "40" }}
               >
-                <ExternalLink className="w-3.5 h-3.5" style={{ color: item.itemType.color }} />
+                <div
+                  className="rounded p-1.5 shrink-0"
+                  style={{ backgroundColor: item.itemType.color + "20" }}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" style={{ color: item.itemType.color }} />
+                </div>
+                <span
+                  className="text-sm break-all leading-snug group-hover:underline"
+                  style={{ color: item.itemType.color }}
+                >
+                  {item.url}
+                </span>
+              </a>
+            )}
+          </section>
+        )}
+
+        {/* Tags */}
+        <section>
+          <SectionLabel>Tags</SectionLabel>
+          {isEditMode ? (
+            <input
+              className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
+              placeholder="tag1, tag2, tag3"
+              {...field("tags")}
+            />
+          ) : (
+            item.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {item.tags.map((tag) => (
+                  <Badge key={tag.id} variant="secondary">
+                    {tag.name}
+                  </Badge>
+                ))}
               </div>
-              <span className="text-sm break-all leading-snug group-hover:underline" style={{ color: item.itemType.color }}>
-                {item.url}
-              </span>
-            </a>
-          </section>
-        )}
+            )
+          )}
+        </section>
 
-        {item.tags.length > 0 && (
-          <section>
-            <SectionLabel>Tags</SectionLabel>
-            <div className="flex flex-wrap gap-1.5">
-              {item.tags.map((tag) => (
-                <Badge key={tag.id} variant="secondary">
-                  {tag.name}
-                </Badge>
-              ))}
-            </div>
-          </section>
-        )}
-
+        {/* Collections (read-only always) */}
         {item.collections.length > 0 && (
           <section>
             <SectionLabel>
@@ -207,6 +421,14 @@ function ItemDrawerBody({ item }: { item: ItemDetail }) {
           </section>
         )}
       </div>
+
+      <ItemDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        itemTitle={item.title}
+        isDeleting={isDeleting}
+        onConfirm={handleDelete}
+      />
     </>
   );
 }
