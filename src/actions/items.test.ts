@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updateItem, deleteItem } from "./items";
+import { createItem, updateItem, deleteItem } from "./items";
 
 const mockAuth = vi.fn();
+const mockCreateItemInDb = vi.fn();
 const mockUpdateItemById = vi.fn();
 const mockDeleteItemById = vi.fn();
 
@@ -10,6 +11,7 @@ vi.mock("@/auth", () => ({
 }));
 
 vi.mock("@/lib/db/items", () => ({
+  createItemInDb: (...args: unknown[]) => mockCreateItemInDb(...args),
   updateItemById: (...args: unknown[]) => mockUpdateItemById(...args),
   deleteItemById: (...args: unknown[]) => mockDeleteItemById(...args),
 }));
@@ -43,6 +45,92 @@ const ITEM_DETAIL = {
   tags: [{ id: "tag-1", name: "react" }, { id: "tag-2", name: "hooks" }],
   collections: [],
 };
+
+const VALID_CREATE_PAYLOAD = {
+  typeName: "Snippet" as const,
+  title: "My Snippet",
+  description: "A helpful snippet",
+  content: "console.log('hi')",
+  url: null,
+  language: "typescript",
+  tags: ["react", "hooks"],
+};
+
+describe("createItem", () => {
+  beforeEach(() => {
+    mockAuth.mockReset();
+    mockCreateItemInDb.mockReset();
+  });
+
+  it("returns unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await createItem(VALID_CREATE_PAYLOAD);
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockCreateItemInDb).not.toHaveBeenCalled();
+  });
+
+  it("returns unauthorized when session has no user id", async () => {
+    mockAuth.mockResolvedValue({ user: {} });
+    const result = await createItem(VALID_CREATE_PAYLOAD);
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+  });
+
+  it("returns validation error when title is empty", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    const result = await createItem({ ...VALID_CREATE_PAYLOAD, title: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toHaveProperty("title");
+  });
+
+  it("returns validation error for invalid typeName", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName: "File" });
+    expect(result.success).toBe(false);
+  });
+
+  it("returns validation error for invalid URL on Link type", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName: "Link", url: "not-a-url" });
+    expect(result.success).toBe(false);
+  });
+
+  it("returns success with item data on valid input", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    const result = await createItem(VALID_CREATE_PAYLOAD);
+    expect(result).toEqual({ success: true, data: ITEM_DETAIL });
+  });
+
+  it("passes userId and parsed data to createItemInDb", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-42" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    await createItem(VALID_CREATE_PAYLOAD);
+    expect(mockCreateItemInDb).toHaveBeenCalledWith(
+      "user-42",
+      expect.objectContaining({ typeName: "Snippet", title: "My Snippet" }),
+    );
+  });
+
+  it("filters empty strings from tags", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    await createItem({ ...VALID_CREATE_PAYLOAD, tags: ["react", "", "hooks"] });
+    expect(mockCreateItemInDb).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ tags: ["react", "hooks"] }),
+    );
+  });
+
+  it("converts empty description to null", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    await createItem({ ...VALID_CREATE_PAYLOAD, description: "" });
+    expect(mockCreateItemInDb).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ description: null }),
+    );
+  });
+});
 
 describe("deleteItem", () => {
   beforeEach(() => {

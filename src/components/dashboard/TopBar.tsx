@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Plus, Archive, Menu, FolderPlus } from "lucide-react";
+import { Search, Archive, Menu, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import NewItemDialog from "./NewItemDialog";
 
 interface TopBarProps {
   onMenuToggle?: () => void;
@@ -54,10 +55,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           <FolderPlus className="size-4" />
           <span className="hidden sm:inline">New Collection</span>
         </Button>
-        <Button size="sm">
-          <Plus className="size-4" />
-          <span className="hidden sm:inline">New Item</span>
-        </Button>
+        <NewItemDialog />
       </div>
     </header>
   );

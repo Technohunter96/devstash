@@ -4,9 +4,11 @@
 
 <!-- Not Started|In Progress|Completed -->
 
+Not Started
+
 ## Goals
 
-<!-- Goals go here -->
+<!-- What does success look like? -->
 
 ## Notes
 
@@ -273,3 +275,16 @@
 - `handleItemDeleted` in `ItemDrawerProvider` — invalidates in-flight fetch, resets drawer state, calls `router.refresh()`
 - Success and error toasts via Sonner; spinner on Delete button during deletion
 - 5 unit tests for `deleteItem` in `src/actions/items.test.ts`
+
+### 2026-06-14 — Item Create Completed
+
+- "New Item" button in TopBar opens `NewItemDialog` — self-contained component, owns its own trigger button
+- Type selector: 5-column grid (Snippet, Prompt, Command, Note, Link); File/Image excluded (Pro)
+- Conditional fields: Content for Snippet/Prompt/Command/Note; Language for Snippet/Command; URL for Link
+- All types: Title (required), Description, Tags (comma-separated)
+- `createItem(data)` server action in `src/actions/items.ts` — `CreateItemSchema` Zod validation, `auth()` + userId, `{ success, data, error }` pattern
+- `createItemInDb(userId, data)` in `src/lib/db/items.ts` — `findFirstOrThrow` for ItemType, `connectOrCreate` tags, returns `ItemDetail` with empty collections
+- On success: dialog closes + resets to `DEFAULT_STATE`, `router.refresh()`, success toast
+- On error: error toast, dialog stays open
+- `canSave` guard: title non-empty AND (not Link OR url non-empty)
+- 9 unit tests for `createItem` in `src/actions/items.test.ts`
