@@ -29,7 +29,7 @@ export default function ItemDeleteDialog({
       <AlertDialogContent className="max-w-md gap-0 p-0 overflow-hidden">
         <AlertDialogHeader className="px-5 pt-5 pb-4">
           <AlertDialogTitle>
-            <span className="text-destructive">Delete</span> &ldquo;{itemTitle}&rdquo;
+            <span className="text-destructive">Delete</span> {itemTitle}?
           </AlertDialogTitle>
           <p className="text-sm text-orange-400/80">
             It will be permanently deleted and it cannot be undone.

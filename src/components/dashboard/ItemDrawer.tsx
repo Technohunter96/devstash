@@ -41,7 +41,7 @@ export default function ItemDrawer({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       {/* data-[side=right]: prefix matches the base class specificity so our width wins */}
-      <SheetContent className="data-[side=right]:w-1/3 data-[side=right]:sm:max-w-none p-0 flex flex-col gap-0">
+      <SheetContent className="data-[side=right]:w-4/5 data-[side=right]:sm:w-1/2 data-[side=right]:lg:w-1/3 data-[side=right]:sm:max-w-none p-0 flex flex-col gap-0">
         {isLoading && <ItemDrawerSkeleton />}
         {!isLoading && error && <ItemDrawerError message={error} />}
         {!isLoading && !error && item && (
