@@ -2,8 +2,58 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
-import { updateItemById, deleteItemById } from "@/lib/db/items";
-import type { ItemDetail } from "@/lib/db/items";
+import { createItemInDb, updateItemById, deleteItemById } from "@/lib/db/items";
+import type { ItemDetail, CreateItemData } from "@/lib/db/items";
+
+const CREATABLE_TYPE_NAMES = ["Snippet", "Prompt", "Command", "Note", "Link"] as const;
+
+const CreateItemSchema = z.object({
+  typeName: z.enum(CREATABLE_TYPE_NAMES),
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
+  content: z.string().nullable().optional().transform((v) => v || null),
+  url: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null)
+    .refine((v) => v === null || z.string().url().safeParse(v).success, {
+      message: "Invalid URL",
+    }),
+  language: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
+  tags: z
+    .array(z.string().trim())
+    .transform((arr) => arr.filter(Boolean))
+    .default([]),
+});
+
+type CreateItemResult =
+  | { success: true; data: ItemDetail }
+  | { success: false; error: string | Record<string, string[]> };
+
+export async function createItem(formData: unknown): Promise<CreateItemResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const parsed = CreateItemSchema.safeParse(formData);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten().fieldErrors };
+  }
+
+  const item = await createItemInDb(session.user.id, {
+    typeName: parsed.data.typeName,
+    title: parsed.data.title,
+    description: parsed.data.description ?? null,
+    content: parsed.data.content ?? null,
+    url: parsed.data.url ?? null,
+    language: parsed.data.language ?? null,
+    tags: parsed.data.tags,
+  });
+
+  return { success: true, data: item };
+}
 
 const UpdateItemSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),

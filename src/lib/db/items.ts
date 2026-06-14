@@ -119,6 +119,16 @@ export interface ItemDetail {
   collections: { id: string; name: string; color: string | null }[];
 }
 
+export interface CreateItemData {
+  typeName: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  url: string | null;
+  language: string | null;
+  tags: string[];
+}
+
 export interface UpdateItemData {
   title: string;
   description: string | null;
@@ -195,6 +205,58 @@ export async function updateItemById(
       color: c.collection.defaultType?.color ?? null,
     })),
   };
+}
+
+export async function createItemInDb(
+  userId: string,
+  data: CreateItemData
+): Promise<ItemDetail> {
+  const itemType = await prisma.itemType.findFirstOrThrow({
+    where: { name: data.typeName, isSystem: true },
+    select: { id: true, name: true, icon: true, color: true },
+  });
+
+  const contentType = data.typeName === "Link" ? ("URL" as const) : ("TEXT" as const);
+
+  const created = await prisma.item.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      content: data.content,
+      url: data.url,
+      language: data.language,
+      contentType,
+      userId,
+      itemTypeId: itemType.id,
+      tags: {
+        connectOrCreate: data.tags.map((name) => ({
+          where: { name_userId: { name, userId } },
+          create: { name, userId },
+        })),
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      contentType: true,
+      content: true,
+      url: true,
+      fileUrl: true,
+      fileName: true,
+      fileSize: true,
+      language: true,
+      isFavorite: true,
+      isPinned: true,
+      lastUsedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      itemType: { select: { name: true, icon: true, color: true } },
+      tags: { select: { id: true, name: true } },
+    },
+  });
+
+  return { ...created, collections: [] };
 }
 
 export async function deleteItemById(
