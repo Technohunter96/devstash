@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import ItemDeleteDialog from "./ItemDeleteDialog";
+import CodeEditor from "./CodeEditor";
 import { cn } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { updateItem, deleteItem } from "@/actions/items";
@@ -56,10 +57,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-medium text-muted-foreground mb-2">{children}</h3>;
 }
 
-// Fields that show Content textarea
+// Fields that show Content textarea/editor
 const CONTENT_TYPES = ["Snippet", "Prompt", "Command", "Note"];
 // Fields that show Language input
 const LANGUAGE_TYPES = ["Snippet", "Command"];
+// Fields that use Monaco CodeEditor instead of textarea/pre
+const CODE_TYPES = ["Snippet", "Command"];
 
 interface EditState {
   title: string;
@@ -102,6 +105,7 @@ function ItemDrawerBody({
   const showContent = CONTENT_TYPES.includes(item.itemType.name);
   const showLanguage = LANGUAGE_TYPES.includes(item.itemType.name);
   const showUrl = item.contentType === "URL";
+  const isCodeType = CODE_TYPES.includes(item.itemType.name);
 
   const handleCopy = async () => {
     if (!copyableContent) return;
@@ -307,16 +311,32 @@ function ItemDrawerBody({
           <section>
             <SectionLabel>Content</SectionLabel>
             {isEditMode ? (
-              <textarea
-                className="w-full bg-background border border-border rounded-md p-3 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none min-h-[120px]"
-                placeholder="Content"
-                {...field("content")}
-                rows={6}
-              />
+              isCodeType ? (
+                <CodeEditor
+                  value={editState.content}
+                  language={editState.language || undefined}
+                  onChange={(val) => setEditState((s) => ({ ...s, content: val }))}
+                />
+              ) : (
+                <textarea
+                  className="w-full bg-background border border-border rounded-md p-3 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none min-h-[120px]"
+                  placeholder="Content"
+                  {...field("content")}
+                  rows={6}
+                />
+              )
             ) : (
-              <pre className="text-xs font-mono bg-background border border-border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                {item.content}
-              </pre>
+              isCodeType ? (
+                <CodeEditor
+                  value={item.content ?? ""}
+                  language={item.language ?? undefined}
+                  readOnly
+                />
+              ) : (
+                <pre className="text-xs font-mono bg-background border border-border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
+                  {item.content}
+                </pre>
+              )
             )}
           </section>
         )}
