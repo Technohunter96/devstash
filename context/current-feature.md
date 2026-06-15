@@ -288,3 +288,13 @@ Not Started
 - On error: error toast, dialog stays open
 - `canSave` guard: title non-empty AND (not Link OR url non-empty)
 - 9 unit tests for `createItem` in `src/actions/items.test.ts`
+
+### 2026-06-15 — Code Editor Completed
+
+- Installed `@monaco-editor/react`; created `src/components/dashboard/CodeEditor.tsx` with Monaco Editor (`vs-dark` theme)
+- macOS window dots (red/yellow/green) + language label + copy button in editor header
+- Fluid height: auto-adjusts 80–400px via `onDidContentSizeChange`; dark 6px scrollbar, no shadows
+- `ItemDrawer.tsx` — Snippet/Command view mode uses `<CodeEditor readOnly>` instead of `<pre>`; edit mode uses `<CodeEditor onChange>` instead of `<textarea>`; Prompt/Note keep `<pre>`/`<textarea>`
+- `NewItemDialog.tsx` — refactored: dialog logic extracted into exported `NewItemDialogContent` (controlled via `open`/`onOpenChange`/`defaultTypeName`); Snippet/Command content field uses `CodeEditor`; default export stays as self-contained TopBar button
+- Created `src/components/dashboard/AddTypeItemButton.tsx` — client component receiving `typeName` and `color` as plain string props; colored outline button opens `NewItemDialogContent` with type pre-selected
+- `/items/[type]/page.tsx` — header row with `AddTypeItemButton` for creatable types (Snippet/Prompt/Command/Note/Link); File/Image pages show no button; type colors defined inline (no client module import)

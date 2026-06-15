@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { createItem } from "@/actions/items";
+import CodeEditor from "./CodeEditor";
 
 const CREATABLE_TYPES = [
   { name: "Snippet" as const, icon: "Code", color: "#3b82f6" },
@@ -23,12 +24,11 @@ const CREATABLE_TYPES = [
   { name: "Link" as const, icon: "Link", color: "#10b981" },
 ] as const;
 
-type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
+export type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
 
-// Fields that show Content textarea
 const CONTENT_TYPES: TypeName[] = ["Snippet", "Prompt", "Command", "Note"];
-// Fields that show Language input
 const LANGUAGE_TYPES: TypeName[] = ["Snippet", "Command"];
+const CODE_TYPES: TypeName[] = ["Snippet", "Command"];
 
 interface FormState {
   typeName: TypeName;
@@ -50,16 +50,27 @@ const DEFAULT_STATE: FormState = {
   tags: "",
 };
 
-export default function NewItemDialog() {
+// ─── Shared dialog content (controlled) ──────────────────────────────────────
+
+interface NewItemDialogContentProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultTypeName?: TypeName;
+}
+
+export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: NewItemDialogContentProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<FormState>(DEFAULT_STATE);
+  const [form, setForm] = useState<FormState>(() => ({
+    ...DEFAULT_STATE,
+    typeName: defaultTypeName ?? DEFAULT_STATE.typeName,
+  }));
   const [isSaving, setIsSaving] = useState(false);
 
   const selectedType = CREATABLE_TYPES.find((t) => t.name === form.typeName)!;
   const showContent = CONTENT_TYPES.includes(form.typeName);
   const showLanguage = LANGUAGE_TYPES.includes(form.typeName);
   const showUrl = form.typeName === "Link";
+  const isCodeType = CODE_TYPES.includes(form.typeName);
   const canSave = form.title.trim().length > 0 && (!showUrl || form.url.trim().length > 0);
 
   const field = (key: keyof FormState) => ({
@@ -69,8 +80,8 @@ export default function NewItemDialog() {
   });
 
   const handleOpenChange = (next: boolean) => {
-    setOpen(next);
-    if (!next) setForm(DEFAULT_STATE);
+    onOpenChange(next);
+    if (!next) setForm({ ...DEFAULT_STATE, typeName: defaultTypeName ?? DEFAULT_STATE.typeName });
   };
 
   const handleSubmit = async () => {
@@ -111,12 +122,7 @@ export default function NewItemDialog() {
   };
 
   return (
-    <>
-      <Button size="sm" onClick={() => setOpen(true)} className="cursor-pointer">
-        <Plus className="size-4" />
-        <span className="hidden sm:inline">New Item</span>
-      </Button>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New Item</DialogTitle>
@@ -176,20 +182,28 @@ export default function NewItemDialog() {
             />
           </div>
 
-          {/* Content (text types) */}
+          {/* Content */}
           {showContent && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Content</label>
-              <textarea
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none"
-                placeholder="Paste your content here"
-                {...field("content")}
-                rows={5}
-              />
+              {isCodeType ? (
+                <CodeEditor
+                  value={form.content}
+                  language={form.language || undefined}
+                  onChange={(val) => setForm((s) => ({ ...s, content: val }))}
+                />
+              ) : (
+                <textarea
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none"
+                  placeholder="Paste your content here"
+                  {...field("content")}
+                  rows={5}
+                />
+              )}
             </div>
           )}
 
-          {/* Language (snippet/command) */}
+          {/* Language */}
           {showLanguage && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Language</label>
@@ -201,7 +215,7 @@ export default function NewItemDialog() {
             </div>
           )}
 
-          {/* URL (link type) */}
+          {/* URL */}
           {showUrl && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
@@ -249,7 +263,22 @@ export default function NewItemDialog() {
           </div>
         </div>
       </DialogContent>
-      </Dialog>
+    </Dialog>
+  );
+}
+
+// ─── TopBar "New Item" button (self-contained) ────────────────────────────────
+
+export default function NewItemDialog() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)} className="cursor-pointer">
+        <Plus className="size-4" />
+        <span className="hidden sm:inline">New Item</span>
+      </Button>
+      <NewItemDialogContent open={open} onOpenChange={setOpen} />
     </>
   );
 }
