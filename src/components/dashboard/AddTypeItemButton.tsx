@@ -16,7 +16,7 @@ export default function AddTypeItemButton({ typeName, color }: Props) {
   return (
     <>
       <Button
-        size="sm"
+        size="lg"
         variant="outline"
         onClick={() => setOpen(true)}
         className="cursor-pointer shrink-0"
