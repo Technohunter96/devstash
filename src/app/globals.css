@@ -147,6 +147,61 @@
   background: oklch(1 0 0 / 28%);
 }
 
+/* Markdown preview — theme-aware via CSS vars */
+.markdown-preview {
+  @apply text-[13px] leading-[1.7] text-foreground;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
+  @apply font-semibold leading-snug mt-5 mb-2;
+}
+.markdown-preview h1 { @apply text-[1.375rem]; }
+.markdown-preview h2 { @apply text-lg; }
+.markdown-preview h3 { @apply text-base; }
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 { @apply text-sm; }
+.markdown-preview p { @apply mb-3; }
+.markdown-preview ul,
+.markdown-preview ol {
+  @apply pl-6 mb-3;
+}
+.markdown-preview ul { list-style-type: disc; }
+.markdown-preview ol { list-style-type: decimal; }
+.markdown-preview li { @apply mb-1; }
+.markdown-preview code {
+  @apply font-mono text-[0.8em] rounded px-[0.35em] py-[0.15em] bg-muted;
+}
+.markdown-preview pre {
+  @apply bg-[#1e1e1e] rounded-md px-4 py-3.5 overflow-x-auto mb-3;
+}
+.markdown-preview pre code {
+  @apply bg-transparent p-0 text-[13px] text-[#d4d4d4];
+}
+.markdown-preview blockquote {
+  @apply border-l-[3px] border-border pl-4 my-3 text-muted-foreground italic;
+}
+.markdown-preview a {
+  @apply text-blue-400 underline underline-offset-2 hover:text-blue-300;
+}
+.markdown-preview table {
+  @apply w-full border-collapse mb-3 text-xs;
+}
+.markdown-preview th,
+.markdown-preview td {
+  @apply border border-border px-3 py-1.5 text-left;
+}
+.markdown-preview th {
+  @apply bg-muted font-semibold;
+}
+.markdown-preview hr {
+  @apply border-none border-t border-border my-4;
+}
+
 /* Light mode override */
 :root:not(.dark) ::-webkit-scrollbar-thumb {
   background: oklch(0 0 0 / 12%);

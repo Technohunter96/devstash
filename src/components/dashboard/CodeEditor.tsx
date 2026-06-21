@@ -13,7 +13,8 @@ interface CodeEditorProps {
 
 export default function CodeEditor({ value, language, readOnly = false, onChange }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
-  const [editorHeight, setEditorHeight] = useState(120);
+  const minHeight = readOnly ? 80 : 400;
+  const [editorHeight, setEditorHeight] = useState(minHeight);
 
   const handleCopy = async () => {
     try {
@@ -27,7 +28,7 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
 
   const handleMount: OnMount = (editorInstance) => {
     const updateHeight = () => {
-      const contentHeight = Math.min(400, Math.max(80, editorInstance.getContentHeight()));
+      const contentHeight = Math.min(400, Math.max(minHeight, editorInstance.getContentHeight()));
       setEditorHeight(contentHeight);
       editorInstance.layout();
     };

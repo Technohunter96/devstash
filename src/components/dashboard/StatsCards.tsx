@@ -1,5 +1,6 @@
 import { Layers, Star, Bookmark, FolderOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ITEM_TYPE_COLORS } from "@/lib/icon-map";
 
 interface StatsCardsProps {
   totalItems: number;
@@ -13,25 +14,25 @@ const stats = (props: StatsCardsProps) => [
     label: "Total Items",
     value: props.totalItems,
     icon: Layers,
-    color: "#3b82f6",
+    color: ITEM_TYPE_COLORS.Snippet,
   },
   {
     label: "Collections",
     value: props.totalCollections,
     icon: FolderOpen,
-    color: "#8b5cf6",
+    color: ITEM_TYPE_COLORS.Prompt,
   },
   {
     label: "Favourite Items",
     value: props.favoriteItems,
     icon: Star,
-    color: "#f97316",
+    color: ITEM_TYPE_COLORS.Command,
   },
   {
     label: "Favourite Collections",
     value: props.favoriteCollections,
     icon: Bookmark,
-    color: "#ec4899",
+    color: ITEM_TYPE_COLORS.Image,
   },
 ];
 

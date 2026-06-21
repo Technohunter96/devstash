@@ -298,3 +298,14 @@ Not Started
 - `NewItemDialog.tsx` — refactored: dialog logic extracted into exported `NewItemDialogContent` (controlled via `open`/`onOpenChange`/`defaultTypeName`); Snippet/Command content field uses `CodeEditor`; default export stays as self-contained TopBar button
 - Created `src/components/dashboard/AddTypeItemButton.tsx` — client component receiving `typeName` and `color` as plain string props; colored outline button opens `NewItemDialogContent` with type pre-selected
 - `/items/[type]/page.tsx` — header row with `AddTypeItemButton` for creatable types (Snippet/Prompt/Command/Note/Link); File/Image pages show no button; type colors defined inline (no client module import)
+
+### 2026-06-21 — Markdown Editor Completed
+
+- Installed `react-markdown` + `remark-gfm` for GitHub Flavored Markdown rendering
+- Created `src/components/dashboard/MarkdownEditor.tsx` — macOS header (same style as CodeEditor), Write/Preview tabs, `useEffect` ref-based auto-resize textarea (min 400px, grows unbounded), Preview renders `react-markdown` with `.markdown-preview` CSS class; readonly mode shows Preview tab only
+- Added `.markdown-preview` CSS to `globals.css` — styled via `@apply` + CSS vars (theme-aware: `text-foreground`, `bg-muted`, `border-border`); code blocks inside markdown hardcoded dark (`#1e1e1e`) intentionally
+- `ItemDrawer.tsx` — Prompt/Note content uses `MarkdownEditor` in both view and edit mode; description textarea gets `ref`-based auto-resize (`[editState.description, isEditMode]` deps — `isEditMode` dep ensures resize fires on edit mode entry); content section rewritten as clean ternary (`isCodeType ? … : isMarkdownType ? … : null`) without dead fallbacks
+- `NewItemDialog.tsx` — Prompt/Note content field uses `MarkdownEditor`; dead fallback `<textarea>` removed from content section
+- `CodeEditor.tsx` — `minHeight` now depends on `readOnly` prop: 80px (view) / 400px (edit); both cap at 400px via `onDidContentSizeChange`
+- `src/lib/icon-map.ts` — added `ITEM_TYPE_COLORS` as single source of truth for all 7 system type colors
+- `NewItemDialog`, `items/[type]/page`, `StatsCards`, `ProfileStats` — all hardcoded item type hex colors replaced with `ITEM_TYPE_COLORS` references

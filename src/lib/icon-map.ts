@@ -18,3 +18,13 @@ export const ICON_MAP: Record<string, LucideIcon | undefined> = {
   File,
   Image,
 };
+
+export const ITEM_TYPE_COLORS: Record<string, string> = {
+  Snippet: "#3b82f6",
+  Prompt:  "#8b5cf6",
+  Command: "#f97316",
+  Note:    "#fde047",
+  Link:    "#10b981",
+  File:    "#6b7280",
+  Image:   "#ec4899",
+};

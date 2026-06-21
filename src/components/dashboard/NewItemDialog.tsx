@@ -12,16 +12,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ICON_MAP } from "@/lib/icon-map";
+import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/icon-map";
 import { createItem } from "@/actions/items";
 import CodeEditor from "./CodeEditor";
+import MarkdownEditor from "./MarkdownEditor";
 
 const CREATABLE_TYPES = [
-  { name: "Snippet" as const, icon: "Code", color: "#3b82f6" },
-  { name: "Prompt" as const, icon: "Sparkles", color: "#8b5cf6" },
-  { name: "Command" as const, icon: "Terminal", color: "#f97316" },
-  { name: "Note" as const, icon: "StickyNote", color: "#fde047" },
-  { name: "Link" as const, icon: "Link", color: "#10b981" },
+  { name: "Snippet" as const, icon: "Code",      color: ITEM_TYPE_COLORS.Snippet },
+  { name: "Prompt"  as const, icon: "Sparkles",  color: ITEM_TYPE_COLORS.Prompt },
+  { name: "Command" as const, icon: "Terminal",  color: ITEM_TYPE_COLORS.Command },
+  { name: "Note"    as const, icon: "StickyNote", color: ITEM_TYPE_COLORS.Note },
+  { name: "Link"    as const, icon: "Link",       color: ITEM_TYPE_COLORS.Link },
 ] as const;
 
 export type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
@@ -29,6 +30,7 @@ export type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
 const CONTENT_TYPES: TypeName[] = ["Snippet", "Prompt", "Command", "Note"];
 const LANGUAGE_TYPES: TypeName[] = ["Snippet", "Command"];
 const CODE_TYPES: TypeName[] = ["Snippet", "Command"];
+const MARKDOWN_TYPES: TypeName[] = ["Prompt", "Note"];
 
 interface FormState {
   typeName: TypeName;
@@ -71,6 +73,7 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
   const showLanguage = LANGUAGE_TYPES.includes(form.typeName);
   const showUrl = form.typeName === "Link";
   const isCodeType = CODE_TYPES.includes(form.typeName);
+  const isMarkdownType = MARKDOWN_TYPES.includes(form.typeName);
   const canSave = form.title.trim().length > 0 && (!showUrl || form.url.trim().length > 0);
 
   const field = (key: keyof FormState) => ({
@@ -186,18 +189,17 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
           {showContent && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Content</label>
-              {isCodeType ? (
+              {isCodeType && (
                 <CodeEditor
                   value={form.content}
                   language={form.language || undefined}
                   onChange={(val) => setForm((s) => ({ ...s, content: val }))}
                 />
-              ) : (
-                <textarea
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none"
-                  placeholder="Paste your content here"
-                  {...field("content")}
-                  rows={5}
+              )}
+              {isMarkdownType && (
+                <MarkdownEditor
+                  value={form.content}
+                  onChange={(val) => setForm((s) => ({ ...s, content: val }))}
                 />
               )}
             </div>

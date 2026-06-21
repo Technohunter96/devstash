@@ -5,15 +5,7 @@ import { auth } from "@/auth";
 import { getItemsByType, SLUG_TO_TYPE_NAME } from "@/lib/db/items";
 import ItemCard from "@/components/dashboard/ItemCard";
 import AddTypeItemButton from "@/components/dashboard/AddTypeItemButton";
-
-// Colors for creatable types only — File/Image (Pro) are excluded
-const TYPE_COLOR: Record<string, string> = {
-  Snippet: "#3b82f6",
-  Prompt:  "#8b5cf6",
-  Command: "#f97316",
-  Note:    "#fde047",
-  Link:    "#10b981",
-};
+import { ITEM_TYPE_COLORS } from "@/lib/icon-map";
 
 interface Props {
   params: Promise<{ type: string }>;
@@ -29,7 +21,7 @@ export default async function ItemsTypePage({ params }: Props) {
   const session = await auth();
   const items = await getItemsByType(session!.user!.id, typeName);
 
-  const typeColor = TYPE_COLOR[typeName] ?? null;
+  const typeColor = ITEM_TYPE_COLORS[typeName] ?? null;
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">

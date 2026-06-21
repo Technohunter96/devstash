@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save } from "lucide-react";
 import {
   Sheet,
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
+import MarkdownEditor from "./MarkdownEditor";
 import { cn } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { updateItem, deleteItem } from "@/actions/items";
@@ -63,6 +64,8 @@ const CONTENT_TYPES = ["Snippet", "Prompt", "Command", "Note"];
 const LANGUAGE_TYPES = ["Snippet", "Command"];
 // Fields that use Monaco CodeEditor instead of textarea/pre
 const CODE_TYPES = ["Snippet", "Command"];
+// Fields that use MarkdownEditor instead of textarea/pre
+const MARKDOWN_TYPES = ["Prompt", "Note"];
 
 interface EditState {
   title: string;
@@ -101,11 +104,20 @@ function ItemDrawerBody({
   const [editState, setEditState] = useState<EditState>(() => itemToEditState(item));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = descriptionRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [editState.description, isEditMode]);
 
   const showContent = CONTENT_TYPES.includes(item.itemType.name);
   const showLanguage = LANGUAGE_TYPES.includes(item.itemType.name);
   const showUrl = item.contentType === "URL";
   const isCodeType = CODE_TYPES.includes(item.itemType.name);
+  const isMarkdownType = MARKDOWN_TYPES.includes(item.itemType.name);
 
   const handleCopy = async () => {
     if (!copyableContent) return;
@@ -294,10 +306,10 @@ function ItemDrawerBody({
           <SectionLabel>Description</SectionLabel>
           {isEditMode ? (
             <textarea
-              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none min-h-[60px]"
+              ref={descriptionRef}
+              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none overflow-hidden min-h-[36px]"
               placeholder="Description (optional)"
               {...field("description")}
-              rows={3}
             />
           ) : (
             item.description && (
@@ -317,14 +329,12 @@ function ItemDrawerBody({
                   language={editState.language || undefined}
                   onChange={(val) => setEditState((s) => ({ ...s, content: val }))}
                 />
-              ) : (
-                <textarea
-                  className="w-full bg-background border border-border rounded-md p-3 text-xs font-mono leading-relaxed outline-none focus:border-primary resize-none min-h-[120px]"
-                  placeholder="Content"
-                  {...field("content")}
-                  rows={6}
+              ) : isMarkdownType ? (
+                <MarkdownEditor
+                  value={editState.content}
+                  onChange={(val) => setEditState((s) => ({ ...s, content: val }))}
                 />
-              )
+              ) : null
             ) : (
               isCodeType ? (
                 <CodeEditor
@@ -332,11 +342,12 @@ function ItemDrawerBody({
                   language={item.language ?? undefined}
                   readOnly
                 />
-              ) : (
-                <pre className="text-xs font-mono bg-background border border-border rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                  {item.content}
-                </pre>
-              )
+              ) : isMarkdownType ? (
+                <MarkdownEditor
+                  value={item.content ?? ""}
+                  readOnly
+                />
+              ) : null
             )}
           </section>
         )}
