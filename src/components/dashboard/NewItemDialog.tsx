@@ -4,25 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, File } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/icon-map";
 import { createItem } from "@/actions/items";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
+import FileUpload, { type UploadResult } from "./FileUpload";
 
+// All creatable item types — File/Image are Pro-only but enabled during development
 const CREATABLE_TYPES = [
-  { name: "Snippet" as const, icon: "Code",      color: ITEM_TYPE_COLORS.Snippet },
-  { name: "Prompt"  as const, icon: "Sparkles",  color: ITEM_TYPE_COLORS.Prompt },
-  { name: "Command" as const, icon: "Terminal",  color: ITEM_TYPE_COLORS.Command },
-  { name: "Note"    as const, icon: "StickyNote", color: ITEM_TYPE_COLORS.Note },
-  { name: "Link"    as const, icon: "Link",       color: ITEM_TYPE_COLORS.Link },
+  { name: "Snippet" as const, icon: "Code", color: ITEM_TYPE_COLORS.Snippet },
+  { name: "Prompt" as const, icon: "Sparkles", color: ITEM_TYPE_COLORS.Prompt },
+  { name: "Command" as const, icon: "Terminal", color: ITEM_TYPE_COLORS.Command },
+  { name: "Note" as const, icon: "StickyNote", color: ITEM_TYPE_COLORS.Note },
+  { name: "Link" as const, icon: "Link", color: ITEM_TYPE_COLORS.Link },
+  { name: "File" as const, icon: "File", color: ITEM_TYPE_COLORS.File },
+  { name: "Image" as const, icon: "Image", color: ITEM_TYPE_COLORS.Image },
 ] as const;
 
 export type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
@@ -31,6 +30,7 @@ const CONTENT_TYPES: TypeName[] = ["Snippet", "Prompt", "Command", "Note"];
 const LANGUAGE_TYPES: TypeName[] = ["Snippet", "Command"];
 const CODE_TYPES: TypeName[] = ["Snippet", "Command"];
 const MARKDOWN_TYPES: TypeName[] = ["Prompt", "Note"];
+const FILE_TYPES: TypeName[] = ["File", "Image"];
 
 interface FormState {
   typeName: TypeName;
@@ -60,13 +60,19 @@ interface NewItemDialogContentProps {
   defaultTypeName?: TypeName;
 }
 
-export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: NewItemDialogContentProps) {
+export function NewItemDialogContent({
+  open,
+  onOpenChange,
+  defaultTypeName,
+}: NewItemDialogContentProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => ({
     ...DEFAULT_STATE,
     typeName: defaultTypeName ?? DEFAULT_STATE.typeName,
   }));
   const [isSaving, setIsSaving] = useState(false);
+  // Tracks uploaded file metadata for File/Image types
+  const [uploadedFile, setUploadedFile] = useState<UploadResult | null>(null);
 
   const selectedType = CREATABLE_TYPES.find((t) => t.name === form.typeName)!;
   const showContent = CONTENT_TYPES.includes(form.typeName);
@@ -74,7 +80,12 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
   const showUrl = form.typeName === "Link";
   const isCodeType = CODE_TYPES.includes(form.typeName);
   const isMarkdownType = MARKDOWN_TYPES.includes(form.typeName);
-  const canSave = form.title.trim().length > 0 && (!showUrl || form.url.trim().length > 0);
+  const isFileType = FILE_TYPES.includes(form.typeName);
+  // File/Image require an uploaded file; Link requires a URL; others just need a title
+  const canSave =
+    form.title.trim().length > 0 &&
+    (!showUrl || form.url.trim().length > 0) &&
+    (!isFileType || uploadedFile !== null);
 
   const field = (key: keyof FormState) => ({
     value: form[key] as string,
@@ -84,7 +95,10 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
 
   const handleOpenChange = (next: boolean) => {
     onOpenChange(next);
-    if (!next) setForm({ ...DEFAULT_STATE, typeName: defaultTypeName ?? DEFAULT_STATE.typeName });
+    if (!next) {
+      setForm({ ...DEFAULT_STATE, typeName: defaultTypeName ?? DEFAULT_STATE.typeName });
+      setUploadedFile(null);
+    }
   };
 
   const handleSubmit = async () => {
@@ -103,6 +117,10 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
         url: form.url || null,
         language: form.language || null,
         tags,
+        // Attach R2 file metadata for File/Image types
+        fileUrl: uploadedFile?.fileUrl ?? null,
+        fileName: uploadedFile?.fileName ?? null,
+        fileSize: uploadedFile?.fileSize ?? null,
       });
 
       if (!result.success) {
@@ -126,14 +144,14 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg transition-all duration-200">
         <DialogHeader>
           <DialogTitle>New Item</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           {/* Type selector */}
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
             {CREATABLE_TYPES.map((type) => {
               const Icon = ICON_MAP[type.icon] ?? File;
               const isSelected = form.typeName === type.name;
@@ -150,11 +168,18 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
                   )}
                   style={
                     isSelected
-                      ? { backgroundColor: type.color + "20", color: type.color, borderColor: type.color + "40" }
+                      ? {
+                          backgroundColor: type.color + "20",
+                          color: type.color,
+                          borderColor: type.color + "40",
+                        }
                       : undefined
                   }
                 >
-                  <Icon className="w-4 h-4" style={isSelected ? { color: type.color } : undefined} />
+                  <Icon
+                    className="w-4 h-4"
+                    style={isSelected ? { color: type.color } : undefined}
+                  />
                   {type.name}
                 </button>
               );
@@ -213,6 +238,21 @@ export function NewItemDialogContent({ open, onOpenChange, defaultTypeName }: Ne
                 className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-3 py-2 focus:border-primary"
                 placeholder="e.g. typescript, bash"
                 {...field("language")}
+              />
+            </div>
+          )}
+
+          {/* File upload for File/Image types */}
+          {isFileType && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {form.typeName === "Image" ? "Image" : "File"}{" "}
+                <span className="text-destructive">*</span>
+              </label>
+              <FileUpload
+                typeName={form.typeName as "File" | "Image"}
+                value={uploadedFile}
+                onChange={setUploadedFile}
               />
             </div>
           )}

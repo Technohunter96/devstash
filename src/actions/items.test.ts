@@ -84,7 +84,7 @@ describe("createItem", () => {
 
   it("returns validation error for invalid typeName", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName: "File" });
+    const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName: "InvalidType" });
     expect(result.success).toBe(false);
   });
 
@@ -152,23 +152,23 @@ describe("deleteItem", () => {
     expect(mockDeleteItemById).not.toHaveBeenCalled();
   });
 
-  it("returns item not found when deleteItemById returns false", async () => {
+  it("returns item not found when deleteItemById returns not deleted", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockDeleteItemById.mockResolvedValue(false);
+    mockDeleteItemById.mockResolvedValue({ deleted: false, fileUrl: null });
     const result = await deleteItem("item-1");
     expect(result).toEqual({ success: false, error: "Item not found" });
   });
 
-  it("returns success when deleteItemById returns true", async () => {
+  it("returns success when deleteItemById returns deleted", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockDeleteItemById.mockResolvedValue(true);
+    mockDeleteItemById.mockResolvedValue({ deleted: true, fileUrl: null });
     const result = await deleteItem("item-1");
     expect(result).toEqual({ success: true });
   });
 
   it("passes userId and itemId to deleteItemById", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-42" } });
-    mockDeleteItemById.mockResolvedValue(true);
+    mockDeleteItemById.mockResolvedValue({ deleted: true, fileUrl: null });
     await deleteItem("item-99");
     expect(mockDeleteItemById).toHaveBeenCalledWith("user-42", "item-99");
   });

@@ -127,6 +127,10 @@ export interface CreateItemData {
   url: string | null;
   language: string | null;
   tags: string[];
+  // File/Image upload fields — set after uploading to R2
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 }
 
 export interface UpdateItemData {
@@ -216,7 +220,13 @@ export async function createItemInDb(
     select: { id: true, name: true, icon: true, color: true },
   });
 
-  const contentType = data.typeName === "Link" ? ("URL" as const) : ("TEXT" as const);
+  // Determine content mode based on item type
+  const FILE_TYPES = ["File", "Image"];
+  const contentType = FILE_TYPES.includes(data.typeName)
+    ? ("FILE" as const)
+    : data.typeName === "Link"
+      ? ("URL" as const)
+      : ("TEXT" as const);
 
   const created = await prisma.item.create({
     data: {
@@ -224,6 +234,9 @@ export async function createItemInDb(
       description: data.description,
       content: data.content,
       url: data.url,
+      fileUrl: data.fileUrl ?? null,
+      fileName: data.fileName ?? null,
+      fileSize: data.fileSize ?? null,
       language: data.language,
       contentType,
       userId,
@@ -259,12 +272,19 @@ export async function createItemInDb(
   return { ...created, collections: [] };
 }
 
+// Deletes an item and returns its fileUrl (if any) for R2 cleanup
 export async function deleteItemById(
   userId: string,
   itemId: string
-): Promise<boolean> {
-  const result = await prisma.item.deleteMany({ where: { id: itemId, userId } });
-  return result.count > 0;
+): Promise<{ deleted: boolean; fileUrl: string | null }> {
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { fileUrl: true },
+  });
+  if (!item) return { deleted: false, fileUrl: null };
+
+  await prisma.item.delete({ where: { id: itemId } });
+  return { deleted: true, fileUrl: item.fileUrl };
 }
 
 export async function getItemById(

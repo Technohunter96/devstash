@@ -3,9 +3,11 @@
 import { z } from "zod";
 import { auth } from "@/auth";
 import { createItemInDb, updateItemById, deleteItemById } from "@/lib/db/items";
+import { deleteFromR2 } from "@/lib/r2";
 import type { ItemDetail, CreateItemData } from "@/lib/db/items";
 
-const CREATABLE_TYPE_NAMES = ["Snippet", "Prompt", "Command", "Note", "Link"] as const;
+// All item types that can be created — File/Image are Pro-only but enabled during development
+const CREATABLE_TYPE_NAMES = ["Snippet", "Prompt", "Command", "Note", "Link", "File", "Image"] as const;
 
 const CreateItemSchema = z.object({
   typeName: z.enum(CREATABLE_TYPE_NAMES),
@@ -25,6 +27,10 @@ const CreateItemSchema = z.object({
     .array(z.string().trim())
     .transform((arr) => arr.filter(Boolean))
     .default([]),
+  // File/Image upload fields — populated after R2 upload completes
+  fileUrl: z.string().url().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  fileSize: z.number().int().positive().nullable().optional(),
 });
 
 type CreateItemResult =
@@ -50,6 +56,9 @@ export async function createItem(formData: unknown): Promise<CreateItemResult> {
     url: parsed.data.url ?? null,
     language: parsed.data.language ?? null,
     tags: parsed.data.tags,
+    fileUrl: parsed.data.fileUrl ?? null,
+    fileName: parsed.data.fileName ?? null,
+    fileSize: parsed.data.fileSize ?? null,
   });
 
   return { success: true, data: item };
@@ -117,9 +126,18 @@ export async function deleteItem(itemId: string): Promise<DeleteItemResult> {
     return { success: false, error: "Unauthorized" };
   }
 
-  const deleted = await deleteItemById(session.user.id, itemId);
+  const { deleted, fileUrl } = await deleteItemById(session.user.id, itemId);
   if (!deleted) {
     return { success: false, error: "Item not found" };
+  }
+
+  // Clean up the file from R2 if item had one attached
+  if (fileUrl) {
+    try {
+      await deleteFromR2(fileUrl);
+    } catch {
+      // File cleanup is best-effort — don't fail the delete if R2 is unreachable
+    }
   }
 
   return { success: true };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save } from "lucide-react";
+import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save, Download, FileIcon, ImageIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -15,11 +15,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
+import FileUpload, { type UploadResult } from "./FileUpload";
 import { cn } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { updateItem, deleteItem } from "@/actions/items";
 import { toast } from "sonner";
 import type { ItemDetail } from "@/lib/db/items";
+
+// Formats bytes into human-readable size
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 interface ItemDrawerProps {
   isOpen: boolean;
@@ -66,6 +74,8 @@ const LANGUAGE_TYPES = ["Snippet", "Command"];
 const CODE_TYPES = ["Snippet", "Command"];
 // Fields that use MarkdownEditor instead of textarea/pre
 const MARKDOWN_TYPES = ["Prompt", "Note"];
+// Fields that use FileUpload component
+const FILE_TYPES = ["File", "Image"];
 
 interface EditState {
   title: string;
@@ -104,6 +114,8 @@ function ItemDrawerBody({
   const [editState, setEditState] = useState<EditState>(() => itemToEditState(item));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // Tracks replacement file in edit mode for File/Image types
+  const [uploadedFile, setUploadedFile] = useState<UploadResult | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -118,6 +130,8 @@ function ItemDrawerBody({
   const showUrl = item.contentType === "URL";
   const isCodeType = CODE_TYPES.includes(item.itemType.name);
   const isMarkdownType = MARKDOWN_TYPES.includes(item.itemType.name);
+  const isFileType = FILE_TYPES.includes(item.itemType.name);
+  const isImageType = item.itemType.name === "Image";
 
   const handleCopy = async () => {
     if (!copyableContent) return;
@@ -287,15 +301,28 @@ function ItemDrawerBody({
                 Edit
               </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete item"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
-              <Trash2 />
-            </Button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Download button for File/Image types — icon-only next to delete */}
+              {isFileType && item.fileUrl && (
+                <a
+                  href={`/api/files/${item.id}`}
+                  download
+                  aria-label="Download file"
+                  className="inline-flex items-center justify-center rounded-md h-7 w-7 cursor-pointer text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
+              )}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Delete item"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
           </>
         )}
       </div>
@@ -396,6 +423,51 @@ function ItemDrawerBody({
                   {item.url}
                 </span>
               </a>
+            )}
+          </section>
+        )}
+
+        {/* File/Image preview or info */}
+        {isFileType && (
+          <section>
+            <SectionLabel>{isImageType ? "Image" : "File"}</SectionLabel>
+            {isEditMode ? (
+              <FileUpload
+                typeName={item.itemType.name as "File" | "Image"}
+                value={
+                  uploadedFile ?? (item.fileUrl
+                    ? { fileUrl: item.fileUrl, fileName: item.fileName ?? "file", fileSize: item.fileSize ?? 0 }
+                    : null)
+                }
+                onChange={setUploadedFile}
+              />
+            ) : item.fileUrl ? (
+              isImageType ? (
+                // Image preview with aspect ratio container
+                <div className="overflow-hidden rounded-lg border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.fileUrl}
+                    alt={item.title}
+                    className="w-full object-contain max-h-[400px]"
+                  />
+                </div>
+              ) : (
+                // File info card with name, size, and download link
+                <div className="flex items-center gap-3 rounded-md border border-border p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
+                    <FileIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{item.fileName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.fileSize ? formatBytes(item.fileSize) : "Unknown size"}
+                    </p>
+                  </div>
+                </div>
+              )
+            ) : (
+              <p className="text-sm text-muted-foreground">No file attached</p>
             )}
           </section>
         )}

@@ -309,3 +309,18 @@ Not Started
 - `CodeEditor.tsx` — `minHeight` now depends on `readOnly` prop: 80px (view) / 400px (edit); both cap at 400px via `onDidContentSizeChange`
 - `src/lib/icon-map.ts` — added `ITEM_TYPE_COLORS` as single source of truth for all 7 system type colors
 - `NewItemDialog`, `items/[type]/page`, `StatsCards`, `ProfileStats` — all hardcoded item type hex colors replaced with `ITEM_TYPE_COLORS` references
+
+### 2026-06-24 — File & Image Upload with Cloudflare R2 Completed
+
+- Installed `@aws-sdk/client-s3`; created `src/lib/r2.ts` — R2 client with `uploadToR2`, `deleteFromR2`, `validateFile`, `generateR2Key`; exports `UPLOAD_CONSTRAINTS` (Image: 5 MB, File: 10 MB) with allowed MIME types and extensions
+- Created `POST /api/upload` — auth-guarded multipart upload, server-side validation, returns `{ fileUrl, fileName, fileSize }`
+- Created `GET /api/files/[id]` — download proxy, streams file from R2 with `Content-Disposition: attachment` header, auth + userId scoping
+- Created `src/components/dashboard/FileUpload.tsx` — drag-and-drop with click-to-browse, XHR upload progress bar, image thumbnail or file info preview, remove button; accepts `typeName` for constraint selection
+- `NewItemDialog.tsx` — File/Image added to type selector (7 types, `grid-cols-4 sm:grid-cols-7`); `FileUpload` shown for file types instead of content editor; `canSave` requires uploaded file; `transition-all duration-200` for smooth type switching; scrollable body `max-h-[70vh]`
+- `src/actions/items.ts` — File/Image added to `CREATABLE_TYPE_NAMES`; `CreateItemSchema` extended with `fileUrl`, `fileName`, `fileSize`; `deleteItem` calls `deleteFromR2` for R2 cleanup (best-effort)
+- `src/lib/db/items.ts` — `CreateItemData` extended with file fields; `createItemInDb` sets `contentType: FILE` for File/Image types; `deleteItemById` returns `{ deleted, fileUrl }` for R2 cleanup
+- `ItemDrawer.tsx` — image preview (`<img>` with `object-contain`, max 400px) for Image type; file info card (icon, name, size) for File type; download button (icon-only) next to delete; edit mode shows `FileUpload` for file replacement
+- `CodeEditor.tsx` — `minHeight` changed from `readOnly ? 80 : 400` to flat `80` for all modes
+- `MarkdownEditor.tsx` — Write tab unified with Preview: `minHeight: 80`, `maxHeight: 400`, `overflowY: auto`
+- 16 unit tests for `validateFile` and `generateR2Key` in `src/lib/r2.test.ts`
+- Existing `deleteItem` tests updated for new `{ deleted, fileUrl }` return type

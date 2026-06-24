@@ -20,7 +20,7 @@ export default function MarkdownEditor({ value, readOnly = false, onChange }: Ma
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.max(400, el.scrollHeight)}px`;
+    el.style.height = `${Math.max(80, Math.min(400, el.scrollHeight))}px`;
   }, [value]);
 
   const handleCopy = async () => {
@@ -91,7 +91,7 @@ export default function MarkdownEditor({ value, readOnly = false, onChange }: Ma
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           className="w-full bg-background text-foreground text-xs font-mono leading-relaxed outline-none resize-none p-3 block"
-          style={{ minHeight: 400, overflowY: "hidden" }}
+          style={{ minHeight: 80, maxHeight: 400, overflowY: "auto" }}
           placeholder="Write markdown…"
           spellCheck={false}
         />
