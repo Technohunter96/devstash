@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save, Download, FileIcon, ImageIcon } from "lucide-react";
+import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save, Download, FileIcon, ImageIcon, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -116,6 +116,8 @@ function ItemDrawerBody({
   const [isDeleting, setIsDeleting] = useState(false);
   // Tracks replacement file in edit mode for File/Image types
   const [uploadedFile, setUploadedFile] = useState<UploadResult | null>(null);
+  // Fullscreen image preview dialog
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -301,28 +303,15 @@ function ItemDrawerBody({
                 Edit
               </Button>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* Download button for File/Image types — icon-only next to delete */}
-              {isFileType && item.fileUrl && (
-                <a
-                  href={`/api/files/${item.id}`}
-                  download
-                  aria-label="Download file"
-                  className="inline-flex items-center justify-center rounded-md h-7 w-7 cursor-pointer text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                </a>
-              )}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Delete item"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Delete item"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 />
+            </Button>
           </>
         )}
       </div>
@@ -443,17 +432,32 @@ function ItemDrawerBody({
               />
             ) : item.fileUrl ? (
               isImageType ? (
-                // Image preview with aspect ratio container
-                <div className="overflow-hidden rounded-lg border border-border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.fileUrl}
-                    alt={item.title}
-                    className="w-full object-contain max-h-[400px]"
-                  />
+                // Image preview with click-to-expand and download button
+                <div>
+                  <div
+                    className="overflow-hidden rounded-lg border border-border cursor-pointer"
+                    onClick={() => setImagePreviewOpen(true)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.fileUrl}
+                      alt={item.title}
+                      className="w-full object-contain max-h-[400px]"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <a
+                      href={`/api/files/${item.id}`}
+                      download
+                      className="inline-flex items-center gap-1.5 mt-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download
+                    </a>
+                  </div>
                 </div>
               ) : (
-                // File info card with name, size, and download link
+                // File info card with name, size, and download button
                 <div className="flex items-center gap-3 rounded-md border border-border p-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
                     <FileIcon className="h-5 w-5 text-muted-foreground" />
@@ -464,6 +468,14 @@ function ItemDrawerBody({
                       {item.fileSize ? formatBytes(item.fileSize) : "Unknown size"}
                     </p>
                   </div>
+                  <a
+                    href={`/api/files/${item.id}`}
+                    download
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm cursor-pointer hover:bg-muted transition-colors shrink-0"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
                 </div>
               )
             ) : (
@@ -523,7 +535,51 @@ function ItemDrawerBody({
             </ul>
           </section>
         )}
+        {/* Details — created/updated dates */}
+        {!isEditMode && (
+          <section>
+            <SectionLabel>
+              <span className="flex items-center gap-1.5">
+                <Info className="w-3 h-3" />
+                Details
+              </span>
+            </SectionLabel>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Created</span>
+                <span>{new Date(item.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Updated</span>
+                <span>{new Date(item.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
+
+      {/* Fullscreen image preview — click image to open, click backdrop to close */}
+      {isImageType && item.fileUrl && imagePreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 cursor-pointer"
+          onClick={() => setImagePreviewOpen(false)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/70 hover:text-white cursor-pointer transition-colors"
+            onClick={() => setImagePreviewOpen(false)}
+            aria-label="Close preview"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.fileUrl}
+            alt={item.title}
+            className="max-h-[90vh] max-w-[90vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <ItemDeleteDialog
         open={deleteDialogOpen}

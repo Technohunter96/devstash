@@ -28,6 +28,7 @@ export interface DashboardItem {
   contentType: "TEXT" | "URL" | "FILE";
   content: string | null;
   url: string | null;
+  fileUrl: string | null;
   language: string | null;
   isFavorite: boolean;
   isPinned: boolean;
@@ -46,6 +47,7 @@ const itemSelect = {
   contentType: true,
   content: true,
   url: true,
+  fileUrl: true,
   language: true,
   isFavorite: true,
   isPinned: true,
