@@ -25,6 +25,6 @@ export const ITEM_TYPE_COLORS: Record<string, string> = {
   Command: "#f97316",
   Note:    "#fde047",
   Link:    "#10b981",
-  File:    "#6b7280",
+  File:    "#9ca3af",
   Image:   "#ec4899",
 };
