@@ -1,18 +1,28 @@
-# Current Feature
+# Current Feature — Image Gallery View
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
 <!-- What does success look like? -->
 
+- Image thumbnail card replaces the regular `ItemCard` on the `/items/images` page
+- Image grid/gallery uses 3 columns
+- Thumbnails display with 16:9 aspect ratio (`aspect-video`)
+- Images use `object-cover` to fill the card (may crop edges)
+- Subtle hover zoom effect: 5% scale with 300ms transition
+
 ## Notes
 
 <!-- Any extra notes -->
+
+- Only affects the `/items/images` route — other item type pages stay unchanged
+- Image items already have `fileUrl` stored in R2; use that as `<img src>`
+- Drawer still opens on click (same as regular `ItemCard`)
 
 ## History
 

@@ -52,10 +52,7 @@ export default function ItemCard({ item }: { item: Item }) {
     >
       <CardContent className="flex items-start gap-3 px-4 py-3">
         <div className="flex flex-col items-center gap-1 shrink-0 w-12">
-          <div
-            className="rounded-md p-1.5"
-            style={{ backgroundColor: item.itemType.color + "20" }}
-          >
+          <div className="rounded-md p-1.5" style={{ backgroundColor: item.itemType.color + "20" }}>
             <Icon className="w-4 h-4" style={{ color: item.itemType.color }} />
           </div>
           <span
@@ -67,10 +64,8 @@ export default function ItemCard({ item }: { item: Item }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            {item.isPinned && (
-              <Pin className="w-3 h-3 text-muted-foreground shrink-0" />
-            )}
-            <span className="font-medium text-sm truncate">{item.title}</span>
+            {item.isPinned && <Pin className="w-3 h-3 text-muted-foreground shrink-0" />}
+            <span className="font-medium text-base truncate">{item.title}</span>
             {item.isFavorite && (
               <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0" />
             )}
@@ -81,9 +76,7 @@ export default function ItemCard({ item }: { item: Item }) {
             )}
           </div>
           {item.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-              {item.description}
-            </p>
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
           )}
         </div>
       </CardContent>
