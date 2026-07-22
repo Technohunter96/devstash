@@ -1,30 +1,18 @@
-# Current Feature — File List View
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- What does success look like? -->
 
-- `/items/files` displays as a single-column list (Google Drive / Dropbox style) instead of a grid
-- Each row shows: file icon (by extension), file name, file size, upload date, and a download button
-- Row has hover highlight
-- Clicking a row opens the ItemDrawer
-- Download button triggers direct download without opening the drawer (`stopPropagation`)
-- Responsive: info stacks vertically on mobile
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Only affects `/items/files` — all other item type pages stay unchanged
-- File items already have `fileUrl`, `fileName`, `fileSize` stored; use those fields
-- Download goes through `/api/files/[id]` (existing proxy endpoint)
-- File icon should reflect the extension (e.g. PDF, ZIP, image, etc.)
 
 ## History
 
@@ -344,3 +332,10 @@ In Progress
 - `/items/[type]/page.tsx` — renders `ImageCard` instead of `ItemCard` when `typeName === "Image"`; other types unchanged
 - `ItemDrawer.tsx` — image preview clickable to open fullscreen lightbox (black backdrop, X to close); download link moved below image preview and alongside file card; Details section added at bottom showing created/updated dates
 - `ItemCard.tsx` — title font size changed from `text-sm` to `text-base`
+
+### 2026-07-23 — File List View Completed
+
+- Created `src/components/dashboard/FileListItem.tsx` — single-column list row with file type icon (by extension: image/code/archive/document/generic), title, original filename, size, upload date, download button (`stopPropagation`); info columns hidden on mobile
+- `DashboardItem` interface and `itemSelect` extended with `fileName`, `fileSize`, `createdAt`
+- `/items/[type]/page.tsx` — renders `FileListItem` list (`flex-col gap-2`) for File type; Image and other types unchanged
+- `ITEM_TYPE_COLORS["File"]` updated from `#6b7280` to `#9ca3af` — lighter grey, visually distinct from disabled state on dark background
