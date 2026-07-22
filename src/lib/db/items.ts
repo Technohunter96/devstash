@@ -29,10 +29,13 @@ export interface DashboardItem {
   content: string | null;
   url: string | null;
   fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
   language: string | null;
   isFavorite: boolean;
   isPinned: boolean;
   lastUsedAt: Date | null;
+  createdAt: Date;
   itemType: {
     name: string;
     icon: string;
@@ -48,10 +51,13 @@ const itemSelect = {
   content: true,
   url: true,
   fileUrl: true,
+  fileName: true,
+  fileSize: true,
   language: true,
   isFavorite: true,
   isPinned: true,
   lastUsedAt: true,
+  createdAt: true,
   itemType: {
     select: { name: true, icon: true, color: true },
   },

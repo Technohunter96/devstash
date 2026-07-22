@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getItemsByType, SLUG_TO_TYPE_NAME } from "@/lib/db/items";
 import ItemCard from "@/components/dashboard/ItemCard";
 import ImageCard from "@/components/dashboard/ImageCard";
+import FileListItem from "@/components/dashboard/FileListItem";
 import AddTypeItemButton from "@/components/dashboard/AddTypeItemButton";
 import { ITEM_TYPE_COLORS } from "@/lib/icon-map";
 
@@ -42,6 +43,12 @@ export default async function ItemsTypePage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item) => (
             <ImageCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : typeName === "File" ? (
+        <div className="flex flex-col gap-2">
+          {items.map((item) => (
+            <FileListItem key={item.id} item={item} />
           ))}
         </div>
       ) : (

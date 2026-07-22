@@ -1,4 +1,4 @@
-# Current Feature — Image Gallery View
+# Current Feature — File List View
 
 ## Status
 
@@ -10,19 +10,21 @@ In Progress
 
 <!-- What does success look like? -->
 
-- Image thumbnail card replaces the regular `ItemCard` on the `/items/images` page
-- Image grid/gallery uses 3 columns
-- Thumbnails display with 16:9 aspect ratio (`aspect-video`)
-- Images use `object-cover` to fill the card (may crop edges)
-- Subtle hover zoom effect: 5% scale with 300ms transition
+- `/items/files` displays as a single-column list (Google Drive / Dropbox style) instead of a grid
+- Each row shows: file icon (by extension), file name, file size, upload date, and a download button
+- Row has hover highlight
+- Clicking a row opens the ItemDrawer
+- Download button triggers direct download without opening the drawer (`stopPropagation`)
+- Responsive: info stacks vertically on mobile
 
 ## Notes
 
 <!-- Any extra notes -->
 
-- Only affects the `/items/images` route — other item type pages stay unchanged
-- Image items already have `fileUrl` stored in R2; use that as `<img src>`
-- Drawer still opens on click (same as regular `ItemCard`)
+- Only affects `/items/files` — all other item type pages stay unchanged
+- File items already have `fileUrl`, `fileName`, `fileSize` stored; use those fields
+- Download goes through `/api/files/[id]` (existing proxy endpoint)
+- File icon should reflect the extension (e.g. PDF, ZIP, image, etc.)
 
 ## History
 
@@ -334,3 +336,11 @@ In Progress
 - `MarkdownEditor.tsx` — Write tab unified with Preview: `minHeight: 80`, `maxHeight: 400`, `overflowY: auto`
 - 16 unit tests for `validateFile` and `generateR2Key` in `src/lib/r2.test.ts`
 - Existing `deleteItem` tests updated for new `{ deleted, fileUrl }` return type
+
+### 2026-07-22 — Image Gallery View Completed
+
+- Created `src/components/dashboard/ImageCard.tsx` — thumbnail card with `aspect-video`, `object-cover`, hover zoom (5% scale / 300ms), always-visible title overlay (`bg-black/75`), pin and favourite badges top-right, placeholder icon when `fileUrl` is null
+- `DashboardItem` interface and `itemSelect` in `src/lib/db/items.ts` extended with `fileUrl`
+- `/items/[type]/page.tsx` — renders `ImageCard` instead of `ItemCard` when `typeName === "Image"`; other types unchanged
+- `ItemDrawer.tsx` — image preview clickable to open fullscreen lightbox (black backdrop, X to close); download link moved below image preview and alongside file card; Details section added at bottom showing created/updated dates
+- `ItemCard.tsx` — title font size changed from `text-sm` to `text-base`
