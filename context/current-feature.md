@@ -210,6 +210,15 @@ Not Started
 - `sign-in-form.tsx` — toasts for `?reset=1` (password updated) and `?error=InvalidToken` (invalid verification link); strips query params via `router.replace` after firing
 - `proxy.ts` — added `/profile` and `/profile/:path*` to middleware matcher
 
+### 2026-05-08 — Rate Limiting for Auth Completed
+
+- Created `src/lib/rate-limit.ts` — lazy Redis singleton, `checkRateLimit(type, identifier)`, `rateLimitResponse()`, `formatRetryTime()` helpers; fail open if Upstash unavailable
+- Added `POST /api/auth/login-ratelimit` — IP-only pre-check (5 attempts / 15 min); prevents account lockout attacks from email enumeration
+- Protected `register` (3/1h), `forgot-password` (3/1h), `reset-password` (5/15min), `resend-verification` (3/15min by IP+email) — all return 429 with `Retry-After` header and formatted retry time
+- `sign-in-form.tsx` calls `/api/auth/login-ratelimit` before `signIn()`; shows descriptive error with retry time on 429
+- `forgot-password-form.tsx` and `resend-verification-button.tsx` updated to display API error message instead of hardcoded fallback
+- Collapsed sidebar user menu fixed: icon-only dropdown (`User`, `LogOut`) positioned `left-full` outside the 60px sidebar
+
 ### 2026-05-09 — Items List View Completed
 
 - Created dynamic route `/items/[type]` (snippets, prompts, commands, notes, links, files, images)
@@ -222,15 +231,6 @@ Not Started
 - `lastUsedAt @default(now())` added to schema via migration — new items always have a timestamp
 - ItemCard redesigned: description below title, type name + icon as fixed-width (`w-12`) left column, badge removed from text area
 - Card gap increased: `gap-3` in dashboard lists, `gap-4` on items page grid
-
-### 2026-05-08 — Rate Limiting for Auth Completed
-
-- Created `src/lib/rate-limit.ts` — lazy Redis singleton, `checkRateLimit(type, identifier)`, `rateLimitResponse()`, `formatRetryTime()` helpers; fail open if Upstash unavailable
-- Added `POST /api/auth/login-ratelimit` — IP-only pre-check (5 attempts / 15 min); prevents account lockout attacks from email enumeration
-- Protected `register` (3/1h), `forgot-password` (3/1h), `reset-password` (5/15min), `resend-verification` (3/15min by IP+email) — all return 429 with `Retry-After` header and formatted retry time
-- `sign-in-form.tsx` calls `/api/auth/login-ratelimit` before `signIn()`; shows descriptive error with retry time on 429
-- `forgot-password-form.tsx` and `resend-verification-button.tsx` updated to display API error message instead of hardcoded fallback
-- Collapsed sidebar user menu fixed: icon-only dropdown (`User`, `LogOut`) positioned `left-full` outside the 60px sidebar
 
 ### 2026-05-11 — Three-Column Item Grid Completed
 

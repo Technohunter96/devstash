@@ -7,9 +7,8 @@ import { signOut } from "next-auth/react";
 import { Mail, CalendarDays, KeyRound, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeClosed } from "lucide-react";
+import PasswordInput from "@/components/ui/password-input";
 import UserAvatar from "@/components/ui/user-avatar";
 import {
   Dialog,
@@ -115,9 +114,6 @@ function ChangePasswordDialog({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -126,9 +122,6 @@ function ChangePasswordDialog({
     setNewPassword("");
     setConfirmPassword("");
     setError("");
-    setShowCurrent(false);
-    setShowNew(false);
-    setShowConfirm(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -186,24 +179,18 @@ function ChangePasswordDialog({
             id="currentPassword"
             label="Current password"
             value={currentPassword}
-            show={showCurrent}
-            onToggle={() => setShowCurrent((v) => !v)}
             onChange={setCurrentPassword}
           />
           <PasswordField
             id="newPassword"
             label="New password"
             value={newPassword}
-            show={showNew}
-            onToggle={() => setShowNew((v) => !v)}
             onChange={setNewPassword}
           />
           <PasswordField
             id="confirmPassword"
             label="Confirm new password"
             value={confirmPassword}
-            show={showConfirm}
-            onToggle={() => setShowConfirm((v) => !v)}
             onChange={setConfirmPassword}
           />
           {error && <p className="text-destructive text-sm">{error}</p>}
@@ -222,38 +209,22 @@ function PasswordField({
   id,
   label,
   value,
-  show,
-  onToggle,
   onChange,
 }: {
   id: string;
   label: string;
   value: string;
-  show: boolean;
-  onToggle: () => void;
   onChange: (v: string) => void;
 }) {
   return (
     <div className="space-y-1">
       <Label htmlFor={id}>{label}</Label>
-      <div className="relative">
-        <Input
-          id={id}
-          type={show ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="pr-10"
-          required
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-          tabIndex={-1}
-        >
-          {show ? <Eye size={16} /> : <EyeClosed size={16} />}
-        </button>
-      </div>
+      <PasswordInput
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+      />
     </div>
   );
 }

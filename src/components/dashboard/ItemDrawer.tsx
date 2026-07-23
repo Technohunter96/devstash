@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save, Download, FileIcon, ImageIcon, Info } from "lucide-react";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
+import { Star, Pin, Copy, Check, Pencil, Trash2, File, Folder, ExternalLink, X, Save, Download, FileIcon, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -16,18 +17,12 @@ import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
-import { cn } from "@/lib/utils";
+import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
+import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/item-type-constants";
 import { updateItem, deleteItem } from "@/actions/items";
 import { toast } from "sonner";
 import type { ItemDetail } from "@/lib/db/items";
-
-// Formats bytes into human-readable size
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 interface ItemDrawerProps {
   isOpen: boolean;
@@ -66,17 +61,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-medium text-muted-foreground mb-2">{children}</h3>;
 }
 
-// Fields that show Content textarea/editor
-const CONTENT_TYPES = ["Snippet", "Prompt", "Command", "Note"];
-// Fields that show Language input
-const LANGUAGE_TYPES = ["Snippet", "Command"];
-// Fields that use Monaco CodeEditor instead of textarea/pre
-const CODE_TYPES = ["Snippet", "Command"];
-// Fields that use MarkdownEditor instead of textarea/pre
-const MARKDOWN_TYPES = ["Prompt", "Note"];
-// Fields that use FileUpload component
-const FILE_TYPES = ["File", "Image"];
-
 interface EditState {
   title: string;
   description: string;
@@ -108,7 +92,7 @@ function ItemDrawerBody({
 }) {
   const Icon = ICON_MAP[item.itemType.icon] ?? File;
   const copyableContent = item.content ?? item.url;
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editState, setEditState] = useState<EditState>(() => itemToEditState(item));
@@ -135,15 +119,8 @@ function ItemDrawerBody({
   const isFileType = FILE_TYPES.includes(item.itemType.name);
   const isImageType = item.itemType.name === "Image";
 
-  const handleCopy = async () => {
-    if (!copyableContent) return;
-    try {
-      await navigator.clipboard.writeText(copyableContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable
-    }
+  const handleCopy = () => {
+    if (copyableContent) copy(copyableContent);
   };
 
   const handleEdit = () => {
@@ -173,11 +150,7 @@ function ItemDrawerBody({
       });
 
       if (!result.success) {
-        const msg =
-          typeof result.error === "string"
-            ? result.error
-            : Object.values(result.error).flat().join(", ");
-        toast.error(msg);
+        toast.error(extractActionError(result.error));
         return;
       }
 

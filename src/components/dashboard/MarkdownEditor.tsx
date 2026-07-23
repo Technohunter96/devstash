@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Copy, Check } from "lucide-react";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
 interface MarkdownEditorProps {
   value: string;
@@ -13,7 +14,7 @@ interface MarkdownEditorProps {
 
 export default function MarkdownEditor({ value, readOnly = false, onChange }: MarkdownEditorProps) {
   const [tab, setTab] = useState<"write" | "preview">(readOnly ? "preview" : "write");
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -22,16 +23,6 @@ export default function MarkdownEditor({ value, readOnly = false, onChange }: Ma
     el.style.height = "auto";
     el.style.height = `${Math.max(80, Math.min(400, el.scrollHeight))}px`;
   }, [value]);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable
-    }
-  };
 
   return (
     <div className="rounded-md overflow-hidden border border-border">
@@ -70,7 +61,7 @@ export default function MarkdownEditor({ value, readOnly = false, onChange }: Ma
             </div>
           )}
           <button
-            onClick={handleCopy}
+            onClick={() => copy(value)}
             className="cursor-pointer text-[#858585] hover:text-white transition-colors"
             aria-label="Copy content"
             type="button"

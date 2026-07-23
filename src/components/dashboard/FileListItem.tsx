@@ -2,6 +2,7 @@
 
 import { Download, FileText, FileImage, FileCode, FileArchive, File } from "lucide-react";
 import { useItemDrawer } from "./ItemDrawerProvider";
+import { formatBytes } from "@/lib/utils";
 
 interface FileItem {
   id: string;
@@ -28,12 +29,6 @@ function FileTypeIcon({ fileName }: { fileName: string | null }) {
     return <FileText className="w-5 h-5 text-muted-foreground" />;
   }
   return <File className="w-5 h-5 text-muted-foreground" />;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDate(date: Date): string {

@@ -6,7 +6,8 @@ import { Plus, File } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, extractActionError } from "@/lib/utils";
+import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/item-type-constants";
 import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/icon-map";
 import { createItem } from "@/actions/items";
 import CodeEditor from "./CodeEditor";
@@ -25,12 +26,6 @@ const CREATABLE_TYPES = [
 ] as const;
 
 export type TypeName = (typeof CREATABLE_TYPES)[number]["name"];
-
-const CONTENT_TYPES: TypeName[] = ["Snippet", "Prompt", "Command", "Note"];
-const LANGUAGE_TYPES: TypeName[] = ["Snippet", "Command"];
-const CODE_TYPES: TypeName[] = ["Snippet", "Command"];
-const MARKDOWN_TYPES: TypeName[] = ["Prompt", "Note"];
-const FILE_TYPES: TypeName[] = ["File", "Image"];
 
 interface FormState {
   typeName: TypeName;
@@ -124,11 +119,7 @@ export function NewItemDialogContent({
       });
 
       if (!result.success) {
-        const msg =
-          typeof result.error === "string"
-            ? result.error
-            : Object.values(result.error).flat().join(", ");
-        toast.error(msg);
+        toast.error(extractActionError(result.error));
         return;
       }
 

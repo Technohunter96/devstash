@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Star, Pin, Copy, Check, File } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { useItemDrawer } from "./ItemDrawerProvider";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
 interface Item {
   id: string;
@@ -27,21 +27,14 @@ interface Item {
 }
 
 export default function ItemCard({ item }: { item: Item }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const { open } = useItemDrawer();
   const Icon = ICON_MAP[item.itemType.icon] ?? File;
   const copyableContent = item.content ?? item.url;
 
-  const handleCopy = async (e: React.MouseEvent) => {
+  const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!copyableContent) return;
-    try {
-      await navigator.clipboard.writeText(copyableContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard not available
-    }
+    if (copyableContent) copy(copyableContent);
   };
 
   return (

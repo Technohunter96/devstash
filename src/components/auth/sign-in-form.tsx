@@ -5,10 +5,10 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { signInWithGitHub } from "@/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/ui/password-input";
 import GitHubIcon from "@/components/icons/github-icon";
 
 export default function SignInForm() {
@@ -22,7 +22,6 @@ const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!passwordReset && !invalidToken) return;
@@ -85,25 +84,13 @@ const [email, setEmail] = useState("");
           disabled={loading}
         />
         <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              disabled={loading}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-              tabIndex={-1}
-            >
-              {showPassword ? <Eye size={16} /> : <EyeClosed size={16} />}
-            </button>
-          </div>
+          <PasswordInput
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={loading}
+          />
           <div className="flex justify-end">
             <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
               Forgot password?

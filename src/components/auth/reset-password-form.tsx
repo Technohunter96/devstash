@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeClosed } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/ui/password-input";
 
 export default function ResetPasswordForm() {
   const router = useRouter();
@@ -14,7 +13,6 @@ export default function ResetPasswordForm() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -63,27 +61,14 @@ export default function ResetPasswordForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="New password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-            disabled={loading}
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-            tabIndex={-1}
-          >
-            {showPassword ? <Eye size={16} /> : <EyeClosed size={16} />}
-          </button>
-        </div>
-        <Input
-          type={showPassword ? "text" : "password"}
+        <PasswordInput
+          placeholder="New password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          disabled={loading}
+        />
+        <PasswordInput
           placeholder="Confirm new password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}

@@ -36,7 +36,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <FolderOpen className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-medium text-sm truncate">{collection.name}</span>
+            <span className="font-medium text-base truncate">{collection.name}</span>
           </div>
           {collection.isFavorite && (
             <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 shrink-0 mt-0.5" />

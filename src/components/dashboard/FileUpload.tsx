@@ -7,6 +7,7 @@ import { useCallback, useRef, useState } from "react";
 import { Upload, X, FileIcon, ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UPLOAD_CONSTRAINTS } from "@/lib/r2";
+import { formatBytes } from "@/lib/utils";
 
 // File metadata returned after successful upload
 export interface UploadResult {
@@ -19,13 +20,6 @@ interface FileUploadProps {
   typeName: "File" | "Image";
   value: UploadResult | null;
   onChange: (result: UploadResult | null) => void;
-}
-
-// Formats bytes into human-readable size (KB/MB)
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function FileUpload({
@@ -176,7 +170,7 @@ export default function FileUpload({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{value.fileName}</p>
             <p className="text-xs text-muted-foreground">
-              {formatFileSize(value.fileSize)}
+              {formatBytes(value.fileSize)}
             </p>
           </div>
 
