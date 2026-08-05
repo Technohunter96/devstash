@@ -339,3 +339,12 @@ Not Started
 - `DashboardItem` interface and `itemSelect` extended with `fileName`, `fileSize`, `createdAt`
 - `/items/[type]/page.tsx` — renders `FileListItem` list (`flex-col gap-2`) for File type; Image and other types unchanged
 - `ITEM_TYPE_COLORS["File"]` updated from `#6b7280` to `#9ca3af` — lighter grey, visually distinct from disabled state on dark background
+
+### 2026-08-05 — Collection Create Completed
+
+- Created `src/actions/collections.ts` — `createCollection` server action; `CreateCollectionSchema` Zod validation (name required, description optional), `auth()` + userId, `{ success, data, error }` pattern — mirrors `createItem` in `items.ts`
+- `createCollectionInDb(userId, data)` added to `src/lib/db/collections.ts` — returns `DashboardCollection` with `itemCount: 0`, empty `itemTypes`, `dominantColor: null` for the new collection
+- Created `src/components/dashboard/NewCollectionDialog.tsx` — modal with Name (required) and Description fields; exported `NewCollectionDialogContent` (controlled) plus self-contained default export for the TopBar button, same structure as `NewItemDialog`
+- `TopBar.tsx` — replaced static "New Collection" placeholder button with `<NewCollectionDialog />`
+- On success: dialog closes + resets, `router.refresh()`, success toast; on error: error toast, dialog stays open
+- 8 unit tests for `createCollection` in `src/actions/collections.test.ts`

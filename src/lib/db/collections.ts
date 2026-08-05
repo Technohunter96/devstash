@@ -22,6 +22,35 @@ export interface CollectionStats {
   favoriteCollections: number;
 }
 
+export interface CreateCollectionData {
+  name: string;
+  description: string | null;
+}
+
+export async function createCollectionInDb(
+  userId: string,
+  data: CreateCollectionData
+): Promise<DashboardCollection> {
+  const collection = await prisma.collection.create({
+    data: {
+      name: data.name,
+      description: data.description,
+      userId,
+    },
+  });
+
+  return {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    isFavorite: collection.isFavorite,
+    itemCount: 0,
+    itemTypes: [],
+    dominantColor: null,
+    updatedAt: collection.updatedAt,
+  };
+}
+
 export async function getCollectionStats(userId: string): Promise<CollectionStats> {
   const [totalCollections, favoriteCollections] = await Promise.all([
     prisma.collection.count({ where: { userId } }),
