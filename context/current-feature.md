@@ -348,3 +348,15 @@ Not Started
 - `TopBar.tsx` — replaced static "New Collection" placeholder button with `<NewCollectionDialog />`
 - On success: dialog closes + resets, `router.refresh()`, success toast; on error: error toast, dialog stays open
 - 8 unit tests for `createCollection` in `src/actions/collections.test.ts`
+
+### 2026-08-05 — Add Item to Collections Completed
+
+- `getCollectionOptions(userId)` added to `src/lib/db/collections.ts` — collection list with dominant color per collection; `GET /api/collections` exposes it to client components
+- Created `src/components/dashboard/CollectionMultiSelect.tsx` — click-to-toggle selector (no checkboxes); trigger shows selected collections as inline badges, dropdown rows show a colored dot instead of a folder icon
+- Created `src/components/dashboard/CollectionBadge.tsx` — shared badge (colored dot + name), used by `CollectionMultiSelect` and `ItemDrawer` read-only view, so both stay visually identical
+- `createItem`/`updateItem` server actions in `src/actions/items.ts` — `collectionIds: string[]` added to both Zod schemas, defaults to `[]`
+- `src/lib/db/items.ts` — `getOwnedCollectionIds` guards against IDOR by filtering to collections owned by the requesting user; `createItemInDb` connects collections on create, `updateItemById` replaces the full set in a transaction (`itemCollection.deleteMany` + `createMany`)
+- Fixed a pre-existing bug where collection color always read `collection.defaultType.color` (a field never actually set anywhere) and was always `null`; `getDominantColors` exported from `collections.ts` (built on a shared `getItemTypeCountsByCollection` helper also used by `getRecentCollections`) is now the single source of truth for collection color, used by `getItemById`, `createItemInDb`, and `updateItemById`
+- `NewItemDialogContent` — fixed header/footer (Cancel/Create no longer scroll out of view), only the field list scrolls, `max-h-[85vh]`
+- `ItemCard.tsx` — tags now shown as badges at the bottom of the card
+- Tests: 9 new tests in `src/lib/db/collections.test.ts` (`getDominantColors`, `getCollectionOptions`); `src/lib/db/items.test.ts` updated to mock `getDominantColors`; 4 new tests in `src/actions/items.test.ts` for `collectionIds` passthrough/defaults

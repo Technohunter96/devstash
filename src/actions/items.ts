@@ -27,6 +27,7 @@ const CreateItemSchema = z.object({
     .array(z.string().trim())
     .transform((arr) => arr.filter(Boolean))
     .default([]),
+  collectionIds: z.array(z.string()).default([]),
   // File/Image upload fields — populated after R2 upload completes
   fileUrl: z.string().url().nullable().optional(),
   fileName: z.string().nullable().optional(),
@@ -56,6 +57,7 @@ export async function createItem(formData: unknown): Promise<CreateItemResult> {
     url: parsed.data.url ?? null,
     language: parsed.data.language ?? null,
     tags: parsed.data.tags,
+    collectionIds: parsed.data.collectionIds,
     fileUrl: parsed.data.fileUrl ?? null,
     fileName: parsed.data.fileName ?? null,
     fileSize: parsed.data.fileSize ?? null,
@@ -82,6 +84,7 @@ const UpdateItemSchema = z.object({
     .array(z.string().trim())
     .transform((arr) => arr.filter(Boolean))
     .default([]),
+  collectionIds: z.array(z.string()).default([]),
 });
 
 type UpdateItemResult =
@@ -109,6 +112,7 @@ export async function updateItem(
     url: parsed.data.url ?? null,
     language: parsed.data.language ?? null,
     tags: parsed.data.tags,
+    collectionIds: parsed.data.collectionIds,
   });
 
   if (!item) {

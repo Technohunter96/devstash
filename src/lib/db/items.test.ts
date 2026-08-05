@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getItemById } from "./items";
 
 const mockFindFirst = vi.fn();
+const mockGetDominantColors = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -9,6 +10,10 @@ vi.mock("@/lib/prisma", () => ({
       findFirst: (...args: unknown[]) => mockFindFirst(...args),
     },
   },
+}));
+
+vi.mock("@/lib/db/collections", () => ({
+  getDominantColors: (...args: unknown[]) => mockGetDominantColors(...args),
 }));
 
 const BASE_ITEM = {
@@ -35,6 +40,8 @@ const BASE_ITEM = {
 describe("getItemById", () => {
   beforeEach(() => {
     mockFindFirst.mockReset();
+    mockGetDominantColors.mockReset();
+    mockGetDominantColors.mockResolvedValue(new Map());
   });
 
   it("returns null when item not found", async () => {
@@ -59,38 +66,24 @@ describe("getItemById", () => {
     expect(result?.collections).toEqual([]);
   });
 
-  it("maps collection with a defaultType color correctly", async () => {
+  it("maps collection to its dominant color", async () => {
     mockFindFirst.mockResolvedValue({
       ...BASE_ITEM,
-      collections: [
-        {
-          collection: {
-            id: "col-1",
-            name: "React Patterns",
-            defaultType: { color: "#3b82f6" },
-          },
-        },
-      ],
+      collections: [{ collection: { id: "col-1", name: "React Patterns" } }],
     });
+    mockGetDominantColors.mockResolvedValue(new Map([["col-1", "#3b82f6"]]));
     const result = await getItemById("user-1", "item-1");
     expect(result?.collections).toEqual([
       { id: "col-1", name: "React Patterns", color: "#3b82f6" },
     ]);
   });
 
-  it("sets color to null when collection has no defaultType", async () => {
+  it("sets color to null when the collection has no dominant color", async () => {
     mockFindFirst.mockResolvedValue({
       ...BASE_ITEM,
-      collections: [
-        {
-          collection: {
-            id: "col-2",
-            name: "No Type Collection",
-            defaultType: null,
-          },
-        },
-      ],
+      collections: [{ collection: { id: "col-2", name: "No Type Collection" } }],
     });
+    mockGetDominantColors.mockResolvedValue(new Map());
     const result = await getItemById("user-1", "item-1");
     expect(result?.collections[0].color).toBeNull();
   });
@@ -99,13 +92,26 @@ describe("getItemById", () => {
     mockFindFirst.mockResolvedValue({
       ...BASE_ITEM,
       collections: [
-        { collection: { id: "col-1", name: "First", defaultType: { color: "#ff0000" } } },
-        { collection: { id: "col-2", name: "Second", defaultType: null } },
+        { collection: { id: "col-1", name: "First" } },
+        { collection: { id: "col-2", name: "Second" } },
       ],
     });
+    mockGetDominantColors.mockResolvedValue(new Map([["col-1", "#ff0000"]]));
     const result = await getItemById("user-1", "item-1");
     expect(result?.collections).toHaveLength(2);
     expect(result?.collections[0]).toEqual({ id: "col-1", name: "First", color: "#ff0000" });
     expect(result?.collections[1]).toEqual({ id: "col-2", name: "Second", color: null });
+  });
+
+  it("passes the item's collection IDs to getDominantColors", async () => {
+    mockFindFirst.mockResolvedValue({
+      ...BASE_ITEM,
+      collections: [
+        { collection: { id: "col-1", name: "First" } },
+        { collection: { id: "col-2", name: "Second" } },
+      ],
+    });
+    await getItemById("user-1", "item-1");
+    expect(mockGetDominantColors).toHaveBeenCalledWith(["col-1", "col-2"]);
   });
 });

@@ -130,6 +130,26 @@ describe("createItem", () => {
       expect.objectContaining({ description: null }),
     );
   });
+
+  it("defaults collectionIds to an empty array when omitted", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    await createItem(VALID_CREATE_PAYLOAD);
+    expect(mockCreateItemInDb).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ collectionIds: [] }),
+    );
+  });
+
+  it("passes collectionIds through to createItemInDb", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    await createItem({ ...VALID_CREATE_PAYLOAD, collectionIds: ["col-1", "col-2"] });
+    expect(mockCreateItemInDb).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ collectionIds: ["col-1", "col-2"] }),
+    );
+  });
 });
 
 describe("deleteItem", () => {
@@ -265,6 +285,28 @@ describe("updateItem", () => {
       "user-1",
       "item-1",
       expect.objectContaining({ description: null }),
+    );
+  });
+
+  it("defaults collectionIds to an empty array when omitted", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockUpdateItemById.mockResolvedValue(ITEM_DETAIL);
+    await updateItem("item-1", VALID_PAYLOAD);
+    expect(mockUpdateItemById).toHaveBeenCalledWith(
+      "user-1",
+      "item-1",
+      expect.objectContaining({ collectionIds: [] }),
+    );
+  });
+
+  it("passes collectionIds through to updateItemById", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockUpdateItemById.mockResolvedValue(ITEM_DETAIL);
+    await updateItem("item-1", { ...VALID_PAYLOAD, collectionIds: ["col-1"] });
+    expect(mockUpdateItemById).toHaveBeenCalledWith(
+      "user-1",
+      "item-1",
+      expect.objectContaining({ collectionIds: ["col-1"] }),
     );
   });
 });

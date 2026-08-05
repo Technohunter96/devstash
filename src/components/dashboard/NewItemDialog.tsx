@@ -13,6 +13,7 @@ import { createItem } from "@/actions/items";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
+import CollectionMultiSelect from "./CollectionMultiSelect";
 
 // All creatable item types — File/Image are Pro-only but enabled during development
 const CREATABLE_TYPES = [
@@ -35,6 +36,7 @@ interface FormState {
   url: string;
   language: string;
   tags: string;
+  collectionIds: string[];
 }
 
 const DEFAULT_STATE: FormState = {
@@ -45,6 +47,7 @@ const DEFAULT_STATE: FormState = {
   url: "",
   language: "",
   tags: "",
+  collectionIds: [],
 };
 
 // ─── Shared dialog content (controlled) ──────────────────────────────────────
@@ -112,6 +115,7 @@ export function NewItemDialogContent({
         url: form.url || null,
         language: form.language || null,
         tags,
+        collectionIds: form.collectionIds,
         // Attach R2 file metadata for File/Image types
         fileUrl: uploadedFile?.fileUrl ?? null,
         fileName: uploadedFile?.fileName ?? null,
@@ -135,12 +139,12 @@ export function NewItemDialogContent({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg transition-all duration-200">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] grid-rows-[auto_1fr_auto] overflow-hidden transition-all duration-200">
         <DialogHeader>
           <DialogTitle>New Item</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4 overflow-y-auto pr-1 -mr-1 min-h-0">
           {/* Type selector */}
           <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
             {CREATABLE_TYPES.map((type) => {
@@ -273,27 +277,36 @@ export function NewItemDialogContent({
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-2 pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleOpenChange(false)}
-              disabled={isSaving}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={isSaving || !canSave}
-              className="cursor-pointer"
-            >
-              <Plus />
-              {isSaving ? "Creating…" : "Create"}
-            </Button>
+          {/* Collections */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Collections</label>
+            <CollectionMultiSelect
+              selectedIds={form.collectionIds}
+              onChange={(collectionIds) => setForm((s) => ({ ...s, collectionIds }))}
+            />
           </div>
+        </div>
+
+        {/* Actions — outside the scroll area so they stay visible */}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenChange(false)}
+            disabled={isSaving}
+            className="cursor-pointer"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={isSaving || !canSave}
+            className="cursor-pointer"
+          >
+            <Plus />
+            {isSaving ? "Creating…" : "Create"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -51,12 +51,88 @@ export async function createCollectionInDb(
   };
 }
 
+export interface CollectionOption {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
+export async function getCollectionOptions(userId: string): Promise<CollectionOption[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+
+  const typesByCollection = await getItemTypeCountsByCollection(collections.map((c) => c.id));
+
+  return collections.map((c) => {
+    const dominantType = [...(typesByCollection.get(c.id)?.values() ?? [])].sort(
+      (a, b) => b.count - a.count,
+    )[0];
+    return { id: c.id, name: c.name, color: dominantType?.type.color ?? null };
+  });
+}
+
+// Maps collectionId -> dominant item type color, for displaying a collection
+// swatch outside of this module (e.g. on an item's collection badges)
+export async function getDominantColors(collectionIds: string[]): Promise<Map<string, string>> {
+  const typesByCollection = await getItemTypeCountsByCollection(collectionIds);
+  const colors = new Map<string, string>();
+  for (const [collectionId, typeCountMap] of typesByCollection) {
+    const dominant = [...typeCountMap.values()].sort((a, b) => b.count - a.count)[0];
+    if (dominant) colors.set(collectionId, dominant.type.color);
+  }
+  return colors;
+}
+
 export async function getCollectionStats(userId: string): Promise<CollectionStats> {
   const [totalCollections, favoriteCollections] = await Promise.all([
     prisma.collection.count({ where: { userId } }),
     prisma.collection.count({ where: { userId, isFavorite: true } }),
   ]);
   return { totalCollections, favoriteCollections };
+}
+
+// Counts item types per collection (via the ItemCollection join table) so the
+// most-used type's color can act as a stand-in "dominant color" for a collection —
+// there's no user-set collection color, so this is derived on the fly.
+async function getItemTypeCountsByCollection(
+  collectionIds: string[]
+): Promise<Map<string, Map<string, { count: number; type: CollectionItemType }>>> {
+  if (collectionIds.length === 0) return new Map();
+
+  const itemTypeLinks = await prisma.itemCollection.findMany({
+    where: { collectionId: { in: collectionIds } },
+    select: {
+      collectionId: true,
+      item: {
+        select: {
+          itemType: { select: { name: true, icon: true, color: true } },
+        },
+      },
+    },
+  });
+
+  const typesByCollection = new Map<
+    string,
+    Map<string, { count: number; type: CollectionItemType }>
+  >();
+  for (const link of itemTypeLinks) {
+    let typeCountMap = typesByCollection.get(link.collectionId);
+    if (!typeCountMap) {
+      typeCountMap = new Map();
+      typesByCollection.set(link.collectionId, typeCountMap);
+    }
+    const { name, icon, color } = link.item.itemType;
+    const existing = typeCountMap.get(name);
+    if (existing) {
+      existing.count++;
+    } else {
+      typeCountMap.set(name, { count: 1, type: { name, icon, color } });
+    }
+  }
+  return typesByCollection;
 }
 
 export async function getRecentCollections(
@@ -77,39 +153,7 @@ export async function getRecentCollections(
     },
   });
 
-  const collectionIds = collections.map((c) => c.id);
-
-  const itemTypeLinks = await prisma.itemCollection.findMany({
-    where: { collectionId: { in: collectionIds } },
-    select: {
-      collectionId: true,
-      item: {
-        select: {
-          itemType: { select: { name: true, icon: true, color: true } },
-        },
-      },
-    },
-  });
-
-  // Build per-collection type count maps
-  const typesByCollection = new Map<
-    string,
-    Map<string, { count: number; type: CollectionItemType }>
-  >();
-  for (const link of itemTypeLinks) {
-    let typeCountMap = typesByCollection.get(link.collectionId);
-    if (!typeCountMap) {
-      typeCountMap = new Map();
-      typesByCollection.set(link.collectionId, typeCountMap);
-    }
-    const { name, icon, color } = link.item.itemType;
-    const existing = typeCountMap.get(name);
-    if (existing) {
-      existing.count++;
-    } else {
-      typeCountMap.set(name, { count: 1, type: { name, icon, color } });
-    }
-  }
+  const typesByCollection = await getItemTypeCountsByCollection(collections.map((c) => c.id));
 
   return collections.map((col) => {
     const typeCountMap = typesByCollection.get(col.id);

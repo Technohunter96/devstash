@@ -3,6 +3,7 @@
 import { Star, Pin, Copy, Check, File } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { useItemDrawer } from "./ItemDrawerProvider";
@@ -24,6 +25,7 @@ interface Item {
     icon: string;
     color: string;
   };
+  tags?: { id: string; name: string }[];
 }
 
 export default function ItemCard({ item }: { item: Item }) {
@@ -70,6 +72,15 @@ export default function ItemCard({ item }: { item: Item }) {
           </div>
           {item.description && (
             <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
+          )}
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {item.tags.map((tag) => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
       </CardContent>

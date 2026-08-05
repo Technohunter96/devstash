@@ -17,6 +17,8 @@ import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
+import CollectionMultiSelect from "./CollectionMultiSelect";
+import CollectionBadge from "./CollectionBadge";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/icon-map";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/item-type-constants";
@@ -68,6 +70,7 @@ interface EditState {
   url: string;
   language: string;
   tags: string; // comma-separated
+  collectionIds: string[];
 }
 
 function itemToEditState(item: ItemDetail): EditState {
@@ -78,6 +81,7 @@ function itemToEditState(item: ItemDetail): EditState {
     url: item.url ?? "",
     language: item.language ?? "",
     tags: item.tags.map((t) => t.name).join(", "),
+    collectionIds: item.collections.map((c) => c.id),
   };
 }
 
@@ -147,6 +151,7 @@ function ItemDrawerBody({
         url: editState.url || null,
         language: editState.language || null,
         tags,
+        collectionIds: editState.collectionIds,
       });
 
       if (!result.success) {
@@ -479,8 +484,8 @@ function ItemDrawerBody({
           )}
         </section>
 
-        {/* Collections (read-only always) */}
-        {item.collections.length > 0 && (
+        {/* Collections */}
+        {(isEditMode || item.collections.length > 0) && (
           <section>
             <SectionLabel>
               <span className="flex items-center gap-1.5">
@@ -488,24 +493,20 @@ function ItemDrawerBody({
                 Collections
               </span>
             </SectionLabel>
-            <ul className="flex flex-col">
-              {item.collections.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex items-center gap-2 py-1.5 text-sm border-b last:border-b-0"
-                >
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full shrink-0",
-                      !c.color && "bg-muted-foreground/50",
-                    )}
-                    style={c.color ? { backgroundColor: c.color } : undefined}
-                  />
-                  <span className="flex-1 truncate">{c.name}</span>
-                  <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />
-                </li>
-              ))}
-            </ul>
+            {isEditMode ? (
+              <CollectionMultiSelect
+                selectedIds={editState.collectionIds}
+                onChange={(collectionIds) =>
+                  setEditState((s) => ({ ...s, collectionIds }))
+                }
+              />
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {item.collections.map((c) => (
+                  <CollectionBadge key={c.id} name={c.name} color={c.color} />
+                ))}
+              </div>
+            )}
           </section>
         )}
         {/* Details — created/updated dates */}
