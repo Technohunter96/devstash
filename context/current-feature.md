@@ -371,3 +371,15 @@ Not Started
 - `proxy.ts` — added `/collections` and `/collections/:path*` to middleware matcher
 - Sidebar's "View all collections" link and `CollectionCard`'s click-through already pointed at `/collections`/`/collections/[id]` from earlier work — no changes needed there, only the target pages were missing
 - Tests: 7 new tests in `src/lib/db/collections.test.ts` (`getAllCollections`, `getCollectionDetail`); 2 new tests in `src/lib/db/items.test.ts` (`getItemsByCollection`)
+
+### 2026-08-06 — Collection Management — Edit, Delete & Favorite Completed
+
+- Installed shadcn DropdownMenu (Base UI-backed) and Textarea components
+- `updateCollectionInDb(userId, collectionId, data)` and `deleteCollectionInDb(userId, collectionId)` added to `src/lib/db/collections.ts` — both ownership-scoped; delete uses `deleteMany` (IDOR-safe); update uses `withDominantColorInfo` to return a full `DashboardCollection`
+- `updateCollection` and `deleteCollection` server actions added to `src/actions/collections.ts` — Zod validation, `auth()` guard, `{ success, data/error }` pattern
+- Created `src/components/dashboard/CollectionEditDialog.tsx` — Dialog modal for editing name + description; resets from props on open; Save disabled when name empty
+- Created `src/components/dashboard/CollectionDeleteDialog.tsx` — AlertDialog confirmation; clarifies items are NOT deleted; optional `onDeleted` callback for post-delete navigation
+- Created `src/components/dashboard/CollectionDetailActions.tsx` — client component with Edit/Delete/Favorite buttons for the `/collections/[id]` header; Delete redirects to `/collections` on success
+- `CollectionCard.tsx` — added 3-dot `DropdownMenu` (Edit, Favorite disabled, Delete); menu uses `onClick` (Base UI API, not Radix `onSelect`); trigger `stopPropagation` so card navigation still fires on the rest of the card; `CollectionEditDialog` + `CollectionDeleteDialog` rendered in the fragment
+- `/collections/[id]/page.tsx` — header row updated with `CollectionDetailActions`; favorite star removed from header (now in actions component)
+- 10 new tests in `src/actions/collections.test.ts` for `updateCollection` (6) and `deleteCollection` (4)

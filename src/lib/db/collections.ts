@@ -27,6 +27,11 @@ export interface CreateCollectionData {
   description: string | null;
 }
 
+export interface UpdateCollectionData {
+  name: string;
+  description: string | null;
+}
+
 export async function createCollectionInDb(
   userId: string,
   data: CreateCollectionData
@@ -49,6 +54,56 @@ export async function createCollectionInDb(
     dominantColor: null,
     updatedAt: collection.updatedAt,
   };
+}
+
+export async function updateCollectionInDb(
+  userId: string,
+  collectionId: string,
+  data: UpdateCollectionData
+): Promise<DashboardCollection | null> {
+  // Ownership check: only update if the collection belongs to the user
+  const existing = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: { id: true },
+  });
+  if (!existing) return null;
+
+  const updated = await prisma.collection.update({
+    where: { id: collectionId },
+    data: { name: data.name, description: data.description },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isFavorite: true,
+      updatedAt: true,
+      _count: { select: { items: true } },
+    },
+  });
+
+  const [result] = await withDominantColorInfo([
+    {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      isFavorite: updated.isFavorite,
+      updatedAt: updated.updatedAt,
+      _count: { items: updated._count.items },
+    },
+  ]);
+  return result;
+}
+
+// Deletes collection by id; ItemCollection rows cascade automatically via Prisma schema.
+// Returns false if the collection doesn't belong to the user.
+export async function deleteCollectionInDb(
+  userId: string,
+  collectionId: string
+): Promise<boolean> {
+  const result = await prisma.collection.deleteMany({
+    where: { id: collectionId, userId },
+  });
+  return result.count > 0;
 }
 
 export interface CollectionOption {
