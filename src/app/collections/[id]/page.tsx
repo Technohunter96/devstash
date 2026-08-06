@@ -1,13 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
-import { Star, FolderOpen } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { auth } from "@/auth";
 import { getCollectionDetail } from "@/lib/db/collections";
 import { getItemsByCollection } from "@/lib/db/items";
 import ItemCard from "@/components/dashboard/ItemCard";
 import ImageCard from "@/components/dashboard/ImageCard";
 import FileListItem from "@/components/dashboard/FileListItem";
+import CollectionDetailActions from "@/components/dashboard/CollectionDetailActions";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -33,15 +34,15 @@ export default async function CollectionDetailPage({ params }: Props) {
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <FolderOpen
-            className="w-5 h-5 shrink-0"
-            style={collection.dominantColor ? { color: collection.dominantColor } : undefined}
-          />
-          <h1 className="text-2xl font-semibold">{collection.name}</h1>
-          {collection.isFavorite && (
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
-          )}
+        <div className="flex items-start justify-between gap-4 mb-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <FolderOpen
+              className="w-5 h-5 shrink-0"
+              style={collection.dominantColor ? { color: collection.dominantColor } : undefined}
+            />
+            <h1 className="text-2xl font-semibold truncate">{collection.name}</h1>
+          </div>
+          <CollectionDetailActions collection={collection} />
         </div>
         {collection.description && (
           <p className="text-muted-foreground text-sm mb-1">{collection.description}</p>
