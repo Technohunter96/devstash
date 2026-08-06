@@ -360,3 +360,14 @@ Not Started
 - `NewItemDialogContent` — fixed header/footer (Cancel/Create no longer scroll out of view), only the field list scrolls, `max-h-[85vh]`
 - `ItemCard.tsx` — tags now shown as badges at the bottom of the card
 - Tests: 9 new tests in `src/lib/db/collections.test.ts` (`getDominantColors`, `getCollectionOptions`); `src/lib/db/items.test.ts` updated to mock `getDominantColors`; 4 new tests in `src/actions/items.test.ts` for `collectionIds` passthrough/defaults
+
+### 2026-08-06 — Collections List & Detail Pages Completed
+
+- `src/lib/db/collections.ts` — added `getAllCollections(userId)` (all collections, no limit, sorted by name) and `getCollectionDetail(userId, collectionId)` (ownership-scoped, returns `null` on IDOR/not found); `getRecentCollections`'s row-shaping logic extracted into shared `withDominantColorInfo` helper reused by both
+- `src/lib/db/items.ts` — added `getItemsByCollection(userId, collectionId)`, scoped by userId and collection membership
+- Created `src/app/collections/layout.tsx` — auth-guarded `DashboardShell` wrapper, same pattern as `/items/[type]` and `/profile`
+- Created `src/app/collections/page.tsx` — grid of all collections using existing `CollectionCard`
+- Created `src/app/collections/[id]/page.tsx` — collection detail (name, description, favorite star, item count); items split by type and rendered with existing `ItemCard`/`ImageCard`/`FileListItem`; `notFound()` on missing/unowned collection
+- `proxy.ts` — added `/collections` and `/collections/:path*` to middleware matcher
+- Sidebar's "View all collections" link and `CollectionCard`'s click-through already pointed at `/collections`/`/collections/[id]` from earlier work — no changes needed there, only the target pages were missing
+- Tests: 7 new tests in `src/lib/db/collections.test.ts` (`getAllCollections`, `getCollectionDetail`); 2 new tests in `src/lib/db/items.test.ts` (`getItemsByCollection`)

@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getItemById } from "./items";
+import { getItemById, getItemsByCollection } from "./items";
 
 const mockFindFirst = vi.fn();
+const mockFindMany = vi.fn();
 const mockGetDominantColors = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     item: {
       findFirst: (...args: unknown[]) => mockFindFirst(...args),
+      findMany: (...args: unknown[]) => mockFindMany(...args),
     },
   },
 }));
@@ -113,5 +115,27 @@ describe("getItemById", () => {
     });
     await getItemById("user-1", "item-1");
     expect(mockGetDominantColors).toHaveBeenCalledWith(["col-1", "col-2"]);
+  });
+});
+
+describe("getItemsByCollection", () => {
+  beforeEach(() => {
+    mockFindMany.mockReset();
+  });
+
+  it("scopes the query to the given userId and collection membership, preventing IDOR", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getItemsByCollection("user-1", "col-1");
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", collections: { some: { collectionId: "col-1" } } },
+      })
+    );
+  });
+
+  it("returns the items from the query", async () => {
+    mockFindMany.mockResolvedValue([BASE_ITEM]);
+    const result = await getItemsByCollection("user-1", "col-1");
+    expect(result).toEqual([BASE_ITEM]);
   });
 });

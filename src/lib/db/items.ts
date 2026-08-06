@@ -97,6 +97,17 @@ export async function getItemsByType(
   });
 }
 
+export async function getItemsByCollection(
+  userId: string,
+  collectionId: string
+): Promise<DashboardItem[]> {
+  return prisma.item.findMany({
+    where: { userId, collections: { some: { collectionId } } },
+    orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
+    select: itemSelect,
+  });
+}
+
 export async function getItemStats(userId: string): Promise<{
   totalItems: number;
   favoriteItems: number;

@@ -135,24 +135,28 @@ async function getItemTypeCountsByCollection(
   return typesByCollection;
 }
 
-export async function getRecentCollections(
-  userId: string,
-  limit = 6
-): Promise<DashboardCollection[]> {
-  const collections = await prisma.collection.findMany({
-    where: { userId },
-    orderBy: { updatedAt: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      isFavorite: true,
-      updatedAt: true,
-      _count: { select: { items: true } },
-    },
-  });
+const collectionSummarySelect = {
+  id: true,
+  name: true,
+  description: true,
+  isFavorite: true,
+  updatedAt: true,
+  _count: { select: { items: true } },
+} as const;
 
+type CollectionSummaryRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  updatedAt: Date;
+  _count: { items: number };
+};
+
+// Attaches item-type breakdown + dominant color to raw collection rows
+async function withDominantColorInfo(
+  collections: CollectionSummaryRow[]
+): Promise<DashboardCollection[]> {
   const typesByCollection = await getItemTypeCountsByCollection(collections.map((c) => c.id));
 
   return collections.map((col) => {
@@ -175,4 +179,66 @@ export async function getRecentCollections(
       updatedAt: col.updatedAt,
     };
   });
+}
+
+export async function getRecentCollections(
+  userId: string,
+  limit = 6
+): Promise<DashboardCollection[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+    select: collectionSummarySelect,
+  });
+
+  return withDominantColorInfo(collections);
+}
+
+export async function getAllCollections(userId: string): Promise<DashboardCollection[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+    select: collectionSummarySelect,
+  });
+
+  return withDominantColorInfo(collections);
+}
+
+export interface CollectionDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  itemCount: number;
+  dominantColor: string | null;
+}
+
+// Returns null if the collection doesn't exist or isn't owned by the user, preventing IDOR
+export async function getCollectionDetail(
+  userId: string,
+  collectionId: string
+): Promise<CollectionDetail | null> {
+  const collection = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isFavorite: true,
+      _count: { select: { items: true } },
+    },
+  });
+  if (!collection) return null;
+
+  const dominantColors = await getDominantColors([collection.id]);
+
+  return {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    isFavorite: collection.isFavorite,
+    itemCount: collection._count.items,
+    dominantColor: dominantColors.get(collection.id) ?? null,
+  };
 }
