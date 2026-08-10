@@ -1,6 +1,6 @@
 import { Layers, Code } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/icon-map";
+import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
 import type { ProfileStats as ProfileStatsType } from "@/lib/db/profile";
 
 interface Props {

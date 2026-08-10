@@ -13,7 +13,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { ICON_MAP } from "@/lib/icon-map";
+import { ICON_MAP } from "@/lib/constants/icon-map";
 import { useSearch } from "./SearchProvider";
 import { useItemDrawer } from "./ItemDrawerProvider";
 

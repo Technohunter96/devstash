@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ICON_MAP } from "@/lib/icon-map";
+import { ICON_MAP } from "@/lib/constants/icon-map";
 import CollectionEditDialog from "@/components/dashboard/CollectionEditDialog";
 import CollectionDeleteDialog from "@/components/dashboard/CollectionDeleteDialog";
 

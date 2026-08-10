@@ -9,13 +9,18 @@ import ItemCard from "@/components/dashboard/ItemCard";
 import ImageCard from "@/components/dashboard/ImageCard";
 import FileListItem from "@/components/dashboard/FileListItem";
 import CollectionDetailActions from "@/components/dashboard/CollectionDetailActions";
+import Pagination from "@/components/dashboard/Pagination";
+import { ITEMS_PER_PAGE } from "@/lib/constants/pagination";
+import { parsePage } from "@/lib/utils";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function CollectionDetailPage({ params }: Props) {
+export default async function CollectionDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const page = parsePage((await searchParams).page);
 
   const session = await auth();
   const userId = session!.user!.id;
@@ -23,7 +28,8 @@ export default async function CollectionDetailPage({ params }: Props) {
   const collection = await getCollectionDetail(userId, id);
   if (!collection) notFound();
 
-  const items = await getItemsByCollection(userId, id);
+  const { data: items, totalCount } = await getItemsByCollection(userId, id, page);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const imageItems = items.filter((item) => item.itemType.name === "Image");
   const fileItems = items.filter((item) => item.itemType.name === "File");
   const otherItems = items.filter(
@@ -102,6 +108,8 @@ export default async function CollectionDetailPage({ params }: Props) {
           )}
         </div>
       )}
+
+      <Pagination currentPage={page} totalPages={totalPages} basePath={`/collections/${id}`} />
     </div>
   );
 }

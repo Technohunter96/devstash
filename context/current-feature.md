@@ -395,3 +395,17 @@ Not Started
 - `TopBar.tsx` — search input replaced with a button styled as an input; click opens the palette; `⌘K`/`Ctrl+K` hint kept in the trailing kbd badge; old local Ctrl+K listener removed (now global in `SearchProvider`)
 - `coding-standards.md` — clarified Server Actions vs API routes: client-side reads use Server Actions; API routes reserved for cases needing `AbortController`-based cancellation (race condition guards) among other existing exceptions
 - 12 unit tests: `src/lib/db/search.test.ts` (8), `src/actions/search.test.ts` (4)
+
+### 2026-08-11 — Pagination Completed
+
+- Created `src/lib/constants/pagination.ts` — `ITEMS_PER_PAGE` (15), `COLLECTIONS_PER_PAGE` (21), `DASHBOARD_COLLECTIONS_LIMIT` (6), `DASHBOARD_RECENT_ITEMS_LIMIT` (5); establishes `src/lib/constants/<feature>.ts` as the pattern for feature-scoped constants going forward
+- Moved `src/lib/icon-map.ts` to `src/lib/constants/icon-map.ts` to match the new convention; all importers updated
+- Created `src/types/pagination.ts` — `PaginatedResult<T>` (`data` + `totalCount`)
+- Added `parsePage` to `src/lib/utils.ts` — parses a `?page=` search param into a valid positive integer, defaulting to 1 on missing/invalid/negative/decimal input; guards Prisma's `skip` from going negative
+- `getItemsByType`/`getItemsByCollection` (`src/lib/db/items.ts`) and `getAllCollections` (`src/lib/db/collections.ts`) now paginate via `skip`/`take` plus a parallel `count`, returning `PaginatedResult` instead of the full list
+- `getRecentItems`/`getRecentCollections` default limits now reference `DASHBOARD_RECENT_ITEMS_LIMIT`/`DASHBOARD_COLLECTIONS_LIMIT` instead of hardcoded numbers — same dashboard behavior, no new call sites
+- Created `src/components/dashboard/Pagination.tsx` — server component (no client JS) rendering numbered page links plus prev/next via `next/link`; long ranges collapse into an ellipsis; disabled prev/next render as non-interactive greyed-out spans instead of links
+- Wired into `/items/[type]`, `/collections/[id]`, and `/collections` — each reads `page` from `searchParams` via `parsePage`, passes it to the paginated query, and renders `<Pagination>` at the bottom
+- `/collections` wasn't explicitly named in the original spec's page list (only `COLLECTIONS_PER_PAGE` hinted at it) — confirmed in scope with the user before implementing
+- Tests: `parsePage` (6 tests) in `utils.test.ts`; `getItemsByType`/`getItemsByCollection` pagination in `items.test.ts`; `getAllCollections` pagination in `collections.test.ts`
+- Added 30 sample snippets for the demo user (dev DB only, via a one-off script) to exercise multi-page behavior with real data

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getDominantColors } from "@/lib/db/collections";
+import { ITEMS_PER_PAGE, DASHBOARD_RECENT_ITEMS_LIMIT } from "@/lib/constants/pagination";
+import type { PaginatedResult } from "@/types/pagination";
 
 export const ITEM_TYPE_ORDER: string[] = [
   "Snippet",
@@ -76,7 +78,7 @@ export async function getPinnedItems(userId: string): Promise<DashboardItem[]> {
 
 export async function getRecentItems(
   userId: string,
-  limit = 10
+  limit = DASHBOARD_RECENT_ITEMS_LIMIT
 ): Promise<DashboardItem[]> {
   return prisma.item.findMany({
     where: { userId },
@@ -86,26 +88,44 @@ export async function getRecentItems(
   });
 }
 
+// Paginated items for a given type — runs count alongside the page fetch instead of loading everything
 export async function getItemsByType(
   userId: string,
-  typeName: string
-): Promise<DashboardItem[]> {
-  return prisma.item.findMany({
-    where: { userId, itemType: { name: typeName } },
-    orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
-    select: itemSelect,
-  });
+  typeName: string,
+  page = 1
+): Promise<PaginatedResult<DashboardItem>> {
+  const where = { userId, itemType: { name: typeName } };
+  const [data, totalCount] = await Promise.all([
+    prisma.item.findMany({
+      where,
+      orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
+      skip: (page - 1) * ITEMS_PER_PAGE,
+      take: ITEMS_PER_PAGE,
+      select: itemSelect,
+    }),
+    prisma.item.count({ where }),
+  ]);
+  return { data, totalCount };
 }
 
+// Paginated items within a collection — same skip/take + count pattern as getItemsByType
 export async function getItemsByCollection(
   userId: string,
-  collectionId: string
-): Promise<DashboardItem[]> {
-  return prisma.item.findMany({
-    where: { userId, collections: { some: { collectionId } } },
-    orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
-    select: itemSelect,
-  });
+  collectionId: string,
+  page = 1
+): Promise<PaginatedResult<DashboardItem>> {
+  const where = { userId, collections: { some: { collectionId } } };
+  const [data, totalCount] = await Promise.all([
+    prisma.item.findMany({
+      where,
+      orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
+      skip: (page - 1) * ITEMS_PER_PAGE,
+      take: ITEMS_PER_PAGE,
+      select: itemSelect,
+    }),
+    prisma.item.count({ where }),
+  ]);
+  return { data, totalCount };
 }
 
 export async function getItemStats(userId: string): Promise<{

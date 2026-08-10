@@ -7,21 +7,28 @@ import ItemCard from "@/components/dashboard/ItemCard";
 import ImageCard from "@/components/dashboard/ImageCard";
 import FileListItem from "@/components/dashboard/FileListItem";
 import AddTypeItemButton from "@/components/dashboard/AddTypeItemButton";
-import { ITEM_TYPE_COLORS } from "@/lib/icon-map";
+import Pagination from "@/components/dashboard/Pagination";
+import { ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
+import { ITEMS_PER_PAGE } from "@/lib/constants/pagination";
+import { parsePage } from "@/lib/utils";
 
 interface Props {
   params: Promise<{ type: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function ItemsTypePage({ params }: Props) {
+export default async function ItemsTypePage({ params, searchParams }: Props) {
   const { type } = await params;
   const typeName = SLUG_TO_TYPE_NAME[type];
 
   if (!typeName) notFound();
 
+  const page = parsePage((await searchParams).page);
+
   // auth() is request-cached — layout already verified the session
   const session = await auth();
-  const items = await getItemsByType(session!.user!.id, typeName);
+  const { data: items, totalCount } = await getItemsByType(session!.user!.id, typeName, page);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const typeColor = ITEM_TYPE_COLORS[typeName] ?? null;
 
@@ -31,7 +38,7 @@ export default async function ItemsTypePage({ params }: Props) {
         <div>
           <h1 className="text-2xl font-semibold mb-1">{typeName}s</h1>
           <p className="text-muted-foreground text-sm">
-            {items.length} {items.length === 1 ? "item" : "items"}
+            {totalCount} {totalCount === 1 ? "item" : "items"}
           </p>
         </div>
         {typeColor && <AddTypeItemButton typeName={typeName} color={typeColor} />}
@@ -58,6 +65,8 @@ export default async function ItemsTypePage({ params }: Props) {
           ))}
         </div>
       )}
+
+      <Pagination currentPage={page} totalPages={totalPages} basePath={`/items/${type}`} />
     </div>
   );
 }

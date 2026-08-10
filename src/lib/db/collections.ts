@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { COLLECTIONS_PER_PAGE, DASHBOARD_COLLECTIONS_LIMIT } from "@/lib/constants/pagination";
+import type { PaginatedResult } from "@/types/pagination";
 
 interface CollectionItemType {
   name: string;
@@ -238,7 +240,7 @@ async function withDominantColorInfo(
 
 export async function getRecentCollections(
   userId: string,
-  limit = 6
+  limit = DASHBOARD_COLLECTIONS_LIMIT
 ): Promise<DashboardCollection[]> {
   const collections = await prisma.collection.findMany({
     where: { userId },
@@ -250,14 +252,25 @@ export async function getRecentCollections(
   return withDominantColorInfo(collections);
 }
 
-export async function getAllCollections(userId: string): Promise<DashboardCollection[]> {
-  const collections = await prisma.collection.findMany({
-    where: { userId },
-    orderBy: { name: "asc" },
-    select: collectionSummarySelect,
-  });
+// Paginated collections, sorted alphabetically — runs count alongside the page fetch instead of loading everything
+export async function getAllCollections(
+  userId: string,
+  page = 1
+): Promise<PaginatedResult<DashboardCollection>> {
+  const where = { userId };
+  const [collections, totalCount] = await Promise.all([
+    prisma.collection.findMany({
+      where,
+      orderBy: { name: "asc" },
+      skip: (page - 1) * COLLECTIONS_PER_PAGE,
+      take: COLLECTIONS_PER_PAGE,
+      select: collectionSummarySelect,
+    }),
+    prisma.collection.count({ where }),
+  ]);
 
-  return withDominantColorInfo(collections);
+  const data = await withDominantColorInfo(collections);
+  return { data, totalCount };
 }
 
 export interface CollectionDetail {

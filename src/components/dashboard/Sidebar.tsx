@@ -8,7 +8,7 @@ import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, X
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
-import { ICON_MAP as lucideIconMap } from "@/lib/icon-map";
+import { ICON_MAP as lucideIconMap } from "@/lib/constants/icon-map";
 
 interface SidebarProps {
   isOpen: boolean;

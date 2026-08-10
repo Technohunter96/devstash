@@ -1,6 +1,6 @@
 import { Layers, Star, Bookmark, FolderOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ITEM_TYPE_COLORS } from "@/lib/icon-map";
+import { ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
 
 interface StatsCardsProps {
   totalItems: number;

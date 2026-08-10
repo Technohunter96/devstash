@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getItemById, getItemsByCollection } from "./items";
+import { getItemById, getItemsByCollection, getItemsByType } from "./items";
 
 const mockFindFirst = vi.fn();
 const mockFindMany = vi.fn();
+const mockCount = vi.fn();
 const mockGetDominantColors = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
@@ -10,6 +11,7 @@ vi.mock("@/lib/prisma", () => ({
     item: {
       findFirst: (...args: unknown[]) => mockFindFirst(...args),
       findMany: (...args: unknown[]) => mockFindMany(...args),
+      count: (...args: unknown[]) => mockCount(...args),
     },
   },
 }));
@@ -121,6 +123,8 @@ describe("getItemById", () => {
 describe("getItemsByCollection", () => {
   beforeEach(() => {
     mockFindMany.mockReset();
+    mockCount.mockReset();
+    mockCount.mockResolvedValue(0);
   });
 
   it("scopes the query to the given userId and collection membership, preventing IDOR", async () => {
@@ -131,11 +135,71 @@ describe("getItemsByCollection", () => {
         where: { userId: "user-1", collections: { some: { collectionId: "col-1" } } },
       })
     );
+    expect(mockCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", collections: { some: { collectionId: "col-1" } } },
+      })
+    );
   });
 
-  it("returns the items from the query", async () => {
+  it("returns the items and total count from the query", async () => {
     mockFindMany.mockResolvedValue([BASE_ITEM]);
+    mockCount.mockResolvedValue(1);
     const result = await getItemsByCollection("user-1", "col-1");
-    expect(result).toEqual([BASE_ITEM]);
+    expect(result).toEqual({ data: [BASE_ITEM], totalCount: 1 });
+  });
+
+  it("defaults to the first page (no skip)", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getItemsByCollection("user-1", "col-1");
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.skip).toBe(0);
+    expect(call.take).toBe(15);
+  });
+
+  it("computes skip from the given page number", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getItemsByCollection("user-1", "col-1", 3);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.skip).toBe(30);
+    expect(call.take).toBe(15);
+  });
+});
+
+describe("getItemsByType", () => {
+  beforeEach(() => {
+    mockFindMany.mockReset();
+    mockCount.mockReset();
+    mockCount.mockResolvedValue(0);
+  });
+
+  it("scopes the query to the given userId and type name", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getItemsByType("user-1", "Snippet");
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", itemType: { name: "Snippet" } },
+      })
+    );
+    expect(mockCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", itemType: { name: "Snippet" } },
+      })
+    );
+  });
+
+  it("returns the items and total count from the query", async () => {
+    mockFindMany.mockResolvedValue([BASE_ITEM]);
+    mockCount.mockResolvedValue(1);
+    const result = await getItemsByType("user-1", "Snippet");
+    expect(result).toEqual({ data: [BASE_ITEM], totalCount: 1 });
+  });
+
+  it("computes skip from the given page number", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getItemsByType("user-1", "Snippet", 2);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.skip).toBe(15);
+    expect(call.take).toBe(15);
   });
 });

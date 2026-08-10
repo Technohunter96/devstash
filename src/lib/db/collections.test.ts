@@ -8,6 +8,7 @@ import {
 
 const mockCollectionFindMany = vi.fn();
 const mockCollectionFindFirst = vi.fn();
+const mockCollectionCount = vi.fn();
 const mockItemCollectionFindMany = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
@@ -15,6 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     collection: {
       findMany: (...args: unknown[]) => mockCollectionFindMany(...args),
       findFirst: (...args: unknown[]) => mockCollectionFindFirst(...args),
+      count: (...args: unknown[]) => mockCollectionCount(...args),
     },
     itemCollection: {
       findMany: (...args: unknown[]) => mockItemCollectionFindMany(...args),
@@ -116,18 +118,32 @@ describe("getCollectionOptions", () => {
 describe("getAllCollections", () => {
   beforeEach(() => {
     mockCollectionFindMany.mockReset();
+    mockCollectionCount.mockReset();
+    mockCollectionCount.mockResolvedValue(0);
     mockItemCollectionFindMany.mockReset();
   });
 
-  it("scopes the query to the given userId with no take limit", async () => {
+  it("scopes the query to the given userId and paginates using COLLECTIONS_PER_PAGE", async () => {
     mockCollectionFindMany.mockResolvedValue([]);
     await getAllCollections("user-42");
     const call = mockCollectionFindMany.mock.calls[0][0];
     expect(call.where).toEqual({ userId: "user-42" });
-    expect(call.take).toBeUndefined();
+    expect(call.skip).toBe(0);
+    expect(call.take).toBe(21);
+    expect(mockCollectionCount).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "user-42" } })
+    );
   });
 
-  it("attaches item type breakdown and dominant color to each collection", async () => {
+  it("computes skip from the given page number", async () => {
+    mockCollectionFindMany.mockResolvedValue([]);
+    await getAllCollections("user-1", 2);
+    const call = mockCollectionFindMany.mock.calls[0][0];
+    expect(call.skip).toBe(21);
+    expect(call.take).toBe(21);
+  });
+
+  it("attaches item type breakdown and dominant color to each collection, plus the total count", async () => {
     mockCollectionFindMany.mockResolvedValue([
       {
         id: "col-1",
@@ -138,22 +154,26 @@ describe("getAllCollections", () => {
         _count: { items: 3 },
       },
     ]);
+    mockCollectionCount.mockResolvedValue(1);
     mockItemCollectionFindMany.mockResolvedValue([
       { collectionId: "col-1", item: { itemType: { name: "Snippet", icon: "Code", color: "#3b82f6" } } },
     ]);
     const result = await getAllCollections("user-1");
-    expect(result).toEqual([
-      {
-        id: "col-1",
-        name: "React Patterns",
-        description: null,
-        isFavorite: false,
-        itemCount: 3,
-        itemTypes: [{ name: "Snippet", icon: "Code", color: "#3b82f6" }],
-        dominantColor: "#3b82f6",
-        updatedAt: new Date("2025-01-01"),
-      },
-    ]);
+    expect(result).toEqual({
+      data: [
+        {
+          id: "col-1",
+          name: "React Patterns",
+          description: null,
+          isFavorite: false,
+          itemCount: 3,
+          itemTypes: [{ name: "Snippet", icon: "Code", color: "#3b82f6" }],
+          dominantColor: "#3b82f6",
+          updatedAt: new Date("2025-01-01"),
+        },
+      ],
+      totalCount: 1,
+    });
   });
 });
 

@@ -28,3 +28,8 @@ export function extractActionError(error: string | Record<string, string[]>): st
     ? error
     : Object.values(error).flat().join(", ");
 }
+
+// Parses a ?page= search param into a valid page number, defaulting to 1 — guards Prisma's skip from going negative
+export function parsePage(value: string | undefined): number {
+  return Math.max(1, Math.floor(Number(value)) || 1);
+}

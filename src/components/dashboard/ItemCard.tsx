@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
-import { ICON_MAP } from "@/lib/icon-map";
+import { ICON_MAP } from "@/lib/constants/icon-map";
 import { useItemDrawer } from "./ItemDrawerProvider";
 import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
