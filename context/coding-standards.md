@@ -18,7 +18,7 @@
 
 - Server components by default — all `page.tsx` files must be server components
 - Only use `'use client'` when needed (interactivity, hooks, browser APIs) — extract into a separate child component, never at the page level
-- Use Server Actions for form submissions and simple mutations
+- Use Server Actions for form submissions, mutations, and simple data reads from client components
 - Use API routes when you need:
   - Webhooks (Stripe, GitHub, etc.)
   - File uploads with progress tracking
@@ -26,6 +26,7 @@
   - Specific HTTP status codes or headers
   - Endpoints for future mobile/CLI clients
   - Third-party integrations
+  - Request cancellation via `AbortController` (e.g. race condition guards)
 - Otherwise, fetch data directly in server components
 - Dynamic routes for item/collection pages
 

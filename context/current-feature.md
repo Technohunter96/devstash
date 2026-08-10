@@ -383,3 +383,15 @@ Not Started
 - `CollectionCard.tsx` — added 3-dot `DropdownMenu` (Edit, Favorite disabled, Delete); menu uses `onClick` (Base UI API, not Radix `onSelect`); trigger `stopPropagation` so card navigation still fires on the rest of the card; `CollectionEditDialog` + `CollectionDeleteDialog` rendered in the fragment
 - `/collections/[id]/page.tsx` — header row updated with `CollectionDetailActions`; favorite star removed from header (now in actions component)
 - 10 new tests in `src/actions/collections.test.ts` for `updateCollection` (6) and `deleteCollection` (4)
+
+### 2026-08-10 — Global Search / Command Palette Completed
+
+- Installed shadcn Command component (`src/components/ui/command.tsx`, `input-group.tsx`) — cmdk-backed
+- Created `src/lib/db/search.ts` — `getSearchItems`/`getSearchCollections`, lightweight fields only (id, title, description, type, content preview / item count + dominant color)
+- Created `src/actions/search.ts` — `getSearchData()` Server Action combining both queries; established as the pattern for client-side data reads going forward (see coding-standards.md update below)
+- Created `src/components/dashboard/SearchProvider.tsx` — context holding palette open state; global Cmd+K/Ctrl+K listener; lazy fetch (data loads on first open, not on app load)
+- Created `src/components/dashboard/CommandPalette.tsx` — two `CommandGroup`s (Items/Collections) separated by `CommandSeparator`; fuzzy match on title via `value`, fuzzy match on description via `keywords`; description shown under title in results; item select opens `ItemDrawer`, collection select navigates to `/collections/[id]`; palette positioned `top-[15%]` (Linear/VS Code style, not centered)
+- `DashboardShell.tsx` — wraps children in `SearchProvider`, renders `CommandPalette`
+- `TopBar.tsx` — search input replaced with a button styled as an input; click opens the palette; `⌘K`/`Ctrl+K` hint kept in the trailing kbd badge; old local Ctrl+K listener removed (now global in `SearchProvider`)
+- `coding-standards.md` — clarified Server Actions vs API routes: client-side reads use Server Actions; API routes reserved for cases needing `AbortController`-based cancellation (race condition guards) among other existing exceptions
+- 12 unit tests: `src/lib/db/search.test.ts` (8), `src/actions/search.test.ts` (4)

@@ -4,6 +4,8 @@ import { useState } from "react";
 import TopBar from "@/components/dashboard/TopBar";
 import Sidebar from "@/components/dashboard/Sidebar";
 import ItemDrawerProvider from "@/components/dashboard/ItemDrawerProvider";
+import SearchProvider from "@/components/dashboard/SearchProvider";
+import CommandPalette from "@/components/dashboard/CommandPalette";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 
 interface DashboardShellProps {
@@ -23,22 +25,25 @@ export default function DashboardShell({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <ItemDrawerProvider>
-      <div className="flex flex-col h-full">
-        <TopBar onMenuToggle={() => setSidebarOpen((v) => !v)} />
-        <div className="flex flex-1 overflow-hidden relative">
-          <Sidebar
-            isOpen={sidebarOpen}
-            isCollapsed={sidebarCollapsed}
-            onClose={() => setSidebarOpen(false)}
-            onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
-            itemTypes={itemTypes}
-            collections={collections}
-            user={user}
-          />
-          <main className="flex-1 overflow-auto">{children}</main>
+    <SearchProvider>
+      <ItemDrawerProvider>
+        <CommandPalette />
+        <div className="flex flex-col h-full">
+          <TopBar onMenuToggle={() => setSidebarOpen((v) => !v)} />
+          <div className="flex flex-1 overflow-hidden relative">
+            <Sidebar
+              isOpen={sidebarOpen}
+              isCollapsed={sidebarCollapsed}
+              onClose={() => setSidebarOpen(false)}
+              onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+              itemTypes={itemTypes}
+              collections={collections}
+              user={user}
+            />
+            <main className="flex-1 overflow-auto">{children}</main>
+          </div>
         </div>
-      </div>
-    </ItemDrawerProvider>
+      </ItemDrawerProvider>
+    </SearchProvider>
   );
 }

@@ -1,30 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Archive, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import NewItemDialog from "./NewItemDialog";
 import NewCollectionDialog from "./NewCollectionDialog";
+import { useSearch } from "./SearchProvider";
 
 interface TopBarProps {
   onMenuToggle?: () => void;
 }
 
 export default function TopBar({ onMenuToggle }: TopBarProps) {
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  const { setOpen } = useSearch();
 
   return (
     <header className="h-14 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0">
@@ -42,13 +29,17 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       </div>
 
       <div className="flex-1 flex justify-center">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input ref={searchRef} placeholder="Search..." className="pl-9 pr-16" />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+        {/* Fake search input that opens the command palette on click */}
+        <button
+          onClick={() => setOpen(true)}
+          className="relative w-full max-w-md flex items-center h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm text-muted-foreground shadow-xs cursor-pointer hover:bg-muted/50 transition-colors"
+        >
+          <Search className="size-4 mr-2 shrink-0" />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="pointer-events-none hidden sm:flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
             <span>⌘</span>K
           </kbd>
-        </div>
+        </button>
       </div>
 
       <div className="flex items-center gap-2 justify-end shrink-0">
