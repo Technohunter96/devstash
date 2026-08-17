@@ -18,6 +18,17 @@ import {
   type EditorPreferences,
 } from "@/lib/constants/editor-preferences";
 
+// Base UI's <Select.Value> needs an `items` list on the root to resolve the
+// selected value into its display label (e.g. "12px" instead of raw "12").
+const FONT_SIZE_ITEMS = FONT_SIZE_OPTIONS.map((size) => ({
+  value: String(size),
+  label: `${size}px`,
+}));
+const TAB_SIZE_ITEMS = TAB_SIZE_OPTIONS.map((size) => ({
+  value: String(size),
+  label: `${size} spaces`,
+}));
+
 export default function EditorPreferencesCard() {
   const { preferences, setPreferences } = useEditorPreferences();
 
@@ -28,6 +39,7 @@ export default function EditorPreferencesCard() {
       <div className="divide-y divide-border">
         <PreferenceRow label="Font size" description="Text size used in the code editor.">
           <Select
+            items={FONT_SIZE_ITEMS}
             value={String(preferences.fontSize)}
             onValueChange={(v) => setPreferences({ fontSize: Number(v) })}
           >
@@ -46,6 +58,7 @@ export default function EditorPreferencesCard() {
 
         <PreferenceRow label="Tab size" description="Number of spaces per indentation level.">
           <Select
+            items={TAB_SIZE_ITEMS}
             value={String(preferences.tabSize)}
             onValueChange={(v) => setPreferences({ tabSize: Number(v) })}
           >
@@ -64,6 +77,7 @@ export default function EditorPreferencesCard() {
 
         <PreferenceRow label="Theme" description="Color theme for the code editor.">
           <Select
+            items={EDITOR_THEME_OPTIONS}
             value={preferences.theme}
             onValueChange={(v) => setPreferences({ theme: v as EditorPreferences["theme"] })}
           >

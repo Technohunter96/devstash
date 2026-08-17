@@ -459,3 +459,10 @@ Not Started
 - `ImageCard.tsx` — favorite badge top-right converted from static display into a clickable toggle button
 - All toggles use local `useState` seeded from the server prop plus `router.refresh()` after a successful toggle, matching the existing edit/delete mutation pattern used elsewhere in these components
 - Tests: 5 new tests for `toggleItemFavorite` in `src/actions/items.test.ts`, 5 new tests for `toggleCollectionFavorite` in `src/actions/collections.test.ts` (unauthorized, not-found, success, userId/id passthrough) — DB-level toggle functions are mutations and, per the existing convention in this codebase, are only covered indirectly through the action-layer tests, not directly
+
+### 2026-08-18 — Favorites Sorting Completed
+
+- `FavoritesList.tsx` — added a "Sort by" `Select` control (Date/Name/Type) above the Items/Collections sections; sorting is entirely client-side via `useState<SortOption>` + `useMemo`, no new server action or DB query
+- `sortItems`/`sortCollections` helper functions: Date sorts by `updatedAt` desc (matches prior default order), Name sorts alphabetically by title/name, Type sorts items by `itemType.name` — Type has no meaning for collections so it falls back to Date order there
+- Default sort is "Date" so the page's initial appearance is unchanged from before this feature
+- Fixed a pre-existing bug surfaced while testing: Base UI's `<Select.Value>` needs an `items` prop on the `<Select>` root to resolve the selected value into its display label — without it, the closed trigger showed the raw `value` (e.g. lowercase "date") instead of the item's rendered label ("Date"), while the open dropdown looked correct since it renders `SelectItem` children directly. Fixed by passing `items={...}` on all `<Select>` roots in `FavoritesList.tsx` and `EditorPreferencesCard.tsx` (the latter's font size/tab size/theme selects had the same latent bug)
