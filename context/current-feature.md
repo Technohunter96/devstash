@@ -419,3 +419,19 @@ Not Started
 - `Sidebar.tsx` — added "Settings" link (Lucide `Settings` icon) to the user dropdown menu, both expanded and collapsed variants, alongside existing Profile/Sign out
 - "Forgot password" in the original ask was clarified with the user to mean the existing Change Password action (not the standalone `/forgot-password` flow, which is untouched)
 - No new server actions or utilities — purely a UI relocation reusing existing data functions and API routes; no new unit tests needed per testing scope (utilities/server actions only)
+
+### 2026-08-17 — Editor Preferences Settings Completed
+
+- Added `editorPreferences Json?` (`editor_preferences`) to the `User` model via migration `20260817211015_add_editor_preferences`
+- `src/lib/constants/editor-preferences.ts` — `EditorPreferences` type, `DEFAULT_EDITOR_PREFERENCES` (fontSize 12, tabSize 2, wordWrap true, minimap false, theme `vs-dark`), and dropdown option lists
+- `src/lib/db/editor-preferences.ts` — `getEditorPreferences`/`updateEditorPreferencesInDb`; `normalizeEditorPreferences` merges stored JSON with defaults field-by-field so null/partial/corrupt data never breaks the editor
+- `src/actions/editor-preferences.ts` — `getEditorPreferences`/`updateEditorPreferences` server actions, Zod-validated (font/tab size restricted to option lists, theme restricted to 3-value enum), `{ success, data, error }` pattern
+- Created `src/components/dashboard/EditorPreferencesProvider.tsx` — `EditorPreferencesContext`/`useEditorPreferences()`, same shape as `SearchProvider`; fetches on mount, `setPreferences(partial)` updates local state immediately and persists via a 500ms-debounced server action call with a success/error toast
+- `DashboardShell.tsx` wraps everything in `EditorPreferencesProvider` (outermost, alongside `SearchProvider`/`ItemDrawerProvider`) so every `CodeEditor` instance across the app — item drawer, new item dialog — shares live preferences
+- Created `src/lib/monaco-themes.ts` — `defineCustomMonacoThemes` registers `monokai` and `github-dark` via `monaco.editor.defineTheme` (Monaco only ships `vs-dark`/`vs`/`hc-black` natively)
+- `CodeEditor.tsx` — `beforeMount` registers the custom themes; `fontSize`, `tabSize`, `wordWrap`, `minimap`, `theme` now read from `useEditorPreferences()` instead of hardcoded values
+- Created `src/components/settings/EditorPreferencesCard.tsx` — 3 `Select` dropdowns + 2 `Switch` toggles wired directly to `setPreferences`, no save button
+- Installed shadcn `select` and `switch` components (Base UI–backed)
+- `/settings` page — `EditorPreferencesCard` rendered above `AccountActionsCard`
+- Dev-server gotcha: the Prisma client singleton in `src/lib/prisma.ts` is intentionally cached on `globalThis` to survive Next.js HMR, so a schema change requires a full `npm run dev` restart (not just a save) to pick up a freshly regenerated client
+- Tests: 4 new tests in `src/lib/db/editor-preferences.test.ts` (defaults, stored values, invalid-field fallback); 7 new tests in `src/actions/editor-preferences.test.ts` (unauthorized, validation, success, userId passthrough)

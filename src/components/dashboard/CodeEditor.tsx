@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Editor, { type OnMount } from "@monaco-editor/react";
+import Editor, { type OnMount, type BeforeMount } from "@monaco-editor/react";
 import { Copy, Check } from "lucide-react";
 import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
+import { useEditorPreferences } from "@/components/dashboard/EditorPreferencesProvider";
+import { defineCustomMonacoThemes } from "@/lib/monaco-themes";
 
 interface CodeEditorProps {
   value: string;
@@ -14,8 +16,13 @@ interface CodeEditorProps {
 
 export default function CodeEditor({ value, language, readOnly = false, onChange }: CodeEditorProps) {
   const { copied, copy } = useCopyToClipboard();
+  const { preferences } = useEditorPreferences();
   const minHeight = 80;
   const [editorHeight, setEditorHeight] = useState(minHeight);
+
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    defineCustomMonacoThemes(monaco);
+  };
 
   const handleMount: OnMount = (editorInstance) => {
     const updateHeight = () => {
@@ -60,17 +67,19 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
         height={editorHeight}
         value={value}
         language={language || "plaintext"}
-        theme="vs-dark"
+        theme={preferences.theme}
+        beforeMount={handleBeforeMount}
         onMount={handleMount}
         onChange={(val) => onChange?.(val ?? "")}
         options={{
           readOnly,
           domReadOnly: readOnly,
-          minimap: { enabled: false },
+          minimap: { enabled: preferences.minimap },
           scrollBeyondLastLine: false,
-          fontSize: 12,
+          fontSize: preferences.fontSize,
+          tabSize: preferences.tabSize,
           lineNumbers: "on",
-          wordWrap: "on",
+          wordWrap: preferences.wordWrap ? "on" : "off",
           automaticLayout: true,
           scrollbar: {
             vertical: "auto",

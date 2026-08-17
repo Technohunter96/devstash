@@ -31,6 +31,7 @@ model User {
   isPro                Boolean   @default(false) @map("is_pro")
   stripeCustomerId     String?   @unique @map("stripe_customer_id")
   stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  editorPreferences    Json?     @map("editor_preferences")
 
   items       Item[]
   itemTypes   ItemType[]
