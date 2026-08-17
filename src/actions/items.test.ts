@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createItem, updateItem, deleteItem, toggleItemFavorite } from "./items";
+import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from "./items";
 
 const mockAuth = vi.fn();
 const mockCreateItemInDb = vi.fn();
 const mockUpdateItemById = vi.fn();
 const mockDeleteItemById = vi.fn();
 const mockToggleItemFavoriteById = vi.fn();
+const mockToggleItemPinById = vi.fn();
 
 vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
@@ -16,6 +17,7 @@ vi.mock("@/lib/db/items", () => ({
   updateItemById: (...args: unknown[]) => mockUpdateItemById(...args),
   deleteItemById: (...args: unknown[]) => mockDeleteItemById(...args),
   toggleItemFavoriteById: (...args: unknown[]) => mockToggleItemFavoriteById(...args),
+  toggleItemPinById: (...args: unknown[]) => mockToggleItemPinById(...args),
 }));
 
 const VALID_PAYLOAD = {
@@ -352,5 +354,47 @@ describe("toggleItemFavorite", () => {
     mockToggleItemFavoriteById.mockResolvedValue({ isFavorite: false });
     await toggleItemFavorite("item-99");
     expect(mockToggleItemFavoriteById).toHaveBeenCalledWith("user-42", "item-99");
+  });
+});
+
+describe("toggleItemPin", () => {
+  beforeEach(() => {
+    mockAuth.mockReset();
+    mockToggleItemPinById.mockReset();
+  });
+
+  it("returns unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await toggleItemPin("item-1");
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockToggleItemPinById).not.toHaveBeenCalled();
+  });
+
+  it("returns unauthorized when session has no user id", async () => {
+    mockAuth.mockResolvedValue({ user: {} });
+    const result = await toggleItemPin("item-1");
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockToggleItemPinById).not.toHaveBeenCalled();
+  });
+
+  it("returns item not found when toggleItemPinById returns null", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockToggleItemPinById.mockResolvedValue(null);
+    const result = await toggleItemPin("item-1");
+    expect(result).toEqual({ success: false, error: "Item not found" });
+  });
+
+  it("returns the new pinned state on success", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockToggleItemPinById.mockResolvedValue({ isPinned: true });
+    const result = await toggleItemPin("item-1");
+    expect(result).toEqual({ success: true, isPinned: true });
+  });
+
+  it("passes userId and itemId to toggleItemPinById", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-42" } });
+    mockToggleItemPinById.mockResolvedValue({ isPinned: false });
+    await toggleItemPin("item-99");
+    expect(mockToggleItemPinById).toHaveBeenCalledWith("user-42", "item-99");
   });
 });

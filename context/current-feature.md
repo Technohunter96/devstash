@@ -466,3 +466,14 @@ Not Started
 - `sortItems`/`sortCollections` helper functions: Date sorts by `updatedAt` desc (matches prior default order), Name sorts alphabetically by title/name, Type sorts items by `itemType.name` — Type has no meaning for collections so it falls back to Date order there
 - Default sort is "Date" so the page's initial appearance is unchanged from before this feature
 - Fixed a pre-existing bug surfaced while testing: Base UI's `<Select.Value>` needs an `items` prop on the `<Select>` root to resolve the selected value into its display label — without it, the closed trigger showed the raw `value` (e.g. lowercase "date") instead of the item's rendered label ("Date"), while the open dropdown looked correct since it renders `SelectItem` children directly. Fixed by passing `items={...}` on all `<Select>` roots in `FavoritesList.tsx` and `EditorPreferencesCard.tsx` (the latter's font size/tab size/theme selects had the same latent bug)
+
+### 2026-08-18 — Pinned Items Completed
+
+- `toggleItemPinById` added to `src/lib/db/items.ts` — mirrors `toggleItemFavoriteById`, ownership-scoped via `findFirst` + `updateMany` (IDOR-safe), flips `isPinned`
+- `toggleItemPin` server action added to `src/actions/items.ts` — `auth()` guard, `{ success, isPinned, error }` pattern
+- `ItemDrawer.tsx` — Pin button in the action bar wired up with a true optimistic update: flips `isPinned` immediately via `onItemUpdated` before the server call resolves, reverts + error toast on failure, success toast ("Item pinned"/"Item unpinned") on confirmation
+- Bug found during manual testing: `onItemUpdated` also triggers `router.refresh()`; calling it only optimistically (before `await toggleItemPin` resolved) meant the refresh could race ahead of the DB write, leaving listings showing the stale unpinned state permanently. Fixed by calling `onItemUpdated` a second time with the server-confirmed `isPinned` value after the toggle succeeds, guaranteeing a refresh that happens after the write lands
+- `getItemsByType`/`getItemsByCollection` (`src/lib/db/items.ts`) — `orderBy` changed to `[{ isPinned: "desc" }, { lastUsedAt: ... }]` so pinned items sort to the top of `/items/[type]` and `/collections/[id]` listings
+- Dashboard's `getRecentItems` intentionally left unchanged — the dashboard already has a separate "Pinned" section above "Recent", so mixing pin-first ordering there would be redundant
+- `ItemCard.tsx` pin icon remains a static, non-clickable indicator per spec — only the drawer's Pin button is interactive
+- Tests: 5 new tests for `toggleItemPin` in `src/actions/items.test.ts` (unauthorized, not-found, success, userId/itemId passthrough)

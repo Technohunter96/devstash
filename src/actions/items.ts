@@ -7,6 +7,7 @@ import {
   updateItemById,
   deleteItemById,
   toggleItemFavoriteById,
+  toggleItemPinById,
 } from "@/lib/db/items";
 import { deleteFromR2 } from "@/lib/r2";
 import type { ItemDetail, CreateItemData } from "@/lib/db/items";
@@ -168,4 +169,22 @@ export async function toggleItemFavorite(itemId: string): Promise<ToggleItemFavo
   }
 
   return { success: true, isFavorite: result.isFavorite };
+}
+
+type ToggleItemPinResult =
+  | { success: true; isPinned: boolean }
+  | { success: false; error: string };
+
+export async function toggleItemPin(itemId: string): Promise<ToggleItemPinResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const result = await toggleItemPinById(session.user.id, itemId);
+  if (!result) {
+    return { success: false, error: "Item not found" };
+  }
+
+  return { success: true, isPinned: result.isPinned };
 }

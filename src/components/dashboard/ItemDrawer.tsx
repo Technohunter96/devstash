@@ -22,7 +22,7 @@ import CollectionBadge from "./CollectionBadge";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/constants/icon-map";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/constants/item-types";
-import { updateItem, deleteItem, toggleItemFavorite } from "@/actions/items";
+import { updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from "@/actions/items";
 import { toast } from "sonner";
 import type { ItemDetail } from "@/lib/db/items";
 
@@ -103,6 +103,7 @@ function ItemDrawerBody({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [isTogglingPin, setIsTogglingPin] = useState(false);
   // Tracks replacement file in edit mode for File/Image types
   const [uploadedFile, setUploadedFile] = useState<UploadResult | null>(null);
   // Fullscreen image preview dialog
@@ -183,6 +184,31 @@ function ItemDrawerBody({
       toast.error("Failed to update favorite");
     } finally {
       setIsTogglingFavorite(false);
+    }
+  };
+
+  const handleTogglePin = async () => {
+    const previousIsPinned = item.isPinned;
+    setIsTogglingPin(true);
+    // Optimistic update — flip immediately, revert if the request fails
+    onItemUpdated({ ...item, isPinned: !previousIsPinned });
+    try {
+      const result = await toggleItemPin(item.id);
+      if (!result.success) {
+        onItemUpdated({ ...item, isPinned: previousIsPinned });
+        toast.error(result.error);
+        return;
+      }
+      // Re-sync once the write is confirmed — onItemUpdated's router.refresh() fired
+      // optimistically above may have already resolved before the DB write landed,
+      // so listings need a second refresh guaranteed to happen after the confirmed state
+      onItemUpdated({ ...item, isPinned: result.isPinned });
+      toast.success(result.isPinned ? "Item pinned" : "Item unpinned");
+    } catch {
+      onItemUpdated({ ...item, isPinned: previousIsPinned });
+      toast.error("Failed to update pin");
+    } finally {
+      setIsTogglingPin(false);
     }
   };
 
@@ -284,7 +310,10 @@ function ItemDrawerBody({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleTogglePin}
+                disabled={isTogglingPin}
                 className={cn(
+                  "cursor-pointer",
                   item.isPinned &&
                     "border-blue-400/40 text-blue-400 hover:text-blue-300 dark:bg-blue-400/10",
                 )}

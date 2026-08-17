@@ -100,7 +100,7 @@ export async function getItemsByType(
   const [data, totalCount] = await Promise.all([
     prisma.item.findMany({
       where,
-      orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
+      orderBy: [{ isPinned: "desc" }, { lastUsedAt: { sort: "desc", nulls: "last" } }],
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
       select: itemSelect,
@@ -120,7 +120,7 @@ export async function getItemsByCollection(
   const [data, totalCount] = await Promise.all([
     prisma.item.findMany({
       where,
-      orderBy: { lastUsedAt: { sort: "desc", nulls: "last" } },
+      orderBy: [{ isPinned: "desc" }, { lastUsedAt: { sort: "desc", nulls: "last" } }],
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
       select: itemSelect,
@@ -378,6 +378,22 @@ export async function toggleItemFavoriteById(
   const isFavorite = !existing.isFavorite;
   await prisma.item.updateMany({ where: { id: itemId, userId }, data: { isFavorite } });
   return { isFavorite };
+}
+
+// Flips isPinned for an item; ownership-scoped via findFirst + updateMany (IDOR-safe)
+export async function toggleItemPinById(
+  userId: string,
+  itemId: string
+): Promise<{ isPinned: boolean } | null> {
+  const existing = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { isPinned: true },
+  });
+  if (!existing) return null;
+
+  const isPinned = !existing.isPinned;
+  await prisma.item.updateMany({ where: { id: itemId, userId }, data: { isPinned } });
+  return { isPinned };
 }
 
 // Deletes an item and returns its fileUrl (if any) for R2 cleanup
