@@ -364,6 +364,22 @@ export async function createItemInDb(
   };
 }
 
+// Flips isFavorite for an item; ownership-scoped via findFirst + updateMany (IDOR-safe)
+export async function toggleItemFavoriteById(
+  userId: string,
+  itemId: string
+): Promise<{ isFavorite: boolean } | null> {
+  const existing = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { isFavorite: true },
+  });
+  if (!existing) return null;
+
+  const isFavorite = !existing.isFavorite;
+  await prisma.item.updateMany({ where: { id: itemId, userId }, data: { isFavorite } });
+  return { isFavorite };
+}
+
 // Deletes an item and returns its fileUrl (if any) for R2 cleanup
 export async function deleteItemById(
   userId: string,

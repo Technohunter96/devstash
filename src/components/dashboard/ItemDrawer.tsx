@@ -22,7 +22,7 @@ import CollectionBadge from "./CollectionBadge";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/constants/icon-map";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/constants/item-types";
-import { updateItem, deleteItem } from "@/actions/items";
+import { updateItem, deleteItem, toggleItemFavorite } from "@/actions/items";
 import { toast } from "sonner";
 import type { ItemDetail } from "@/lib/db/items";
 
@@ -102,6 +102,7 @@ function ItemDrawerBody({
   const [editState, setEditState] = useState<EditState>(() => itemToEditState(item));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   // Tracks replacement file in edit mode for File/Image types
   const [uploadedFile, setUploadedFile] = useState<UploadResult | null>(null);
   // Fullscreen image preview dialog
@@ -166,6 +167,22 @@ function ItemDrawerBody({
       toast.error("Failed to save item");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    setIsTogglingFavorite(true);
+    try {
+      const result = await toggleItemFavorite(item.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      onItemUpdated({ ...item, isFavorite: result.isFavorite });
+    } catch {
+      toast.error("Failed to update favorite");
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
@@ -253,7 +270,10 @@ function ItemDrawerBody({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleToggleFavorite}
+                disabled={isTogglingFavorite}
                 className={cn(
+                  "cursor-pointer",
                   item.isFavorite &&
                     "border-yellow-400/40 text-yellow-400 hover:text-yellow-300 dark:bg-yellow-400/10",
                 )}

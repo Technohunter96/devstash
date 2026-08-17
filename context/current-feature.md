@@ -447,3 +447,15 @@ Not Started
 - Page title on `/favorites` includes a yellow filled star icon
 - No dedicated `favoritedAt` timestamp exists on `Item`/`Collection`, so `updatedAt` is used as the "recently favorited" sort proxy (documented tradeoff, confirmed acceptable — `updatedAt` also changes on unrelated edits)
 - Tests: `getFavoriteItems` in `src/lib/db/items.test.ts`, `getFavoriteCollections` in `src/lib/db/collections.test.ts`
+
+### 2026-08-18 — Favorite Toggle Button Completed
+
+- Created `toggleItemFavoriteById` (`src/lib/db/items.ts`) and `toggleCollectionFavoriteInDb` (`src/lib/db/collections.ts`) — ownership-scoped via `findFirst` + `updateMany` (IDOR-safe), flip the current `isFavorite` value
+- Added `toggleItemFavorite`/`toggleCollectionFavorite` server actions (`src/actions/items.ts`, `src/actions/collections.ts`) — `auth()` guard, `{ success, isFavorite, error }` pattern
+- `ItemDrawer.tsx` — Favorite button in the action bar wired up (previously styled but non-functional); updates the open item via existing `onItemUpdated` callback, which also triggers `router.refresh()`
+- `CollectionDetailActions.tsx` — Favorite button wired up (previously a disabled "coming soon" placeholder)
+- `CollectionCard.tsx` — dropdown "Favorite"/"Unfavorite" menu item enabled and wired
+- `ItemCard.tsx` — added a hover-visible favorite toggle button top-right of the card (always visible when favorited); removed the old static star badge next to the title to avoid duplication
+- `ImageCard.tsx` — favorite badge top-right converted from static display into a clickable toggle button
+- All toggles use local `useState` seeded from the server prop plus `router.refresh()` after a successful toggle, matching the existing edit/delete mutation pattern used elsewhere in these components
+- Tests: 5 new tests for `toggleItemFavorite` in `src/actions/items.test.ts`, 5 new tests for `toggleCollectionFavorite` in `src/actions/collections.test.ts` (unauthorized, not-found, success, userId/id passthrough) — DB-level toggle functions are mutations and, per the existing convention in this codebase, are only covered indirectly through the action-layer tests, not directly

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Pencil, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CollectionEditDialog from "@/components/dashboard/CollectionEditDialog";
 import CollectionDeleteDialog from "@/components/dashboard/CollectionDeleteDialog";
+import { toggleCollectionFavorite } from "@/actions/collections";
 
 interface CollectionDetailActionsProps {
   collection: {
@@ -20,21 +22,40 @@ export default function CollectionDetailActions({ collection }: CollectionDetail
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(collection.isFavorite);
+  const [isToggling, setIsToggling] = useState(false);
+
+  const handleToggleFavorite = async () => {
+    setIsToggling(true);
+    try {
+      const result = await toggleCollectionFavorite(collection.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      setIsFavorite(result.isFavorite);
+      router.refresh();
+    } catch {
+      toast.error("Failed to update favorite");
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   return (
     <>
       <div className="flex items-center gap-2">
-        {/* Favorite — placeholder, not yet functional */}
         <Button
           variant="ghost"
           size="icon"
           className="cursor-pointer"
-          title="Favorite (coming soon)"
-          disabled
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          onClick={handleToggleFavorite}
+          disabled={isToggling}
         >
           <Star
             className="w-4 h-4"
-            style={collection.isFavorite ? { color: "#facc15", fill: "#facc15" } : undefined}
+            style={isFavorite ? { color: "#facc15", fill: "#facc15" } : undefined}
           />
         </Button>
 

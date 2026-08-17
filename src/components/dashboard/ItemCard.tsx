@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Star, Pin, Copy, Check, File } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/constants/icon-map";
 import { useItemDrawer } from "./ItemDrawerProvider";
 import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
+import { toggleItemFavorite } from "@/actions/items";
 
 interface Item {
   id: string;
@@ -29,14 +33,27 @@ interface Item {
 }
 
 export default function ItemCard({ item }: { item: Item }) {
+  const router = useRouter();
   const { copied, copy } = useCopyToClipboard();
   const { open } = useItemDrawer();
+  const [isFavorite, setIsFavorite] = useState(item.isFavorite);
   const Icon = ICON_MAP[item.itemType.icon] ?? File;
   const copyableContent = item.content ?? item.url;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (copyableContent) copy(copyableContent);
+  };
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const result = await toggleItemFavorite(item.id);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    setIsFavorite(result.isFavorite);
+    router.refresh();
   };
 
   return (
@@ -61,9 +78,6 @@ export default function ItemCard({ item }: { item: Item }) {
           <div className="flex items-center gap-1.5">
             {item.isPinned && <Pin className="w-3 h-3 text-muted-foreground shrink-0" />}
             <span className="font-medium text-base truncate">{item.title}</span>
-            {item.isFavorite && (
-              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0" />
-            )}
             {item.lastUsedAt && (
               <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
                 {timeAgo(item.lastUsedAt)}
@@ -84,6 +98,17 @@ export default function ItemCard({ item }: { item: Item }) {
           )}
         </div>
       </CardContent>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className={cn(
+          "absolute top-2 right-2 transition-opacity",
+          isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+        )}
+        onClick={handleToggleFavorite}
+      >
+        <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-400 text-yellow-400")} />
+      </Button>
       {copyableContent && (
         <Button
           variant="ghost"

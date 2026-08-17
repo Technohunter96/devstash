@@ -6,6 +6,7 @@ import {
   createCollectionInDb,
   updateCollectionInDb,
   deleteCollectionInDb,
+  toggleCollectionFavoriteInDb,
 } from "@/lib/db/collections";
 import type { DashboardCollection } from "@/lib/db/collections";
 
@@ -86,4 +87,24 @@ export async function deleteCollection(collectionId: string): Promise<DeleteColl
   }
 
   return { success: true };
+}
+
+type ToggleCollectionFavoriteResult =
+  | { success: true; isFavorite: boolean }
+  | { success: false; error: string };
+
+export async function toggleCollectionFavorite(
+  collectionId: string
+): Promise<ToggleCollectionFavoriteResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const result = await toggleCollectionFavoriteInDb(session.user.id, collectionId);
+  if (!result) {
+    return { success: false, error: "Collection not found" };
+  }
+
+  return { success: true, isFavorite: result.isFavorite };
 }

@@ -96,6 +96,25 @@ export async function updateCollectionInDb(
   return result;
 }
 
+// Flips isFavorite for a collection; ownership-scoped via findFirst + updateMany (IDOR-safe)
+export async function toggleCollectionFavoriteInDb(
+  userId: string,
+  collectionId: string
+): Promise<{ isFavorite: boolean } | null> {
+  const existing = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: { isFavorite: true },
+  });
+  if (!existing) return null;
+
+  const isFavorite = !existing.isFavorite;
+  await prisma.collection.updateMany({
+    where: { id: collectionId, userId },
+    data: { isFavorite },
+  });
+  return { isFavorite };
+}
+
 // Deletes collection by id; ItemCollection rows cascade automatically via Prisma schema.
 // Returns false if the collection doesn't belong to the user.
 export async function deleteCollectionInDb(

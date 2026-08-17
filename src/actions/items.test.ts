@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createItem, updateItem, deleteItem } from "./items";
+import { createItem, updateItem, deleteItem, toggleItemFavorite } from "./items";
 
 const mockAuth = vi.fn();
 const mockCreateItemInDb = vi.fn();
 const mockUpdateItemById = vi.fn();
 const mockDeleteItemById = vi.fn();
+const mockToggleItemFavoriteById = vi.fn();
 
 vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
@@ -14,6 +15,7 @@ vi.mock("@/lib/db/items", () => ({
   createItemInDb: (...args: unknown[]) => mockCreateItemInDb(...args),
   updateItemById: (...args: unknown[]) => mockUpdateItemById(...args),
   deleteItemById: (...args: unknown[]) => mockDeleteItemById(...args),
+  toggleItemFavoriteById: (...args: unknown[]) => mockToggleItemFavoriteById(...args),
 }));
 
 const VALID_PAYLOAD = {
@@ -308,5 +310,47 @@ describe("updateItem", () => {
       "item-1",
       expect.objectContaining({ collectionIds: ["col-1"] }),
     );
+  });
+});
+
+describe("toggleItemFavorite", () => {
+  beforeEach(() => {
+    mockAuth.mockReset();
+    mockToggleItemFavoriteById.mockReset();
+  });
+
+  it("returns unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await toggleItemFavorite("item-1");
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockToggleItemFavoriteById).not.toHaveBeenCalled();
+  });
+
+  it("returns unauthorized when session has no user id", async () => {
+    mockAuth.mockResolvedValue({ user: {} });
+    const result = await toggleItemFavorite("item-1");
+    expect(result).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockToggleItemFavoriteById).not.toHaveBeenCalled();
+  });
+
+  it("returns item not found when toggleItemFavoriteById returns null", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockToggleItemFavoriteById.mockResolvedValue(null);
+    const result = await toggleItemFavorite("item-1");
+    expect(result).toEqual({ success: false, error: "Item not found" });
+  });
+
+  it("returns the new favorite state on success", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockToggleItemFavoriteById.mockResolvedValue({ isFavorite: true });
+    const result = await toggleItemFavorite("item-1");
+    expect(result).toEqual({ success: true, isFavorite: true });
+  });
+
+  it("passes userId and itemId to toggleItemFavoriteById", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-42" } });
+    mockToggleItemFavoriteById.mockResolvedValue({ isFavorite: false });
+    await toggleItemFavorite("item-99");
+    expect(mockToggleItemFavoriteById).toHaveBeenCalledWith("user-42", "item-99");
   });
 });

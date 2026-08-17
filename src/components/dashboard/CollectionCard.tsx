@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { File, Star, FolderOpen, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,6 +15,7 @@ import {
 import { ICON_MAP } from "@/lib/constants/icon-map";
 import CollectionEditDialog from "@/components/dashboard/CollectionEditDialog";
 import CollectionDeleteDialog from "@/components/dashboard/CollectionDeleteDialog";
+import { toggleCollectionFavorite } from "@/actions/collections";
 
 interface ItemType {
   name: string;
@@ -37,6 +39,17 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(collection.isFavorite);
+
+  const handleToggleFavorite = async () => {
+    const result = await toggleCollectionFavorite(collection.id);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    setIsFavorite(result.isFavorite);
+    router.refresh();
+  };
 
   return (
     <>
@@ -53,7 +66,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              {collection.isFavorite && (
+              {isFavorite && (
                 <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 mt-0.5" />
               )}
               {/* 3-dot menu — stopPropagation prevents the card click from firing */}
@@ -78,10 +91,10 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    disabled
+                    onClick={handleToggleFavorite}
                   >
-                    <Star className="w-4 h-4 mr-2" />
-                    Favorite
+                    <Star className={isFavorite ? "w-4 h-4 mr-2 fill-yellow-400 text-yellow-400" : "w-4 h-4 mr-2"} />
+                    {isFavorite ? "Unfavorite" : "Favorite"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

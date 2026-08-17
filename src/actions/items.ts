@@ -2,7 +2,12 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
-import { createItemInDb, updateItemById, deleteItemById } from "@/lib/db/items";
+import {
+  createItemInDb,
+  updateItemById,
+  deleteItemById,
+  toggleItemFavoriteById,
+} from "@/lib/db/items";
 import { deleteFromR2 } from "@/lib/r2";
 import type { ItemDetail, CreateItemData } from "@/lib/db/items";
 
@@ -145,4 +150,22 @@ export async function deleteItem(itemId: string): Promise<DeleteItemResult> {
   }
 
   return { success: true };
+}
+
+type ToggleItemFavoriteResult =
+  | { success: true; isFavorite: boolean }
+  | { success: false; error: string };
+
+export async function toggleItemFavorite(itemId: string): Promise<ToggleItemFavoriteResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const result = await toggleItemFavoriteById(session.user.id, itemId);
+  if (!result) {
+    return { success: false, error: "Item not found" };
+  }
+
+  return { success: true, isFavorite: result.isFavorite };
 }
