@@ -409,3 +409,13 @@ Not Started
 - `/collections` wasn't explicitly named in the original spec's page list (only `COLLECTIONS_PER_PAGE` hinted at it) — confirmed in scope with the user before implementing
 - Tests: `parsePage` (6 tests) in `utils.test.ts`; `getItemsByType`/`getItemsByCollection` pagination in `items.test.ts`; `getAllCollections` pagination in `collections.test.ts`
 - Added 30 sample snippets for the demo user (dev DB only, via a one-off script) to exercise multi-page behavior with real data
+
+### 2026-08-17 — Settings Page Completed
+
+- Created `/settings` route: `src/app/settings/layout.tsx` (auth + email verification check + `DashboardShell`, same pattern as `/profile`) and `src/app/settings/page.tsx` (server component, reuses `getProfileUser` for `hasPassword`)
+- `proxy.ts` — added `/settings` and `/settings/:path*` to the middleware matcher
+- Created `src/components/settings/AccountActionsCard.tsx` — Change Password and Delete Account moved here from `AccountInfoCard`; two-row layout (title + description on the left, action button on the right), rows separated by a divider; `ChangePasswordDialog`/`DeleteAccountDialog` logic unchanged, still calling existing `/api/auth/change-password` and `/api/auth/delete-account`
+- `src/components/profile/AccountInfoCard.tsx` trimmed to identity info only (avatar, name, account type, email, member since); no longer a client component, no dialogs
+- `Sidebar.tsx` — added "Settings" link (Lucide `Settings` icon) to the user dropdown menu, both expanded and collapsed variants, alongside existing Profile/Sign out
+- "Forgot password" in the original ask was clarified with the user to mean the existing Change Password action (not the standalone `/forgot-password` flow, which is untouched)
+- No new server actions or utilities — purely a UI relocation reusing existing data functions and API routes; no new unit tests needed per testing scope (utilities/server actions only)

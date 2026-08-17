@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, X, LayoutDashboard } from "lucide-react";
+import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings, X, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
@@ -269,6 +269,14 @@ export default function Sidebar({
                 <User className="size-4 text-muted-foreground" />
                 Profile
               </Link>
+              <Link
+                href="/settings"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                <Settings className="size-4 text-muted-foreground" />
+                Settings
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/sign-in" })}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-destructive/10 text-destructive transition-colors text-left cursor-pointer"
@@ -289,6 +297,14 @@ export default function Sidebar({
                 className="flex items-center justify-center size-9 hover:bg-muted transition-colors"
               >
                 <User className="size-4 text-muted-foreground" />
+              </Link>
+              <Link
+                href="/settings"
+                onClick={() => setUserMenuOpen(false)}
+                title="Settings"
+                className="flex items-center justify-center size-9 hover:bg-muted transition-colors"
+              >
+                <Settings className="size-4 text-muted-foreground" />
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/sign-in" })}
