@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getItemById, getItemsByCollection, getItemsByType } from "./items";
+import { getFavoriteItems, getItemById, getItemsByCollection, getItemsByType } from "./items";
 
 const mockFindFirst = vi.fn();
 const mockFindMany = vi.fn();
@@ -117,6 +117,29 @@ describe("getItemById", () => {
     });
     await getItemById("user-1", "item-1");
     expect(mockGetDominantColors).toHaveBeenCalledWith(["col-1", "col-2"]);
+  });
+});
+
+describe("getFavoriteItems", () => {
+  beforeEach(() => {
+    mockFindMany.mockReset();
+  });
+
+  it("scopes the query to the given userId and isFavorite: true, sorted by updatedAt desc", async () => {
+    mockFindMany.mockResolvedValue([]);
+    await getFavoriteItems("user-1");
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", isFavorite: true },
+        orderBy: { updatedAt: "desc" },
+      })
+    );
+  });
+
+  it("returns the favorited items as-is", async () => {
+    mockFindMany.mockResolvedValue([BASE_ITEM]);
+    const result = await getFavoriteItems("user-1");
+    expect(result).toEqual([BASE_ITEM]);
   });
 });
 

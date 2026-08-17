@@ -4,6 +4,7 @@ import {
   getCollectionOptions,
   getAllCollections,
   getCollectionDetail,
+  getFavoriteCollections,
 } from "./collections";
 
 const mockCollectionFindMany = vi.fn();
@@ -174,6 +175,53 @@ describe("getAllCollections", () => {
       ],
       totalCount: 1,
     });
+  });
+});
+
+describe("getFavoriteCollections", () => {
+  beforeEach(() => {
+    mockCollectionFindMany.mockReset();
+    mockItemCollectionFindMany.mockReset();
+  });
+
+  it("scopes the query to the given userId and isFavorite: true, sorted by updatedAt desc", async () => {
+    mockCollectionFindMany.mockResolvedValue([]);
+    await getFavoriteCollections("user-1");
+    expect(mockCollectionFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", isFavorite: true },
+        orderBy: { updatedAt: "desc" },
+      })
+    );
+  });
+
+  it("attaches item type breakdown and dominant color to each favorited collection", async () => {
+    mockCollectionFindMany.mockResolvedValue([
+      {
+        id: "col-1",
+        name: "React Patterns",
+        description: null,
+        isFavorite: true,
+        updatedAt: new Date("2025-01-01"),
+        _count: { items: 2 },
+      },
+    ]);
+    mockItemCollectionFindMany.mockResolvedValue([
+      { collectionId: "col-1", item: { itemType: { name: "Snippet", icon: "Code", color: "#3b82f6" } } },
+    ]);
+    const result = await getFavoriteCollections("user-1");
+    expect(result).toEqual([
+      {
+        id: "col-1",
+        name: "React Patterns",
+        description: null,
+        isFavorite: true,
+        itemCount: 2,
+        itemTypes: [{ name: "Snippet", icon: "Code", color: "#3b82f6" }],
+        dominantColor: "#3b82f6",
+        updatedAt: new Date("2025-01-01"),
+      },
+    ]);
   });
 });
 

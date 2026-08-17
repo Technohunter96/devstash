@@ -273,6 +273,17 @@ export async function getAllCollections(
   return { data, totalCount };
 }
 
+// Favorited collections sorted by updatedAt desc — same "recently favorited" proxy as getFavoriteItems
+export async function getFavoriteCollections(userId: string): Promise<DashboardCollection[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId, isFavorite: true },
+    orderBy: { updatedAt: "desc" },
+    select: collectionSummarySelect,
+  });
+
+  return withDominantColorInfo(collections);
+}
+
 export interface CollectionDetail {
   id: string;
   name: string;

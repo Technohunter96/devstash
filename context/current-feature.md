@@ -435,3 +435,15 @@ Not Started
 - `/settings` page — `EditorPreferencesCard` rendered above `AccountActionsCard`
 - Dev-server gotcha: the Prisma client singleton in `src/lib/prisma.ts` is intentionally cached on `globalThis` to survive Next.js HMR, so a schema change requires a full `npm run dev` restart (not just a save) to pick up a freshly regenerated client
 - Tests: 4 new tests in `src/lib/db/editor-preferences.test.ts` (defaults, stored values, invalid-field fallback); 7 new tests in `src/actions/editor-preferences.test.ts` (unauthorized, validation, success, userId passthrough)
+
+### 2026-08-17 — Favorites Page Completed
+
+- Star icon button added to `TopBar.tsx`, links to `/favorites`
+- Created `/favorites` route: `src/app/favorites/layout.tsx` (auth + email verification check + `DashboardShell`, same pattern as `/settings`) and `src/app/favorites/page.tsx` (server component)
+- `proxy.ts` — added `/favorites` and `/favorites/:path*` to the middleware matcher
+- `DashboardItem` interface and `itemSelect` in `src/lib/db/items.ts` extended with `updatedAt`; `getFavoriteItems(userId)` added — `isFavorite: true`, sorted by `updatedAt desc`
+- `getFavoriteCollections(userId)` added to `src/lib/db/collections.ts` — same `isFavorite`/`updatedAt desc` pattern, reuses `withDominantColorInfo`
+- Created `src/components/dashboard/FavoritesList.tsx` — compact monospace list (not cards), separate Items/Collections sections with counts; item row click opens `ItemDrawer` via `useItemDrawer`, collection row is a `Link` to `/collections/[id]`; empty state when no favorites
+- Page title on `/favorites` includes a yellow filled star icon
+- No dedicated `favoritedAt` timestamp exists on `Item`/`Collection`, so `updatedAt` is used as the "recently favorited" sort proxy (documented tradeoff, confirmed acceptable — `updatedAt` also changes on unrelated edits)
+- Tests: `getFavoriteItems` in `src/lib/db/items.test.ts`, `getFavoriteCollections` in `src/lib/db/collections.test.ts`

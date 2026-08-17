@@ -39,6 +39,7 @@ export interface DashboardItem {
   isPinned: boolean;
   lastUsedAt: Date | null;
   createdAt: Date;
+  updatedAt: Date;
   itemType: {
     name: string;
     icon: string;
@@ -62,6 +63,7 @@ const itemSelect = {
   isPinned: true,
   lastUsedAt: true,
   createdAt: true,
+  updatedAt: true,
   itemType: {
     select: { name: true, icon: true, color: true },
   },
@@ -126,6 +128,16 @@ export async function getItemsByCollection(
     prisma.item.count({ where }),
   ]);
   return { data, totalCount };
+}
+
+// Favorited items sorted by updatedAt desc — the closest available proxy for
+// "recently favorited" since there is no dedicated favoritedAt timestamp
+export async function getFavoriteItems(userId: string): Promise<DashboardItem[]> {
+  return prisma.item.findMany({
+    where: { userId, isFavorite: true },
+    orderBy: { updatedAt: "desc" },
+    select: itemSelect,
+  });
 }
 
 export async function getItemStats(userId: string): Promise<{

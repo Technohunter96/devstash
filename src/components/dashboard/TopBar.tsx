@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Archive, Menu } from "lucide-react";
+import { Search, Archive, Menu, Star } from "lucide-react";
 import NewItemDialog from "./NewItemDialog";
 import NewCollectionDialog from "./NewCollectionDialog";
 import { useSearch } from "./SearchProvider";
@@ -43,6 +43,13 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 justify-end shrink-0">
+        <Link
+          href="/favorites"
+          className="flex items-center justify-center size-9 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+          aria-label="Favorites"
+        >
+          <Star className="size-4" />
+        </Link>
         <NewCollectionDialog />
         <NewItemDialog />
       </div>
