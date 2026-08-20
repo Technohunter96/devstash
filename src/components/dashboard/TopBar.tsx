@@ -22,7 +22,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         >
           <Menu className="size-5" />
         </button>
-        <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+        <Link href="/" className="flex items-center gap-2 cursor-pointer">
           <Archive className="size-5 text-primary" />
           <span className="font-semibold text-base tracking-tight">DevStash</span>
         </Link>
