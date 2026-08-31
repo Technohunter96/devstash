@@ -101,6 +101,7 @@ export default function ItemCard({ item }: { item: Item }) {
       <Button
         variant="ghost"
         size="icon-sm"
+        aria-label={isFavorite ? "Unfavorite" : "Favorite"}
         className={cn(
           "absolute top-2 right-2 transition-opacity",
           isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100",
@@ -113,6 +114,7 @@ export default function ItemCard({ item }: { item: Item }) {
         <Button
           variant="ghost"
           size="icon-sm"
+          aria-label={copied ? "Copied" : "Copy"}
           className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={handleCopy}
         >

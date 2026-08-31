@@ -263,11 +263,11 @@ function ItemDrawerBody({
         </div>
       </SheetHeader>
 
-      {/* Action bar */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+      {/* Action bar — flex-wrap so buttons drop to a new row instead of overflowing the drawer on narrow viewports */}
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b">
         {isEditMode ? (
           <>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 variant="default"
                 size="sm"
@@ -292,7 +292,7 @@ function ItemDrawerBody({
           </>
         ) : (
           <>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -334,7 +334,7 @@ function ItemDrawerBody({
               variant="ghost"
               size="icon-sm"
               aria-label="Delete item"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer ml-auto"
               onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 />
@@ -512,16 +512,16 @@ function ItemDrawerBody({
         )}
 
         {/* Tags */}
-        <section>
-          <SectionLabel>Tags</SectionLabel>
-          {isEditMode ? (
-            <input
-              className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
-              placeholder="tag1, tag2, tag3"
-              {...field("tags")}
-            />
-          ) : (
-            item.tags.length > 0 && (
+        {(isEditMode || item.tags.length > 0) && (
+          <section>
+            <SectionLabel>Tags</SectionLabel>
+            {isEditMode ? (
+              <input
+                className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
+                placeholder="tag1, tag2, tag3"
+                {...field("tags")}
+              />
+            ) : (
               <div className="flex flex-wrap gap-1.5">
                 {item.tags.map((tag) => (
                   <Badge key={tag.id} variant="secondary">
@@ -529,9 +529,9 @@ function ItemDrawerBody({
                   </Badge>
                 ))}
               </div>
-            )
-          )}
-        </section>
+            )}
+          </section>
+        )}
 
         {/* Collections */}
         {(isEditMode || item.collections.length > 0) && (

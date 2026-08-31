@@ -75,7 +75,7 @@ export function CodeMockup() {
           {["react", "hooks", "debounce", "performance"].map((tag, i) => (
             <span
               key={tag}
-              className="animate-[tag-pop_0.4s_ease_forwards] rounded-full border border-purple-400/35 bg-purple-400/15 px-2.5 py-1 text-xs text-purple-400 opacity-0"
+              className="animate-[tag-pop_0.4s_ease_forwards] rounded-full border border-purple-400/35 bg-purple-400/15 px-2.5 py-1 text-xs text-purple-400 opacity-0 motion-reduce:animate-none motion-reduce:opacity-100"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
               {tag}

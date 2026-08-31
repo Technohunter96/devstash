@@ -145,10 +145,6 @@ export function ChaosAnimation() {
     const iconSize = iconRefs.current[0]?.getBoundingClientRect().width || DESKTOP_ICON_SIZE;
 
     let bounds = container.getBoundingClientRect();
-    const resizeBounds = () => {
-      bounds = container.getBoundingClientRect();
-    };
-    window.addEventListener("resize", resizeBounds);
 
     const rows = Math.ceil(CHAOS_ICONS.length / COLS);
     const particles: Particle[] = CHAOS_ICONS.map((_, i) => {
@@ -161,6 +157,20 @@ export function ChaosAnimation() {
         vy: (Math.random() - 0.5) * 0.25,
       };
     });
+
+    // Lay icons out in their grid positions immediately regardless of motion preference
+    particles.forEach((p, i) => {
+      const el = iconRefs.current[i];
+      if (el) el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    });
+
+    // Respect the OS-level motion preference — skip the drift/repel physics loop entirely
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const resizeBounds = () => {
+      bounds = container.getBoundingClientRect();
+    };
+    window.addEventListener("resize", resizeBounds);
 
     let mouseX = -9999;
     let mouseY = -9999;
@@ -267,7 +277,7 @@ export function ChaosAnimation() {
           className="absolute top-0 left-0 size-12 will-change-transform sm:size-[76px]"
         >
           <div
-            className="flex size-full animate-[icon-pulse_3.5s_ease-in-out_infinite] items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-lg [&_svg]:size-8"
+            className="flex size-full animate-[icon-pulse_3.5s_ease-in-out_infinite] items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-lg [&_svg]:size-8 motion-reduce:animate-none"
             style={{ animationDelay: `${-0.4 * i}s` }}
           >
             {icon.svg}

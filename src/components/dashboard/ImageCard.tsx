@@ -60,8 +60,9 @@ export default function ImageCard({ item }: { item: ImageItem }) {
         <button
           type="button"
           onClick={handleToggleFavorite}
+          aria-label={isFavorite ? "Unfavorite" : "Favorite"}
           className={cn(
-            "bg-black/50 rounded p-1 cursor-pointer transition-opacity",
+            "bg-black/50 rounded p-1.5 cursor-pointer transition-opacity",
             isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100",
           )}
         >

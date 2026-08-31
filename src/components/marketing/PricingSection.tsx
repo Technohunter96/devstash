@@ -17,6 +17,9 @@ const FREE_FEATURES = [
 const PRO_MONTHLY_PRICE = 8;
 const PRO_YEARLY_PRICE = 69;
 const PRO_YEARLY_PRICE_AT_MONTHLY_RATE = PRO_MONTHLY_PRICE * 12;
+const PRO_YEARLY_SAVINGS_PERCENT = Math.round(
+  (1 - PRO_YEARLY_PRICE / PRO_YEARLY_PRICE_AT_MONTHLY_RATE) * 100,
+);
 
 const PRO_FEATURES = [
   "Unlimited items & collections",
@@ -78,7 +81,7 @@ export function PricingSection({ isAuthenticated }: PricingSectionProps) {
             >
               Yearly
               <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-emerald-500 sm:text-[0.7rem]">
-                Save 25%
+                Save {PRO_YEARLY_SAVINGS_PERCENT}%
               </span>
             </span>
           </div>
