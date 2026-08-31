@@ -23,13 +23,13 @@ const stats = (props: StatsCardsProps) => [
     color: ITEM_TYPE_COLORS.Prompt,
   },
   {
-    label: "Favourite Items",
+    label: "Favorite Items",
     value: props.favoriteItems,
     icon: Star,
     color: ITEM_TYPE_COLORS.Command,
   },
   {
-    label: "Favourite Collections",
+    label: "Favorite Collections",
     value: props.favoriteCollections,
     icon: Bookmark,
     color: ITEM_TYPE_COLORS.Image,

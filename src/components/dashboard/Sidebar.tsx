@@ -176,9 +176,9 @@ export default function Sidebar({
 
               {collectionsOpen && (
                 <div className="space-y-1">
-                  {/* Favourites subsection */}
+                  {/* Favorites subsection */}
                   <p className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Favourites
+                    Favorites
                   </p>
                   <nav className="space-y-0.5">
                     {favoriteCollections.map((col) => (
@@ -200,7 +200,7 @@ export default function Sidebar({
                       </Link>
                     ))}
                     {favoriteCollections.length === 0 && (
-                      <p className="px-2 py-1 text-xs text-muted-foreground">No favourites yet</p>
+                      <p className="px-2 py-1 text-xs text-muted-foreground">No favorites yet</p>
                     )}
                   </nav>
 
@@ -243,11 +243,11 @@ export default function Sidebar({
               )}
             </div>
           ) : (
-            /* Collapsed: star icon for favourites */
+            /* Collapsed: star icon for favorites */
             <div className="px-3">
               <Link
-                href="/favourites"
-                title="Favourites"
+                href="/favorites"
+                title="Favorites"
                 className="flex items-center justify-center rounded px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 <Star className="size-4 text-yellow-400" />

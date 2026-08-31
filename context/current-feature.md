@@ -509,3 +509,25 @@ Not Started
 - `src/app/(auth)/layout.tsx` — added a DevStash logo linking to `/` above the auth card, so sign-in/register/forgot-password/etc. all gained a way back to the homepage from one shared layout change
 - `src/components/dashboard/TopBar.tsx` — logo link changed from `/dashboard` to `/`, so clicking it from inside the app now goes to the marketing homepage instead of back to the dashboard
 - No automated browser testing — all visual iteration was driven by the user's own manual testing and screenshots (user preference — see memory)
+
+### 2026-08-31 — UI Review Fixes Completed
+
+- UI reviewed live via Playwright (desktop 1440px + mobile 375px), authenticated as the demo user; homepage, dashboard, item drawer, `/items/snippets`, `/items/images`, `/collections`, `/favorites` all checked
+- Fixed: item drawer action bar (`ItemDrawer.tsx`) overflowed on mobile — Delete button rendered fully off-screen (measured at x:421–449px on a 375px viewport) with no way to reach it; changed the bar to `flex-wrap` with `ml-auto` on the Delete button so it wraps to its own row and stays reachable at any width
+- Fixed: `PricingSection.tsx`'s "Save 25%" yearly badge was stale after `PRO_YEARLY_PRICE` was changed to $69 — actual savings vs. the monthly rate is 28%; badge now computes `PRO_YEARLY_SAVINGS_PERCENT` from the existing price constants instead of a hardcoded number
+- Fixed: missing `aria-label` on icon-only buttons — `ItemCard.tsx` favorite/copy buttons, `ImageCard.tsx` favorite toggle, `PasswordInput.tsx` show/hide toggle (shared by sign-in, register, reset/change password)
+- Fixed: `ImageCard.tsx` favorite toggle touch target bumped from `p-1` (20px) to `p-1.5` (24px) to meet the WCAG 2.5.8 AA minimum
+- Fixed: item drawer showed an empty "Tags" section heading with no content for items with no tags (view mode) — wrapped the whole section in the same `{(isEditMode || item.tags.length > 0) &&` conditional already used for the Collections section below it
+- Fixed: Next.js dev console warning about `scroll-behavior: smooth` on `<html>` (from Tailwind's `scroll-smooth` in `globals.css`) — added `data-scroll-behavior="smooth"` to `<html>` in `layout.tsx`
+- Fixed: homepage `ChaosAnimation.tsx` hero animation ignored `prefers-reduced-motion` — the rAF drift/repel physics loop now checks `matchMedia("(prefers-reduced-motion: reduce)")` and returns early after laying icons out statically in their grid positions (no motion, but still visible/positioned); the `icon-pulse` CSS animation gets `motion-reduce:animate-none`
+- Also fixed the same gap in `CodeMockup.tsx`'s one-shot `tag-pop` entrance animation — needed both `motion-reduce:animate-none` and `motion-reduce:opacity-100` together, since the animation's `forwards` fill is what brings opacity from the base `opacity-0` class up to visible; disabling only the animation would have left the AI-generated tags permanently invisible for reduced-motion users
+- One static-review finding turned out to be a false positive once checked live and was **not** changed: TopBar cramping at 375px (search bar and action buttons render fine, no overlap)
+- All fixes re-verified live in the browser after implementation (mobile drawer Delete button position measured via `getBoundingClientRect`, pricing badge screenshot, aria-label presence via accessibility snapshot)
+- `npm run build && npm run lint && npm test` all pass (168 tests, 3 pre-existing unrelated lint warnings)
+
+### 2026-08-31 — British Spelling Cleanup Completed
+
+- The collapsed sidebar's Favorites link (`Sidebar.tsx`) really was pointing at `/favourites` (404) — the previous entry above incorrectly called this a false positive. That live check used a JS filter for the substring `"favor"`, which does not match `"favour"` (the "u" breaks the substring match), so it silently re-checked a different link (TopBar's, already correct) instead of the collapsed-sidebar one it was meant to verify
+- Grepped the whole `src/` tree for `avourite` (case-insensitive) and fixed every remaining British-spelling instance to match the rest of the app's American spelling (route is `/favorites`, page heading is "Favorites"): `Sidebar.tsx`'s "Favourites" section label, "No favourites yet" empty state, and the collapsed star link's `href`/`title`; `StatsCards.tsx`'s "Favourite Items"/"Favourite Collections" dashboard stat labels
+- Re-verified live: `src/` has zero remaining `avourite` matches, and clicking the collapsed sidebar's star icon now lands on `/favorites` instead of a 404
+- `npm run build && npm run lint && npm test` all pass (168 tests, same 3 pre-existing unrelated lint warnings)
