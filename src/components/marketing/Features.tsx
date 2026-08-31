@@ -55,8 +55,8 @@ const FEATURES: Feature[] = [
 
 export function Features() {
   return (
-    <div className="border-y border-border bg-muted/30">
-      <section id="features" className="mx-auto max-w-6xl scroll-mt-16 px-6 py-24 sm:py-32">
+    <div id="features" className="scroll-mt-16 border-y border-border bg-muted/30">
+      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
         <ScrollFadeIn className="mx-auto mb-14 max-w-xl text-center">
           <span className="mb-3 inline-block text-xs font-semibold tracking-wider text-blue-500 uppercase">
             Everything in one place

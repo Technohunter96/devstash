@@ -39,8 +39,8 @@ export function PricingSection({ isAuthenticated }: PricingSectionProps) {
   const ctaHref = isAuthenticated ? "/dashboard" : "/register";
 
   return (
-    <div className="border-y border-border bg-muted/30">
-      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-16 px-6 py-24 sm:py-32">
+    <div id="pricing" className="scroll-mt-16 border-y border-border bg-muted/30">
+      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
         <ScrollFadeIn className="mx-auto mb-14 max-w-xl text-center">
           <span className="mb-3 inline-block text-xs font-semibold tracking-wider text-blue-500 uppercase">
             Pricing

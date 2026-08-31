@@ -1,14 +1,16 @@
-import Link from "next/link";
-import { Code } from "lucide-react";
+import { auth } from "@/auth";
+import { MarketingNavbar } from "@/components/marketing/MarketingNavbar";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const isAuthenticated = !!session;
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-4">
-      <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-        <Code className="size-5 text-blue-500" />
-        DevStash
-      </Link>
-      <div className="w-full max-w-sm space-y-6">{children}</div>
+    <div className="min-h-screen bg-background">
+      <MarketingNavbar isAuthenticated={isAuthenticated} />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 pt-24">
+        <div className="w-full max-w-sm space-y-6">{children}</div>
+      </div>
     </div>
   );
 }

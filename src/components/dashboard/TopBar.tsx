@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Archive, Menu, Star } from "lucide-react";
+import { Search, Menu, Star } from "lucide-react";
 import NewItemDialog from "./NewItemDialog";
 import NewCollectionDialog from "./NewCollectionDialog";
 import { useSearch } from "./SearchProvider";
+import { Logo } from "@/components/icons/logo";
 
 interface TopBarProps {
   onMenuToggle?: () => void;
@@ -23,8 +24,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           <Menu className="size-5" />
         </button>
         <Link href="/" className="flex items-center gap-2 cursor-pointer">
-          <Archive className="size-5 text-primary" />
-          <span className="font-semibold text-base tracking-tight">DevStash</span>
+          <Logo textClassName="text-base" />
         </Link>
       </div>
 
