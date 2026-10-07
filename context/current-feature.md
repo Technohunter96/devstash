@@ -544,3 +544,18 @@ Not Started
 - Fixed a second bug in the same function: per-frame `window.scrollTo(0, y)` calls were being re-smoothed by the page's own CSS `scroll-behavior: smooth` (`scroll-smooth` on `<html>`), stacking a native scroll animation on top of the custom rAF easing on every frame and causing a stutter at the start; switched to `window.scrollTo({ top, left: 0, behavior: "instant" })` so only the custom easing animates the scroll
 - Branched off `fix/ui-review-findings` rather than `master`, since that branch's 2 commits (UI review fixes, British spelling cleanup) were already committed and pushed but not yet merged — merging this feature branch into `master` also brought those commits in
 - `npm run build && npm run lint && npm test` all pass (168 tests, same 3 pre-existing unrelated lint warnings) after every round of changes in this session
+
+### 2026-10-07 — Stripe Integration — Phase 1: Core Infrastructure Completed
+
+- Installed `stripe` npm package
+- `src/lib/stripe.ts` — lazy `getStripe()` singleton (same pattern as `getRedis()` in `src/lib/rate-limit.ts`), throws if `STRIPE_SECRET_KEY` is missing; exports `STRIPE_PRICE_IDS = { monthly, yearly }` read from env
+- `src/lib/constants/billing.ts` — `FREE_ITEM_LIMIT` (50), `FREE_COLLECTION_LIMIT` (3), `PRO_MONTHLY_PRICE`/`PRO_YEARLY_PRICE`/`PRO_YEARLY_PRICE_AT_MONTHLY_RATE`/`PRO_YEARLY_SAVINGS_PERCENT` — same values currently still hardcoded locally in `PricingSection.tsx`; Phase 2 will switch that file to import from here
+- `src/lib/usage-limits.ts` — pure functions `canCreateItem`, `canCreateCollection`, `canUploadFileType` (no `prisma`/`auth()` imports, so Phase 2's server actions can call them without extra mocking); 15 tests in `src/lib/usage-limits.test.ts`
+- `src/lib/stripe.test.ts` — 2 tests for `getStripe()` (throws when env var unset, returns cached instance on second call), Stripe SDK mocked at module level
+- `src/lib/db/billing.ts` — `getUserByStripeCustomerId(customerId)`, `setUserProStatus(userId, data)` for Phase 2's webhook handler
+- Added `stripePriceId`/`currentPeriodEnd` to `User` via migration `20261007194807_add_stripe_billing_fields` — decided against the alternative (a live Stripe API call on every Settings page view) since the webhook sync mechanism for `isPro` already has to exist, making these two extra cached fields nearly free, versus the live-call approach adding a new runtime dependency/failure mode to a page that should just read local state
+- `src/auth.ts` — `jwt` callback now also selects `isPro` alongside `emailVerified` (same query, no extra DB round trip) and copies it to `token.isPro`; `session` callback copies `token.isPro` → `session.user.isPro`
+- `src/types/next-auth.d.ts` — added `isPro: boolean` to `Session.user`
+- Nothing in this phase makes a real Stripe API call, handles a webhook, or touches UI — fully verified via `npm test` alone; confirmed `src/auth.config.ts` (edge-compatible, used by `proxy.ts`) imports none of this, per the spec's gotcha about keeping Stripe off the edge bundle
+- Checkout, the webhook, free-tier gating enforcement, and billing UI land in Phase 2 (`context/features/stripe-phase-2-spec.md`), which was blocked on this phase and can now proceed
+- `npm run build && npm run lint && npm test` all pass (185 tests, same 3 pre-existing unrelated lint warnings)

@@ -5,6 +5,7 @@ declare module "next-auth" {
     user: {
       id: string;
       emailVerified: Date | null;
+      isPro: boolean;
     } & DefaultSession["user"];
   }
 }

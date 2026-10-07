@@ -15,12 +15,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token }) {
       if (token.sub) {
-        // Refresh emailVerified on every token refresh so the session stays accurate
+        // Refresh emailVerified/isPro on every token refresh so the session stays accurate
         const user = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { emailVerified: true },
+          select: { emailVerified: true, isPro: true },
         });
         token.emailVerified = user?.emailVerified ?? null;
+        token.isPro = user?.isPro ?? false;
       }
       return token;
     },
@@ -29,6 +30,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
       }
       session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
+      session.user.isPro = (token.isPro as boolean) ?? false;
       return session;
     },
   },
