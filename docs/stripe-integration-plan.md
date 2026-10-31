@@ -1,6 +1,6 @@
 # Stripe Integration Plan — DevStash Pro
 
-Subscription billing for DevStash Pro: **$8/month** or **$69/year** (see note under Pricing below on the discrepancy with `project-overview.md`'s $72/year).
+Subscription billing for DevStash Pro: **$8/month** or **$69/year** (decided; consistent with `project-overview.md` and `PricingSection.tsx`).
 
 ---
 
@@ -442,7 +442,7 @@ npm install stripe
 
 ### `context/project-overview.md`
 
-Reconcile the `$72/year` figure with the `$69/year` actually shown in `PricingSection.tsx` (flagged as an open discrepancy in the 2026-08-21 homepage history entry, still unresolved) — pick one number before wiring real Stripe Price IDs, since `STRIPE_PRICE_ID_YEARLY` must point at a Stripe Price object created with that exact amount.
+Already updated: the yearly price is `$69/year` everywhere (decided). `STRIPE_PRICE_ID_YEARLY` must point at a Stripe Price object created with exactly that amount.
 
 ---
 
@@ -499,7 +499,7 @@ Reconcile the `$72/year` figure with the `$69/year` actually shown in `PricingSe
 9. `src/components/settings/BillingCard.tsx` + wire into `src/app/settings/page.tsx`
 10. Free-tier gating in `src/actions/items.ts` (File/Image + 50-item limit) and `src/actions/collections.ts` (3-collection limit)
 11. Wire `PricingSection.tsx`'s Pro CTA to `createCheckoutSession`
-12. Reconcile `$69` vs `$72` yearly price (§5) before creating live-mode Stripe Prices
+12. Create the live-mode yearly Stripe Price with exactly `$69` (price is decided, see §5)
 13. Tests (§7 automated section) alongside each of steps 6, 7, 10
 14. Manual Stripe CLI testing (§7) end-to-end
 15. Switch to live-mode keys/prices/webhook before launch

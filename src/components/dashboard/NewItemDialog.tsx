@@ -10,12 +10,13 @@ import { cn, extractActionError } from "@/lib/utils";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/constants/item-types";
 import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
 import { createItem } from "@/actions/items";
+import { useIsPro } from "@/hooks/useIsPro";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
 import CollectionMultiSelect from "./CollectionMultiSelect";
 
-// All creatable item types — File/Image are Pro-only but enabled during development
+// All creatable item types — File/Image are greyed out for non-Pro users
 const CREATABLE_TYPES = [
   { name: "Snippet" as const, icon: "Code", color: ITEM_TYPE_COLORS.Snippet },
   { name: "Prompt" as const, icon: "Sparkles", color: ITEM_TYPE_COLORS.Prompt },
@@ -64,6 +65,7 @@ export function NewItemDialogContent({
   defaultTypeName,
 }: NewItemDialogContentProps) {
   const router = useRouter();
+  const isPro = useIsPro();
   const [form, setForm] = useState<FormState>(() => ({
     ...DEFAULT_STATE,
     typeName: defaultTypeName ?? DEFAULT_STATE.typeName,
@@ -150,13 +152,17 @@ export function NewItemDialogContent({
             {CREATABLE_TYPES.map((type) => {
               const Icon = ICON_MAP[type.icon] ?? File;
               const isSelected = form.typeName === type.name;
+              const isLocked = isPro === false && FILE_TYPES.includes(type.name);
               return (
                 <button
                   key={type.name}
                   type="button"
+                  disabled={isLocked}
+                  title={isLocked ? "Pro feature" : undefined}
                   onClick={() => setForm((s) => ({ ...s, typeName: type.name }))}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-md border p-2.5 text-xs font-medium transition-colors cursor-pointer",
+                    isLocked && "opacity-40 cursor-not-allowed",
                     isSelected
                       ? "border-transparent"
                       : "border-border text-muted-foreground hover:bg-muted/50",

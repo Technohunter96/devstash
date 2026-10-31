@@ -227,7 +227,7 @@ model Tag {
 - All system types except File & Image
 - Basic search, no file uploads, no AI
 
-### Pro — $8/month or $72/year
+### Pro — $8/month or $69/year
 
 - Unlimited items & collections
 - File & image uploads

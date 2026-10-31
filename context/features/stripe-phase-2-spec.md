@@ -89,7 +89,7 @@ Also enable the **Customer Portal** in Stripe Dashboard → Settings → Billing
 - `client_reference_id` on the checkout session is the only link between a completed Stripe checkout and a DevStash `userId` — don't drop it.
 - `setUserProStatus` on `customer.subscription.deleted` must clear `stripeSubscriptionId` to `null`, not leave the old (now-invalid) subscription ID in place.
 - Test card `4242 4242 4242 4242` (any future expiry, any CVC) always succeeds in test mode; use Stripe's other documented test cards for declined/3DS scenarios if those paths need coverage later.
-- Before creating **live-mode** Stripe Prices, reconcile the `$69/year` shown in `PricingSection.tsx` against the `$72/year` still written in `context/project-overview.md` (flagged, unresolved) — the live Price object's amount must match whatever number ships.
+- The yearly price is **$69/year** (decided; `project-overview.md` and `PricingSection.tsx` agree). The live-mode Stripe Price object for yearly must be created with exactly $69.
 
 ## References
 

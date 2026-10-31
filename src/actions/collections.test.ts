@@ -6,6 +6,7 @@ const mockCreateCollectionInDb = vi.fn();
 const mockUpdateCollectionInDb = vi.fn();
 const mockDeleteCollectionInDb = vi.fn();
 const mockToggleCollectionFavoriteInDb = vi.fn();
+const mockCountUserCollections = vi.fn();
 
 vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
@@ -16,6 +17,7 @@ vi.mock("@/lib/db/collections", () => ({
   updateCollectionInDb: (...args: unknown[]) => mockUpdateCollectionInDb(...args),
   deleteCollectionInDb: (...args: unknown[]) => mockDeleteCollectionInDb(...args),
   toggleCollectionFavoriteInDb: (...args: unknown[]) => mockToggleCollectionFavoriteInDb(...args),
+  countUserCollections: (...args: unknown[]) => mockCountUserCollections(...args),
 }));
 
 const VALID_PAYLOAD = {
@@ -40,6 +42,24 @@ describe("createCollection", () => {
     mockCreateCollectionInDb.mockReset();
     mockUpdateCollectionInDb.mockReset();
     mockDeleteCollectionInDb.mockReset();
+    mockCountUserCollections.mockReset();
+    mockCountUserCollections.mockResolvedValue(0);
+  });
+
+  it("blocks collection creation at the free limit for non-Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
+    mockCountUserCollections.mockResolvedValue(3);
+    const result = await createCollection(VALID_PAYLOAD);
+    expect(result.success).toBe(false);
+    expect(mockCreateCollectionInDb).not.toHaveBeenCalled();
+  });
+
+  it("allows collection creation past the free limit for Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
+    mockCountUserCollections.mockResolvedValue(10);
+    mockCreateCollectionInDb.mockResolvedValue(COLLECTION);
+    const result = await createCollection(VALID_PAYLOAD);
+    expect(result.success).toBe(true);
   });
 
   it("returns unauthorized when no session", async () => {

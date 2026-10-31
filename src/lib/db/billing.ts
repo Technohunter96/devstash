@@ -15,3 +15,10 @@ export async function setUserProStatus(
     data,
   });
 }
+export async function getStripeCustomerIdByUserId(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { stripeCustomerId: true },
+  });
+  return user?.stripeCustomerId ?? null;
+}

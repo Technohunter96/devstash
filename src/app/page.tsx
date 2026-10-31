@@ -18,7 +18,7 @@ export default async function Home() {
         <Hero isAuthenticated={isAuthenticated} />
         <Features />
         <AiSection />
-        <PricingSection isAuthenticated={isAuthenticated} />
+        <PricingSection isAuthenticated={isAuthenticated} isPro={session?.user?.isPro ?? false} />
         <Cta isAuthenticated={isAuthenticated} />
       </main>
       <MarketingFooter />

@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings, X, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
+import { useIsPro } from "@/hooks/useIsPro";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 import { ICON_MAP as lucideIconMap } from "@/lib/constants/icon-map";
 
@@ -30,6 +31,7 @@ export default function Sidebar({
   user,
 }: SidebarProps) {
   const pathname = usePathname();
+  const isPro = useIsPro();
   const [collectionsOpen, setCollectionsOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -121,20 +123,23 @@ export default function Sidebar({
                 const slug = type.name.toLowerCase() + "s";
                 const href = `/items/${slug}`;
                 const isActive = pathname === href;
-
-                return (
-                  <Link
-                    key={type.id}
-                    href={href}
-                    title={isCollapsed ? `${type.name} (${type.itemCount})` : undefined}
-                    className={[
-                      "flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors",
-                      isActive
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      isCollapsed ? "justify-center" : "",
-                    ].join(" ")}
-                  >
+                const isLocked = isPro === false && (type.name === "File" || type.name === "Image");
+                const rowClass = [
+                  "flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors",
+                  isLocked
+                    ? "text-muted-foreground opacity-50 cursor-not-allowed"
+                    : isActive
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isCollapsed ? "justify-center" : "",
+                ].join(" ");
+                const title = isLocked
+                  ? `${type.name} is a Pro feature`
+                  : isCollapsed
+                    ? `${type.name} (${type.itemCount})`
+                    : undefined;
+                const rowContent = (
+                  <>
                     <Icon className="size-4 shrink-0" style={{ color: type.color }} />
                     {!isCollapsed && (
                       <>
@@ -148,6 +153,17 @@ export default function Sidebar({
                         <span className="text-xs text-muted-foreground">{type.itemCount}</span>
                       </>
                     )}
+                  </>
+                );
+
+                // Locked rows are plain divs so a non-Pro user can't navigate to Pro-only pages
+                return isLocked ? (
+                  <div key={type.id} title={title} className={rowClass}>
+                    {rowContent}
+                  </div>
+                ) : (
+                  <Link key={type.id} href={href} title={title} className={rowClass}>
+                    {rowContent}
                   </Link>
                 );
               })}
