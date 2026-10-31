@@ -1,33 +1,18 @@
-# Current Feature: Stripe Integration — Phase 2: Integration & UI
+# Current Feature
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- What does success look like? -->
 
-- `src/actions/billing.ts` — `createCheckoutSession(interval)` and `createBillingPortalSession()` server actions (`auth()` guard, `{ success, url | error }` shape; checkout sets `client_reference_id` to the user ID and redirects to `/settings?checkout=success|cancelled`; portal errors with "No billing account found" when no `stripeCustomerId`)
-- `src/actions/billing.test.ts` — Stripe SDK mocked at module level (unauthorized, missing price ID, no customer ID, success cases)
-- `POST /api/webhooks/stripe` — raw body via `req.text()`, signature verification (400 on invalid/missing), handles `checkout.session.completed`, `customer.subscription.updated` (`active`/`trialing` → Pro), `customer.subscription.deleted` (`isPro: false`, `stripeSubscriptionId: null`); handler errors → 500
-- Free-tier enforcement: `createItem` rejects File/Image for non-Pro (`canUploadFileType`) and items past `FREE_ITEM_LIMIT` (`canCreateItem`, new lightweight `prisma.item.count` helper in `src/lib/db/items.ts`); `createCollection` rejects past `FREE_COLLECTION_LIMIT` (`canCreateCollection`); remove the "Pro-only but enabled during development" comment
-- Extend `items.test.ts` and `collections.test.ts` for the gating cases
-- `src/components/settings/BillingCard.tsx` — Free: "Upgrade to Pro" (monthly/yearly) → checkout; Pro: "Manage Billing" → portal; rendered in `/settings` with `session.user.isPro`
-- `PricingSection.tsx` — import prices from `src/lib/constants/billing.ts`, remove stale Stripe comment; Pro CTA: unauthenticated → `/register`, free → checkout, Pro → `/settings`
-- `npm run build && npm run lint && npm test` pass
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Spec: `context/features/stripe-phase-2-spec.md`; depends on Phase 1 (already merged); reference `docs/stripe-integration-plan.md` §§4–7
-- Needs `STRIPE_WEBHOOK_SECRET` in `.env` (local: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`); Customer Portal must be enabled in the Stripe Dashboard
-- Manual verification requires Stripe CLI / test card `4242 4242 4242 4242` (see spec's Testing Checklist)
-- Yearly price is **$69/year** (decided, consistent everywhere); the live-mode yearly Stripe Price must be created with exactly $69
-- Webhook must read raw body via `req.text()` before any parsing; `client_reference_id` is the only checkout → user link
 
 ## History
 
@@ -574,3 +559,20 @@ In Progress
 - Nothing in this phase makes a real Stripe API call, handles a webhook, or touches UI — fully verified via `npm test` alone; confirmed `src/auth.config.ts` (edge-compatible, used by `proxy.ts`) imports none of this, per the spec's gotcha about keeping Stripe off the edge bundle
 - Checkout, the webhook, free-tier gating enforcement, and billing UI land in Phase 2 (`context/features/stripe-phase-2-spec.md`), which was blocked on this phase and can now proceed
 - `npm run build && npm run lint && npm test` all pass (185 tests, same 3 pre-existing unrelated lint warnings)
+
+### 2026-10-31 — Stripe Integration — Phase 2: Integration & UI Completed
+
+- `src/actions/billing.ts` — `createCheckoutSession(interval)`, `createBillingPortalSession()` and `getIsPro()` server actions; checkout sets `client_reference_id` to the user ID, reuses an existing `stripeCustomerId`, redirects to `/settings?checkout=success|cancelled`; refuses to create a second subscription for users who are already Pro; portal errors with "No billing account found" when there is no customer
+- `POST /api/webhooks/stripe` — raw body via `req.text()`, signature failure → 400, handler failure → 500; handles `checkout.session.completed` (only when `payment_status === "paid"`, so async methods like Klarna don't grant Pro early), `customer.subscription.updated` (`active`/`trialing` → Pro) and `customer.subscription.deleted` (`isPro: false`, `stripeSubscriptionId: null`)
+- Free-tier enforcement: `createItem` rejects File/Image for non-Pro and items past `FREE_ITEM_LIMIT`; `createCollection` rejects past `FREE_COLLECTION_LIMIT`; `countUserItems`/`countUserCollections` added as lightweight count helpers; `getStripeCustomerIdByUserId` added to `src/lib/db/billing.ts`
+- `POST /api/upload` now returns 403 for non-Pro File/Image uploads — found during review: gating only `createItem` would have let free users fill R2 storage directly
+- `/items/files` and `/items/images` redirect non-Pro users to `/settings` (server-side, so editing the URL doesn't bypass the lock)
+- UI locking for non-Pro users: `NewItemDialog` greys out File/Image, `ItemDrawer` edit mode hides file replacement, `Sidebar` renders File/Image rows as non-clickable greyed divs (PRO badge kept); driven by new `useIsPro` hook (`src/hooks/useIsPro.ts`) calling `getIsPro()` — returns `null` until loaded so Pro users never see a flash of locked UI; a provider/layout-prop approach was rejected as too invasive
+- `src/components/settings/BillingCard.tsx` — Free: monthly/yearly upgrade buttons → checkout; Pro: Manage Billing → portal; toast after returning from Checkout; rendered in `/settings`
+- `PricingSection.tsx` — prices imported from `src/lib/constants/billing.ts`; Pro CTA: unauthenticated → `/register`, free → checkout, Pro → `/settings`; `page.tsx` passes `isPro`
+- Yearly price confirmed as **$69/year** and aligned in `project-overview.md`, the Phase 2 spec, the Stripe plan doc and research docs
+- Billing is deliberately Server Actions + one webhook route (not `/api/stripe/*` routes as in the course material), per `coding-standards.md`
+- Stripe setup gotcha: the Price IDs in `.env` must belong to the same Stripe account/sandbox as the secret key (the ID suffix identifies the account), and Prices must be created in USD — the existing test Price was in CZK
+- Known and left as-is: limit check + create is not atomic; after a downgrade old File/Image items remain visible outside their type pages
+- Webhook round trip (`stripe listen`, `stripe trigger`, portal cancel) and the manual gating checklist still need to be verified — deferred by the user to a later session
+- Tests: 8 new in `billing.test.ts`, gating tests added to `items.test.ts` and `collections.test.ts`; `npm run build && npm run lint && npm test` all pass (199 tests, 2 pre-existing lint warnings)

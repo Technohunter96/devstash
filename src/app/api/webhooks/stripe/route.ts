@@ -33,7 +33,8 @@ async function handleEvent(event: Stripe.Event) {
       const user = await getUserByStripeCustomerId(customerId);
       if (!user) return;
       await setUserProStatus(user.id, {
-        isPro: subscription.status === "active" || subscription.status === "trialing",
+        // past_due = grace period while Stripe retries the payment; it ends in canceled/unpaid
+        isPro: ["active", "trialing", "past_due"].includes(subscription.status),
       });
       return;
     }
@@ -61,14 +62,16 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
   try {
     event = getStripe().webhooks.constructEvent(body, signature, secret);
-  } catch {
+  } catch (err) {
+    console.error("Stripe webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   try {
     await handleEvent(event);
     return NextResponse.json({ received: true });
-  } catch {
+  } catch (err) {
+    console.error(`Stripe webhook error handling ${event.type}:`, err);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }
