@@ -17,6 +17,7 @@ import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
+import { useIsPro } from "@/hooks/useIsPro";
 import CollectionMultiSelect from "./CollectionMultiSelect";
 import CollectionBadge from "./CollectionBadge";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
@@ -123,6 +124,7 @@ function ItemDrawerBody({
   const isCodeType = CODE_TYPES.includes(item.itemType.name);
   const isMarkdownType = MARKDOWN_TYPES.includes(item.itemType.name);
   const isFileType = FILE_TYPES.includes(item.itemType.name);
+  const isPro = useIsPro();
   const isImageType = item.itemType.name === "Image";
 
   const handleCopy = () => {
@@ -447,7 +449,7 @@ function ItemDrawerBody({
         {isFileType && (
           <section>
             <SectionLabel>{isImageType ? "Image" : "File"}</SectionLabel>
-            {isEditMode ? (
+            {isEditMode && isPro !== false ? (
               <FileUpload
                 typeName={item.itemType.name as "File" | "Image"}
                 value={

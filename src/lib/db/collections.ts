@@ -340,3 +340,8 @@ export async function getCollectionDetail(
     dominantColor: dominantColors.get(collection.id) ?? null,
   };
 }
+
+// Lightweight count for free-tier limit checks
+export async function countUserCollections(userId: string): Promise<number> {
+  return prisma.collection.count({ where: { userId } });
+}

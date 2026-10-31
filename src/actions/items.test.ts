@@ -7,6 +7,7 @@ const mockUpdateItemById = vi.fn();
 const mockDeleteItemById = vi.fn();
 const mockToggleItemFavoriteById = vi.fn();
 const mockToggleItemPinById = vi.fn();
+const mockCountUserItems = vi.fn();
 
 vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/db/items", () => ({
   deleteItemById: (...args: unknown[]) => mockDeleteItemById(...args),
   toggleItemFavoriteById: (...args: unknown[]) => mockToggleItemFavoriteById(...args),
   toggleItemPinById: (...args: unknown[]) => mockToggleItemPinById(...args),
+  countUserItems: (...args: unknown[]) => mockCountUserItems(...args),
 }));
 
 const VALID_PAYLOAD = {
@@ -64,6 +66,8 @@ describe("createItem", () => {
   beforeEach(() => {
     mockAuth.mockReset();
     mockCreateItemInDb.mockReset();
+    mockCountUserItems.mockReset();
+    mockCountUserItems.mockResolvedValue(0);
   });
 
   it("returns unauthorized when no session", async () => {
@@ -71,6 +75,38 @@ describe("createItem", () => {
     const result = await createItem(VALID_CREATE_PAYLOAD);
     expect(result).toEqual({ success: false, error: "Unauthorized" });
     expect(mockCreateItemInDb).not.toHaveBeenCalled();
+  });
+
+  it("blocks File and Image creation for non-Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
+    for (const typeName of ["File", "Image"]) {
+      const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName });
+      expect(result.success).toBe(false);
+    }
+    expect(mockCreateItemInDb).not.toHaveBeenCalled();
+  });
+
+  it("allows File creation for Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    const result = await createItem({ ...VALID_CREATE_PAYLOAD, typeName: "File" });
+    expect(result.success).toBe(true);
+  });
+
+  it("blocks item creation at the free limit for non-Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
+    mockCountUserItems.mockResolvedValue(50);
+    const result = await createItem(VALID_CREATE_PAYLOAD);
+    expect(result.success).toBe(false);
+    expect(mockCreateItemInDb).not.toHaveBeenCalled();
+  });
+
+  it("allows item creation past the free limit for Pro users", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
+    mockCountUserItems.mockResolvedValue(500);
+    mockCreateItemInDb.mockResolvedValue(ITEM_DETAIL);
+    const result = await createItem(VALID_CREATE_PAYLOAD);
+    expect(result.success).toBe(true);
   });
 
   it("returns unauthorized when session has no user id", async () => {

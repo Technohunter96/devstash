@@ -60,7 +60,7 @@ A box labeled "...with DevStash" showing a simplified dashboard mockup:
 
 4. **AI Section** - Two columns: Left has "Pro Feature" badge and checklist of AI capabilities. Right shows a code editor mockup with "AI Generated Tags" demo.
 
-5. **Pricing** - Free ($0, 50 items, 3 collections) vs Pro ($8/mo, unlimited, AI features). Pro card highlighted with "Most Popular" badge. Also add a toggle for the yearly $72 option.
+5. **Pricing** - Free ($0, 50 items, 3 collections) vs Pro ($8/mo, unlimited, AI features). Pro card highlighted with "Most Popular" badge. Also add a toggle for the yearly $69 option.
 
 6. **CTA** - "Ready to Organize Your Knowledge?" with button
 

@@ -456,3 +456,7 @@ export async function getItemById(
     })),
   };
 }
+// Lightweight count for free-tier limit checks (getItemStats computes extra fields)
+export async function countUserItems(userId: string): Promise<number> {
+  return prisma.item.count({ where: { userId } });
+}

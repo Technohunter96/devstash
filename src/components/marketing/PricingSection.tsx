@@ -3,8 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { createCheckoutSession } from "@/actions/billing";
+import {
+  PRO_MONTHLY_PRICE,
+  PRO_YEARLY_PRICE,
+  PRO_YEARLY_PRICE_AT_MONTHLY_RATE,
+  PRO_YEARLY_SAVINGS_PERCENT,
+} from "@/lib/constants/billing";
 import { ScrollFadeIn } from "./ScrollFadeIn";
 
 const FREE_FEATURES = [
@@ -13,13 +21,6 @@ const FREE_FEATURES = [
   "Snippets, prompts, commands, notes & links",
   "Basic search",
 ];
-
-const PRO_MONTHLY_PRICE = 8;
-const PRO_YEARLY_PRICE = 69;
-const PRO_YEARLY_PRICE_AT_MONTHLY_RATE = PRO_MONTHLY_PRICE * 12;
-const PRO_YEARLY_SAVINGS_PERCENT = Math.round(
-  (1 - PRO_YEARLY_PRICE / PRO_YEARLY_PRICE_AT_MONTHLY_RATE) * 100,
-);
 
 const PRO_FEATURES = [
   "Unlimited items & collections",
@@ -31,12 +32,29 @@ const PRO_FEATURES = [
 
 interface PricingSectionProps {
   isAuthenticated: boolean;
+  isPro: boolean;
 }
 
-export function PricingSection({ isAuthenticated }: PricingSectionProps) {
+export function PricingSection({ isAuthenticated, isPro }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false);
-  // Stripe checkout isn't built yet, so both plans point at signup — swap this for a checkout link once billing exists
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const ctaHref = isAuthenticated ? "/dashboard" : "/register";
+
+  async function handleUpgrade() {
+    setCheckoutLoading(true);
+    const result = await createCheckoutSession(isYearly ? "yearly" : "monthly");
+    if (result.success) {
+      window.location.href = result.url;
+      return;
+    }
+    toast.error(result.error);
+    setCheckoutLoading(false);
+  }
+
+  const proButtonClass = cn(
+    buttonVariants({ variant: "default" }),
+    "justify-center px-2 text-xs sm:px-4 sm:text-sm",
+  );
 
   return (
     <div id="pricing" className="scroll-mt-16 border-y border-border bg-muted/30">
@@ -143,15 +161,20 @@ export function PricingSection({ isAuthenticated }: PricingSectionProps) {
                 </li>
               ))}
             </ul>
-            <Link
-              href={ctaHref}
-              className={cn(buttonVariants({ variant: "default" }), "justify-center px-2 text-xs sm:px-4 sm:text-sm")}
-            >
-              <span className="sm:hidden">{isAuthenticated ? "Dashboard" : "Upgrade"}</span>
-              <span className="hidden sm:inline">
-                {isAuthenticated ? "Go to Dashboard" : "Upgrade to Pro"}
-              </span>
-            </Link>
+            {isAuthenticated && !isPro ? (
+              <button
+                type="button"
+                onClick={handleUpgrade}
+                disabled={checkoutLoading}
+                className={cn(proButtonClass, "cursor-pointer")}
+              >
+                {checkoutLoading ? "Redirecting..." : "Upgrade to Pro"}
+              </button>
+            ) : (
+              <Link href={isPro ? "/settings" : "/register"} className={proButtonClass}>
+                {isPro ? "Manage Plan" : "Upgrade to Pro"}
+              </Link>
+            )}
           </ScrollFadeIn>
         </div>
       </section>

@@ -1,18 +1,33 @@
-# Current Feature
+# Current Feature: Stripe Integration — Phase 2: Integration & UI
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
 <!-- What does success look like? -->
 
+- `src/actions/billing.ts` — `createCheckoutSession(interval)` and `createBillingPortalSession()` server actions (`auth()` guard, `{ success, url | error }` shape; checkout sets `client_reference_id` to the user ID and redirects to `/settings?checkout=success|cancelled`; portal errors with "No billing account found" when no `stripeCustomerId`)
+- `src/actions/billing.test.ts` — Stripe SDK mocked at module level (unauthorized, missing price ID, no customer ID, success cases)
+- `POST /api/webhooks/stripe` — raw body via `req.text()`, signature verification (400 on invalid/missing), handles `checkout.session.completed`, `customer.subscription.updated` (`active`/`trialing` → Pro), `customer.subscription.deleted` (`isPro: false`, `stripeSubscriptionId: null`); handler errors → 500
+- Free-tier enforcement: `createItem` rejects File/Image for non-Pro (`canUploadFileType`) and items past `FREE_ITEM_LIMIT` (`canCreateItem`, new lightweight `prisma.item.count` helper in `src/lib/db/items.ts`); `createCollection` rejects past `FREE_COLLECTION_LIMIT` (`canCreateCollection`); remove the "Pro-only but enabled during development" comment
+- Extend `items.test.ts` and `collections.test.ts` for the gating cases
+- `src/components/settings/BillingCard.tsx` — Free: "Upgrade to Pro" (monthly/yearly) → checkout; Pro: "Manage Billing" → portal; rendered in `/settings` with `session.user.isPro`
+- `PricingSection.tsx` — import prices from `src/lib/constants/billing.ts`, remove stale Stripe comment; Pro CTA: unauthenticated → `/register`, free → checkout, Pro → `/settings`
+- `npm run build && npm run lint && npm test` pass
+
 ## Notes
 
 <!-- Any extra notes -->
+
+- Spec: `context/features/stripe-phase-2-spec.md`; depends on Phase 1 (already merged); reference `docs/stripe-integration-plan.md` §§4–7
+- Needs `STRIPE_WEBHOOK_SECRET` in `.env` (local: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`); Customer Portal must be enabled in the Stripe Dashboard
+- Manual verification requires Stripe CLI / test card `4242 4242 4242 4242` (see spec's Testing Checklist)
+- Yearly price is **$69/year** (decided, consistent everywhere); the live-mode yearly Stripe Price must be created with exactly $69
+- Webhook must read raw body via `req.text()` before any parsing; `client_reference_id` is the only checkout → user link
 
 ## History
 

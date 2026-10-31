@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { canUploadFileType } from "@/lib/usage-limits";
 import {
   validateFile,
   uploadToR2,
@@ -32,6 +33,12 @@ export async function POST(req: Request) {
       { error: "typeName must be File or Image" },
       { status: 400 }
     );
+  }
+
+  // Pro gate here too — otherwise free users could fill R2 storage without ever creating an item
+  const proCheck = canUploadFileType(typeName, session.user.isPro);
+  if (!proCheck.allowed) {
+    return NextResponse.json({ error: proCheck.reason }, { status: 403 });
   }
 
   // Server-side validation of size, MIME type, and extension

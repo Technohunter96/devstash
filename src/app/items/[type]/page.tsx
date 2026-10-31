@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { canUploadFileType } from "@/lib/usage-limits";
 import { getItemsByType, SLUG_TO_TYPE_NAME } from "@/lib/db/items";
 import ItemCard from "@/components/dashboard/ItemCard";
 import ImageCard from "@/components/dashboard/ImageCard";
@@ -27,6 +28,12 @@ export default async function ItemsTypePage({ params, searchParams }: Props) {
 
   // auth() is request-cached — layout already verified the session
   const session = await auth();
+
+  // File/Image pages are Pro-only; send free users to Settings where they can upgrade
+  if (!canUploadFileType(typeName, session!.user!.isPro).allowed) {
+    redirect("/settings");
+  }
+
   const { data: items, totalCount } = await getItemsByType(session!.user!.id, typeName, page);
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 

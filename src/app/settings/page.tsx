@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getProfileUser } from "@/lib/db/profile";
 import AccountActionsCard from "@/components/settings/AccountActionsCard";
+import BillingCard from "@/components/settings/BillingCard";
 import EditorPreferencesCard from "@/components/settings/EditorPreferencesCard";
 
 export default async function SettingsPage() {
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       <h1 className="text-2xl font-semibold">Settings</h1>
       <EditorPreferencesCard />
+      <BillingCard isPro={session!.user!.isPro} />
       <AccountActionsCard hasPassword={profileUser.hasPassword} />
     </div>
   );

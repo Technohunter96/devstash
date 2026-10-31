@@ -8,18 +8,37 @@ import {
   deleteItemById,
   toggleItemFavoriteById,
   toggleItemPinById,
+  countUserItems,
 } from "@/lib/db/items";
+import { canCreateItem, canUploadFileType } from "@/lib/usage-limits";
 import { deleteFromR2 } from "@/lib/r2";
-import type { ItemDetail, CreateItemData } from "@/lib/db/items";
+import type { ItemDetail } from "@/lib/db/items";
 
-// All item types that can be created — File/Image are Pro-only but enabled during development
-const CREATABLE_TYPE_NAMES = ["Snippet", "Prompt", "Command", "Note", "Link", "File", "Image"] as const;
+// All item types that can be created — File/Image are gated to Pro in createItem
+const CREATABLE_TYPE_NAMES = [
+  "Snippet",
+  "Prompt",
+  "Command",
+  "Note",
+  "Link",
+  "File",
+  "Image",
+] as const;
 
 const CreateItemSchema = z.object({
   typeName: z.enum(CREATABLE_TYPE_NAMES),
   title: z.string().trim().min(1, "Title is required"),
-  description: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
-  content: z.string().nullable().optional().transform((v) => v || null),
+  description: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  content: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v || null),
   url: z
     .string()
     .nullable()
@@ -28,7 +47,12 @@ const CreateItemSchema = z.object({
     .refine((v) => v === null || z.string().url().safeParse(v).success, {
       message: "Invalid URL",
     }),
-  language: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
+  language: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
   tags: z
     .array(z.string().trim())
     .transform((arr) => arr.filter(Boolean))
@@ -55,6 +79,18 @@ export async function createItem(formData: unknown): Promise<CreateItemResult> {
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
+  const isPro = session.user.isPro;
+
+  const fileCheck = canUploadFileType(parsed.data.typeName, isPro);
+  if (!fileCheck.allowed) {
+    return { success: false, error: fileCheck.reason };
+  }
+
+  const itemCheck = canCreateItem(await countUserItems(session.user.id), isPro);
+  if (!itemCheck.allowed) {
+    return { success: false, error: itemCheck.reason };
+  }
+
   const item = await createItemInDb(session.user.id, {
     typeName: parsed.data.typeName,
     title: parsed.data.title,
@@ -74,8 +110,17 @@ export async function createItem(formData: unknown): Promise<CreateItemResult> {
 
 const UpdateItemSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
-  description: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
-  content: z.string().nullable().optional().transform((v) => v || null),
+  description: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  content: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v || null),
   url: z
     .string()
     .nullable()
@@ -84,7 +129,12 @@ const UpdateItemSchema = z.object({
     .refine((v) => v === null || z.string().url().safeParse(v).success, {
       message: "Invalid URL",
     }),
-  language: z.string().trim().nullable().optional().transform((v) => v?.trim() || null),
+  language: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
   // filter out empty strings instead of rejecting them
   tags: z
     .array(z.string().trim())
@@ -97,10 +147,7 @@ type UpdateItemResult =
   | { success: true; data: ItemDetail }
   | { success: false; error: string | Record<string, string[]> };
 
-export async function updateItem(
-  itemId: string,
-  formData: unknown
-): Promise<UpdateItemResult> {
+export async function updateItem(itemId: string, formData: unknown): Promise<UpdateItemResult> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
@@ -171,9 +218,7 @@ export async function toggleItemFavorite(itemId: string): Promise<ToggleItemFavo
   return { success: true, isFavorite: result.isFavorite };
 }
 
-type ToggleItemPinResult =
-  | { success: true; isPinned: boolean }
-  | { success: false; error: string };
+type ToggleItemPinResult = { success: true; isPinned: boolean } | { success: false; error: string };
 
 export async function toggleItemPin(itemId: string): Promise<ToggleItemPinResult> {
   const session = await auth();

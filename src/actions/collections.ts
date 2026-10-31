@@ -7,7 +7,9 @@ import {
   updateCollectionInDb,
   deleteCollectionInDb,
   toggleCollectionFavoriteInDb,
+  countUserCollections,
 } from "@/lib/db/collections";
+import { canCreateCollection } from "@/lib/usage-limits";
 import type { DashboardCollection } from "@/lib/db/collections";
 
 const CreateCollectionSchema = z.object({
@@ -28,6 +30,14 @@ export async function createCollection(formData: unknown): Promise<CreateCollect
   const parsed = CreateCollectionSchema.safeParse(formData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.flatten().fieldErrors };
+  }
+
+  const limitCheck = canCreateCollection(
+    await countUserCollections(session.user.id),
+    session.user.isPro
+  );
+  if (!limitCheck.allowed) {
+    return { success: false, error: limitCheck.reason };
   }
 
   const collection = await createCollectionInDb(session.user.id, {
