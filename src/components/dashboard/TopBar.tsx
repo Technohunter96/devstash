@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Search, Menu, Star } from "lucide-react";
 import NewItemDialog from "./NewItemDialog";
 import NewCollectionDialog from "./NewCollectionDialog";
+import UpgradeButton from "./UpgradeButton";
 import { useSearch } from "./SearchProvider";
 import { Logo } from "@/components/icons/logo";
 
@@ -43,6 +44,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 justify-end shrink-0">
+        <UpgradeButton />
         <Link
           href="/favorites"
           className="flex items-center justify-center size-9 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
