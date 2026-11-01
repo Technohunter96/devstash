@@ -29,9 +29,9 @@ export default async function ItemsTypePage({ params, searchParams }: Props) {
   // auth() is request-cached — layout already verified the session
   const session = await auth();
 
-  // File/Image pages are Pro-only; send free users to Settings where they can upgrade
+  // File/Image pages are Pro-only; send free users to the upgrade page
   if (!canUploadFileType(typeName, session!.user!.isPro).allowed) {
-    redirect("/settings");
+    redirect("/upgrade");
   }
 
   const { data: items, totalCount } = await getItemsByType(session!.user!.id, typeName, page);

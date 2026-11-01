@@ -5,15 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CreditCard, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createCheckoutSession, createBillingPortalSession } from "@/actions/billing";
-import {
-  FREE_COLLECTION_LIMIT,
-  FREE_ITEM_LIMIT,
-  PRO_MONTHLY_PRICE,
-  PRO_YEARLY_PRICE,
-} from "@/lib/constants/billing";
+import { cn } from "@/lib/utils";
+import { createBillingPortalSession } from "@/actions/billing";
+import { FREE_COLLECTION_LIMIT, FREE_ITEM_LIMIT } from "@/lib/constants/billing";
 import { getUsageLevel, type UsageLevel } from "@/lib/usage-limits";
 
 interface Props {
@@ -52,7 +49,7 @@ function UsageBar({ label, used, limit }: { label: string; used: number; limit: 
 }
 
 export default function BillingCard({ isPro, itemCount, collectionCount }: Props) {
-  const [loading, setLoading] = useState<"monthly" | "yearly" | "portal" | null>(null);
+  const [loading, setLoading] = useState<"portal" | null>(null);
   const searchParams = useSearchParams();
   const toasted = useRef(false);
 
@@ -62,11 +59,10 @@ export default function BillingCard({ isPro, itemCount, collectionCount }: Props
     if (!checkout || toasted.current) return;
     toasted.current = true;
     if (checkout === "success") toast.success("Payment received. Your plan will update in a moment.");
-    if (checkout === "cancelled") toast.info("Checkout cancelled.");
   }, [searchParams]);
 
   async function redirectTo(
-    key: "monthly" | "yearly" | "portal",
+    key: "portal",
     action: () => Promise<{ success: true; url: string } | { success: false; error: string }>,
   ) {
     setLoading(key);
@@ -125,24 +121,10 @@ export default function BillingCard({ isPro, itemCount, collectionCount }: Props
       </div>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground">Upgrade for unlimited access, file uploads and AI features.</p>
-        <div className="flex gap-2 shrink-0">
-          <Button
-            variant="outline"
-            className="cursor-pointer gap-2"
-            disabled={loading !== null}
-            onClick={() => redirectTo("monthly", () => createCheckoutSession("monthly"))}
-          >
-            {loading === "monthly" ? "Redirecting..." : `$${PRO_MONTHLY_PRICE}/month`}
-          </Button>
-          <Button
-            className="cursor-pointer gap-2"
-            disabled={loading !== null}
-            onClick={() => redirectTo("yearly", () => createCheckoutSession("yearly"))}
-          >
-            <Sparkles className="size-4" />
-            {loading === "yearly" ? "Redirecting..." : `Upgrade · $${PRO_YEARLY_PRICE}/year`}
-          </Button>
-        </div>
+        <Link href="/upgrade" className={cn(buttonVariants(), "cursor-pointer gap-2 shrink-0")}>
+          <Sparkles className="size-4" />
+          Upgrade to Pro
+        </Link>
       </div>
     </Card>
   );

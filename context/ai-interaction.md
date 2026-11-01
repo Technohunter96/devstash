@@ -14,6 +14,8 @@ This is the common workflow that we will use for every single feature/fix:
 
 1. **Document** - Document the feature in @context/current-feature.md.
 2. **Todo List** - At the start of implementation, create a task list in the conversation using the task tools (TaskCreate). Mark each task as `in_progress` when starting it and `completed` when done, so progress is visible in the conversation.
+   - Create the checklist before the first edit and keep it updated throughout the feature.
+   - Before each command or edit, add a brief one-line note saying what is being done and why, so the user is not just approving prompts blindly. Keep it to one short sentence.
 3. **Branch** - Create new branch for feature, fix, etc
 4. **Implement** - Implement the feature/fix that I create in @context/current-feature.md
 5. **Test** - Verify it works in the browser. Run `npm run build && npm run lint && npm test` chained in one command and fix any errors
