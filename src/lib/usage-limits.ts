@@ -20,6 +20,15 @@ export function canCreateCollection(currentCollectionCount: number, isPro: boole
   };
 }
 
+export type UsageLevel = "ok" | "warning" | "full";
+
+// Drives the colour of the usage bars in Settings: yellow from 80%, red at the limit
+export function getUsageLevel(used: number, limit: number): UsageLevel {
+  if (used >= limit) return "full";
+  if (used / limit >= 0.8) return "warning";
+  return "ok";
+}
+
 export function canUploadFileType(typeName: string, isPro: boolean): LimitCheck {
   if (isPro || (typeName !== "File" && typeName !== "Image")) return { allowed: true };
   return {

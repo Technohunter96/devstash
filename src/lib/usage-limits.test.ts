@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canCreateItem, canCreateCollection, canUploadFileType } from "./usage-limits";
+import { canCreateItem, canCreateCollection, canUploadFileType, getUsageLevel } from "./usage-limits";
 import { FREE_ITEM_LIMIT, FREE_COLLECTION_LIMIT } from "@/lib/constants/billing";
 
 describe("canCreateItem", () => {
@@ -74,5 +74,23 @@ describe("canUploadFileType", () => {
   it("allows any other type name regardless of Pro status", () => {
     expect(canUploadFileType("Snippet", false)).toEqual({ allowed: true });
     expect(canUploadFileType("Link", false)).toEqual({ allowed: true });
+  });
+});
+describe("getUsageLevel", () => {
+  it("is ok below 80% of the limit", () => {
+    expect(getUsageLevel(39, 50)).toBe("ok");
+    expect(getUsageLevel(0, 3)).toBe("ok");
+  });
+
+  it("warns from 80% up to the limit (2 of 3 collections is still ok)", () => {
+    expect(getUsageLevel(40, 50)).toBe("warning");
+    expect(getUsageLevel(49, 50)).toBe("warning");
+    expect(getUsageLevel(2, 3)).toBe("ok");
+  });
+
+  it("is full at or above the limit", () => {
+    expect(getUsageLevel(50, 50)).toBe("full");
+    expect(getUsageLevel(3, 3)).toBe("full");
+    expect(getUsageLevel(60, 50)).toBe("full");
   });
 });

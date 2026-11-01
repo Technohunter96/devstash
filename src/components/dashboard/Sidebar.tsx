@@ -127,14 +127,14 @@ export default function Sidebar({
                 const rowClass = [
                   "flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors",
                   isLocked
-                    ? "text-muted-foreground opacity-50 cursor-not-allowed"
+                    ? "text-muted-foreground opacity-50 hover:opacity-80 hover:bg-muted"
                     : isActive
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   isCollapsed ? "justify-center" : "",
                 ].join(" ");
                 const title = isLocked
-                  ? `${type.name} is a Pro feature`
+                  ? "Upgrade to Pro to unlock"
                   : isCollapsed
                     ? `${type.name} (${type.itemCount})`
                     : undefined;
@@ -156,13 +156,14 @@ export default function Sidebar({
                   </>
                 );
 
-                // Locked rows are plain divs so a non-Pro user can't navigate to Pro-only pages
-                return isLocked ? (
-                  <div key={type.id} title={title} className={rowClass}>
-                    {rowContent}
-                  </div>
-                ) : (
-                  <Link key={type.id} href={href} title={title} className={rowClass}>
+                // Locked rows lead to the upgrade section instead of the Pro-only page
+                return (
+                  <Link
+                    key={type.id}
+                    href={isLocked ? "/settings#billing" : href}
+                    title={title}
+                    className={rowClass}
+                  >
                     {rowContent}
                   </Link>
                 );

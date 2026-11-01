@@ -576,3 +576,15 @@ Not Started
 - Known and left as-is: limit check + create is not atomic; after a downgrade old File/Image items remain visible outside their type pages
 - Webhook round trip (`stripe listen`, `stripe trigger`, portal cancel) and the manual gating checklist still need to be verified — deferred by the user to a later session
 - Tests: 8 new in `billing.test.ts`, gating tests added to `items.test.ts` and `collections.test.ts`; `npm run build && npm run lint && npm test` all pass (199 tests, 2 pre-existing lint warnings)
+
+### 2026-11-01 — Billing UX — Settings Card & Upgrade Entry Points Completed
+
+- `BillingCard.tsx` redesigned: Pro variant has a blue→purple gradient card with a Pro badge, "You're a Pro user" and Manage Billing; Free variant shows a "Free plan" badge with Items (x/50) and Collections (x/3) usage bars
+- Usage bars change colour via `getUsageLevel` in `src/lib/usage-limits.ts`: blue, yellow from 80%, red at the limit (2 of 3 collections is 67%, so that bar goes straight from blue to red at 3/3); 3 new tests
+- `/settings` fetches `countUserItems`/`countUserCollections` and passes them as props; card has `id="billing"` for the `/settings#billing` anchor
+- Created `UpgradeButton.tsx` in the TopBar (gradient outline, icon-only on mobile); rendered only when `useIsPro()` is exactly `false`, so Pro users never see it flash
+- Locked File/Image rows in `Sidebar.tsx` are now links to `/settings#billing` with an "Upgrade to Pro to unlock" tooltip instead of inert divs; `/items/files` and `/items/images` stay server-side redirected for free users
+- Considered and dropped a renewal date on the Pro card: the webhook never populated `currentPeriodEnd`, and a "Renews on" label would be wrong for subscriptions cancelled at period end; Stripe portal shows the accurate state. Column removed via migration `drop_current_period_end`
+- "Pro upgraded" toast was explicitly left out of scope
+- Dev-server gotcha: after a schema change the running `npm run dev` keeps the old cached Prisma client, so a restart is required
+- `npm run build && npm run lint && npm test` all pass (202 tests)
