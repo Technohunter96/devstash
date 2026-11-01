@@ -160,7 +160,7 @@ export default function Sidebar({
                 return (
                   <Link
                     key={type.id}
-                    href={isLocked ? "/settings#billing" : href}
+                    href={isLocked ? "/upgrade" : href}
                     title={title}
                     className={rowClass}
                   >

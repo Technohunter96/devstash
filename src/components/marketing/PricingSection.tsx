@@ -3,10 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createCheckoutSession } from "@/actions/billing";
 import {
   PRO_MONTHLY_PRICE,
   PRO_YEARLY_PRICE,
@@ -37,19 +35,12 @@ interface PricingSectionProps {
 
 export function PricingSection({ isAuthenticated, isPro }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const ctaHref = isAuthenticated ? "/dashboard" : "/register";
-
-  async function handleUpgrade() {
-    setCheckoutLoading(true);
-    const result = await createCheckoutSession(isYearly ? "yearly" : "monthly");
-    if (result.success) {
-      window.location.href = result.url;
-      return;
-    }
-    toast.error(result.error);
-    setCheckoutLoading(false);
-  }
+  const freeButtonClass = cn(
+    buttonVariants({ variant: "outline" }),
+    "justify-center px-2 text-xs sm:px-4 sm:text-sm",
+  );
+  const proHref = isPro ? "/settings" : isAuthenticated ? "/upgrade" : "/register";
 
   const proButtonClass = cn(
     buttonVariants({ variant: "default" }),
@@ -123,15 +114,18 @@ export function PricingSection({ isAuthenticated, isPro }: PricingSectionProps) 
                 </li>
               ))}
             </ul>
-            <Link
-              href={ctaHref}
-              className={cn(buttonVariants({ variant: "outline" }), "justify-center px-2 text-xs sm:px-4 sm:text-sm")}
-            >
-              <span className="sm:hidden">{isAuthenticated ? "Dashboard" : "Get Started"}</span>
-              <span className="hidden sm:inline">
-                {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
-              </span>
-            </Link>
+            {isAuthenticated && !isPro ? (
+              <button type="button" disabled className={freeButtonClass}>
+                Current Plan
+              </button>
+            ) : (
+              <Link href={ctaHref} className={freeButtonClass}>
+                <span className="sm:hidden">{isAuthenticated ? "Dashboard" : "Get Started"}</span>
+                <span className="hidden sm:inline">
+                  {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
+                </span>
+              </Link>
+            )}
           </ScrollFadeIn>
 
           <ScrollFadeIn className="relative flex flex-col rounded-xl border border-blue-500 bg-gradient-to-b from-blue-500/8 to-card p-4 shadow-[0_20px_40px_-20px_rgba(59,130,246,0.4)] sm:p-8">
@@ -161,20 +155,9 @@ export function PricingSection({ isAuthenticated, isPro }: PricingSectionProps) 
                 </li>
               ))}
             </ul>
-            {isAuthenticated && !isPro ? (
-              <button
-                type="button"
-                onClick={handleUpgrade}
-                disabled={checkoutLoading}
-                className={cn(proButtonClass, "cursor-pointer")}
-              >
-                {checkoutLoading ? "Redirecting..." : "Upgrade to Pro"}
-              </button>
-            ) : (
-              <Link href={isPro ? "/settings" : "/register"} className={proButtonClass}>
-                {isPro ? "Manage Plan" : "Upgrade to Pro"}
-              </Link>
-            )}
+            <Link href={proHref} className={proButtonClass}>
+              {isPro ? "Manage Plan" : "Upgrade to Pro"}
+            </Link>
           </ScrollFadeIn>
         </div>
       </section>

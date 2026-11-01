@@ -588,3 +588,16 @@ Not Started
 - "Pro upgraded" toast was explicitly left out of scope
 - Dev-server gotcha: after a schema change the running `npm run dev` keeps the old cached Prisma client, so a restart is required
 - `npm run build && npm run lint && npm test` all pass (202 tests)
+
+### 2026-11-01 — Upgrade Page Completed
+
+- Created `/upgrade` route: `src/app/upgrade/layout.tsx` (auth + email verification check + `DashboardShell`, same pattern as `/settings`) and `src/app/upgrade/page.tsx` (server component; Pro users are redirected to `/settings`; shows current usage as "x/50 items and x/3 collections")
+- Created `src/components/billing/UpgradePlans.tsx` — Free vs Pro comparison with a Monthly/Yearly toggle (reuses `PRO_*` price constants, so yearly is $69 with a computed savings badge); Free card shows disabled "Current Plan" and struck-through unavailable features, Pro card shows "Recommended" and the "Upgrade to Pro ($8/mo)" button which is the only place that starts Stripe Checkout
+- Free users no longer go straight to Stripe: TopBar `UpgradeButton`, locked File/Image rows in `Sidebar.tsx`, the server-side redirect on `/items/files` and `/items/images`, and the Settings `BillingCard` (now a single "Upgrade to Pro" link, checkout buttons removed) all point to `/upgrade`
+- Homepage `PricingSection.tsx` — free signed-in users see a disabled "Current Plan" button on the Free card instead of "Go to Dashboard"; the Pro button links to `/upgrade` instead of starting checkout directly
+- `createCheckoutSession` — `cancel_url` now returns to `/upgrade`; the "checkout cancelled" toast in `BillingCard` removed as dead code
+- `proxy.ts` — added `/upgrade` to the middleware matcher
+- Fixed login failing with "column (not available) does not exist": the generated Prisma client in `src/generated/` (gitignored) was stale after the `drop_current_period_end` migration; resolved by `prisma generate` plus a dev-server restart
+- Removed two unused imports (`Button` in `resend-verification-button.tsx`, `beforeEach` in `feature-flags.test.ts`) — lint is now warning-free
+- `context/ai-interaction.md` — workflow step 2 now requires a todo checklist created before the first edit and a brief one-line note before each command or edit
+- `npm run build && npm run lint && npm test` all pass (202 tests)

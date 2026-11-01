@@ -11,7 +11,7 @@ export default function UpgradeButton() {
 
   return (
     <Link
-      href="/settings#billing"
+      href="/upgrade"
       aria-label="Upgrade to Pro"
       title="Upgrade to Pro"
       className="flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-md border border-purple-500/50 bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-sm font-medium text-foreground hover:from-blue-500/20 hover:to-purple-500/20 transition-colors cursor-pointer"

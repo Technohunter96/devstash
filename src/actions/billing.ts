@@ -33,7 +33,7 @@ export async function createCheckoutSession(
       client_reference_id: session.user.id,
       ...(customerId ? { customer: customerId } : { customer_email: session.user.email ?? undefined }),
       success_url: `${process.env.APP_URL}/settings?checkout=success`,
-      cancel_url: `${process.env.APP_URL}/settings?checkout=cancelled`,
+      cancel_url: `${process.env.APP_URL}/upgrade`,
     });
 
     if (!checkout.url) {
