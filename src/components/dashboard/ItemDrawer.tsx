@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import ItemDeleteDialog from "./ItemDeleteDialog";
 import CodeEditor from "./CodeEditor";
+import LanguageSelect from "./LanguageSelect";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
 import { useIsPro } from "@/hooks/useIsPro";
@@ -363,6 +364,17 @@ function ItemDrawerBody({
           )}
         </section>
 
+        {/* Language (snippet/command only) — above content so highlighting follows the selection */}
+        {isEditMode && showLanguage && (
+          <section>
+            <SectionLabel>Language</SectionLabel>
+            <LanguageSelect
+              value={editState.language}
+              onChange={(val) => setEditState((s) => ({ ...s, language: val }))}
+            />
+          </section>
+        )}
+
         {/* Content (text types) */}
         {(isEditMode ? showContent : item.contentType === "TEXT" && item.content) && (
           <section>
@@ -394,18 +406,6 @@ function ItemDrawerBody({
                 />
               ) : null
             )}
-          </section>
-        )}
-
-        {/* Language (snippet/command only) */}
-        {isEditMode && showLanguage && (
-          <section>
-            <SectionLabel>Language</SectionLabel>
-            <input
-              className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
-              placeholder="e.g. typescript, bash"
-              {...field("language")}
-            />
           </section>
         )}
 

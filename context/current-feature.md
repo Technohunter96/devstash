@@ -601,3 +601,12 @@ Not Started
 - Removed two unused imports (`Button` in `resend-verification-button.tsx`, `beforeEach` in `feature-flags.test.ts`) — lint is now warning-free
 - `context/ai-interaction.md` — workflow step 2 now requires a todo checklist created before the first edit and a brief one-line note before each command or edit
 - `npm run build && npm run lint && npm test` all pass (202 tests)
+
+### 2026-11-04 — Language Dropdown Completed
+
+- Replaced the free-text Language input with a dropdown in both `NewItemDialog` and the `ItemDrawer` edit mode (Snippet/Command only); the field now sits above the Content editor so syntax highlighting follows the selected language as you type
+- Created `src/lib/constants/languages.ts` — `LANGUAGE_OPTIONS` (Monaco language IDs with display labels) and `PLAINTEXT_LANGUAGE`
+- Created `src/components/dashboard/LanguageSelect.tsx` — shared component for both places, since it holds non-trivial logic: empty language maps to "Plain text" and back to `""` on change, and a legacy free-form value saved before the dropdown existed (e.g. `ts`) is appended as an extra option instead of being lost; uses the Base UI `items` prop on `<Select>` so the closed trigger shows the label, not the raw value
+- No changes to `CodeEditor`, server actions or the schema — the `language` string was already passed to Monaco; the stored value is still a plain string
+- No new unit tests — UI-only change, no new utilities or server actions
+- `npm run build && npm run lint && npm test` all pass (202 tests)
