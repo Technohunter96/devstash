@@ -12,6 +12,7 @@ import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
 import { createItem } from "@/actions/items";
 import { useIsPro } from "@/hooks/useIsPro";
 import CodeEditor from "./CodeEditor";
+import LanguageSelect from "./LanguageSelect";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
 import CollectionMultiSelect from "./CollectionMultiSelect";
@@ -211,6 +212,19 @@ export function NewItemDialogContent({
             />
           </div>
 
+          {/* Language — above content so highlighting follows the selection */}
+          {showLanguage && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Language</label>
+              <div>
+                <LanguageSelect
+                  value={form.language}
+                  onChange={(val) => setForm((s) => ({ ...s, language: val }))}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           {showContent && (
             <div className="space-y-1.5">
@@ -228,18 +242,6 @@ export function NewItemDialogContent({
                   onChange={(val) => setForm((s) => ({ ...s, content: val }))}
                 />
               )}
-            </div>
-          )}
-
-          {/* Language */}
-          {showLanguage && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Language</label>
-              <input
-                className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-3 py-2 focus:border-primary"
-                placeholder="e.g. typescript, bash"
-                {...field("language")}
-              />
             </div>
           )}
 
