@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { useIsPro } from "@/hooks/useIsPro";
+import { useIsPro } from "./ProProvider";
 
 // Shown to free users only; null while loading so Pro users never see it flash
 export default function UpgradeButton() {

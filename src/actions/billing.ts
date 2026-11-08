@@ -66,9 +66,3 @@ export async function createBillingPortalSession(): Promise<BillingUrlResult> {
     return { success: false, error: "Could not open billing portal" };
   }
 }
-
-// UI hint only for greying out Pro features — real gating is enforced server-side in each action
-export async function getIsPro(): Promise<boolean> {
-  const session = await auth();
-  return session?.user?.isPro ?? false;
-}

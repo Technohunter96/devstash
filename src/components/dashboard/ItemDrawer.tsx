@@ -18,9 +18,11 @@ import CodeEditor from "./CodeEditor";
 import LanguageSelect from "./LanguageSelect";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
-import { useIsPro } from "@/hooks/useIsPro";
+import { useIsPro } from "./ProProvider";
 import CollectionMultiSelect from "./CollectionMultiSelect";
 import CollectionBadge from "./CollectionBadge";
+import SuggestTags from "./SuggestTags";
+import TagInput from "./TagInput";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/constants/icon-map";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/constants/item-types";
@@ -518,11 +520,20 @@ function ItemDrawerBody({
           <section>
             <SectionLabel>Tags</SectionLabel>
             {isEditMode ? (
-              <input
-                className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-2 py-1.5 focus:border-primary"
-                placeholder="tag1, tag2, tag3"
-                {...field("tags")}
-              />
+              <div className="flex items-start gap-1.5">
+                <TagInput
+                  value={editState.tags}
+                  onChange={(tags) => setEditState((s) => ({ ...s, tags }))}
+                />
+                <SuggestTags
+                  title={editState.title}
+                  content={editState.content}
+                  language={editState.language}
+                  typeName={item.itemType.name}
+                  tags={editState.tags}
+                  onTagsChange={(tags) => setEditState((s) => ({ ...s, tags }))}
+                />
+              </div>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {item.tags.map((tag) => (

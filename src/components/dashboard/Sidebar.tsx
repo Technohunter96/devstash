@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react";
 import { File, Star, PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings, X, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
-import { useIsPro } from "@/hooks/useIsPro";
+import { useIsPro } from "./ProProvider";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 import { ICON_MAP as lucideIconMap } from "@/lib/constants/icon-map";
 

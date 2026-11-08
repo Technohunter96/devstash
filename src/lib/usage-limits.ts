@@ -29,6 +29,14 @@ export function getUsageLevel(used: number, limit: number): UsageLevel {
   return "ok";
 }
 
+export function canUseAI(isPro: boolean): LimitCheck {
+  if (isPro) return { allowed: true };
+  return {
+    allowed: false,
+    reason: "AI features are a Pro feature. Upgrade to Pro to enable them.",
+  };
+}
+
 export function canUploadFileType(typeName: string, isPro: boolean): LimitCheck {
   if (isPro || (typeName !== "File" && typeName !== "Image")) return { allowed: true };
   return {
