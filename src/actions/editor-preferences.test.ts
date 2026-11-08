@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getEditorPreferences, updateEditorPreferences } from "./editor-preferences";
-import { DEFAULT_EDITOR_PREFERENCES } from "@/lib/constants/editor-preferences";
+import { updateEditorPreferences } from "./editor-preferences";
 
 const mockAuth = vi.fn();
-const mockGetEditorPreferencesFromDb = vi.fn();
 const mockUpdateEditorPreferencesInDb = vi.fn();
 
 vi.mock("@/auth", () => ({
@@ -11,7 +9,6 @@ vi.mock("@/auth", () => ({
 }));
 
 vi.mock("@/lib/db/editor-preferences", () => ({
-  getEditorPreferences: (...args: unknown[]) => mockGetEditorPreferencesFromDb(...args),
   updateEditorPreferencesInDb: (...args: unknown[]) => mockUpdateEditorPreferencesInDb(...args),
 }));
 
@@ -22,28 +19,6 @@ const VALID_PREFERENCES = {
   minimap: true,
   theme: "monokai" as const,
 };
-
-describe("getEditorPreferences", () => {
-  beforeEach(() => {
-    mockAuth.mockReset();
-    mockGetEditorPreferencesFromDb.mockReset();
-  });
-
-  it("returns defaults when no session", async () => {
-    mockAuth.mockResolvedValue(null);
-    const result = await getEditorPreferences();
-    expect(result).toEqual(DEFAULT_EDITOR_PREFERENCES);
-    expect(mockGetEditorPreferencesFromDb).not.toHaveBeenCalled();
-  });
-
-  it("returns preferences for the current user", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockGetEditorPreferencesFromDb.mockResolvedValue(VALID_PREFERENCES);
-    const result = await getEditorPreferences();
-    expect(result).toEqual(VALID_PREFERENCES);
-    expect(mockGetEditorPreferencesFromDb).toHaveBeenCalledWith("user-1");
-  });
-});
 
 describe("updateEditorPreferences", () => {
   beforeEach(() => {

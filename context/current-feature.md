@@ -624,3 +624,12 @@ Not Started
 - Follow-up idea: `EditorPreferencesProvider` still fetches on mount and flashes the defaults — pass `initialPreferences` from the layouts the same way as `isPro`
 - Verified manually in the browser as a Pro and as a free user
 - Tests: 12 in `src/actions/ai.test.ts`, 11 in `src/lib/ai/tags.test.ts`, 2 `canUseAI` tests in `usage-limits.test.ts`; `npm run build && npm run lint && npm test` all pass (227 tests)
+
+### 2026-11-08 — Editor Preferences Initial State Completed
+
+- `EditorPreferencesProvider` now takes a required `initialPreferences` prop and seeds its state from it; the mount-time `getEditorPreferences()` fetch and the `useEffect` are gone, so the editor no longer flashes the default settings before the saved ones arrive
+- `DashboardShell` takes a new required `editorPreferences` prop and passes it to the provider, same pattern as `isPro`/`ProProvider`
+- All 7 dashboard-shell layouts (dashboard, items/[type], collections, profile, settings, favorites, upgrade) load the preferences via `getEditorPreferences(userId)` from `src/lib/db/editor-preferences.ts` inside their existing `Promise.all` — one extra parallel query, no extra round trip
+- Removed the now-unused `getEditorPreferences` server action from `src/actions/editor-preferences.ts` together with its 2 tests (same cleanup as `getIsPro`); `updateEditorPreferences` is unchanged
+- Preferences are only read when the layout renders; after a save the provider's local state is the source of truth, so `router.refresh()` does not overwrite it
+- Verified by `npm run build && npm run lint && npm test` (225 tests); not checked manually in the browser

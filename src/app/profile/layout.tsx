@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
+import { getEditorPreferences } from "@/lib/db/editor-preferences";
 import { isEmailVerificationEnabled } from "@/lib/feature-flags";
 
 export default async function ProfileLayout({
@@ -24,14 +25,16 @@ export default async function ProfileLayout({
 
   const userId = session.user.id;
 
-  const [itemTypes, collections] = await Promise.all([
+  const [itemTypes, collections, editorPreferences] = await Promise.all([
     getSidebarItemTypes(userId),
     getSidebarCollections(userId),
+    getEditorPreferences(userId),
   ]);
 
   return (
     <DashboardShell
       isPro={session.user.isPro}
+      editorPreferences={editorPreferences}
       itemTypes={itemTypes}
       collections={collections}
       user={{
