@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { toast } from "sonner";
-import { getEditorPreferences, updateEditorPreferences } from "@/actions/editor-preferences";
-import { DEFAULT_EDITOR_PREFERENCES, type EditorPreferences } from "@/lib/constants/editor-preferences";
+import { updateEditorPreferences } from "@/actions/editor-preferences";
+import type { EditorPreferences } from "@/lib/constants/editor-preferences";
 import { extractActionError } from "@/lib/utils";
 
 // Debounce so rapid changes (e.g. dragging a toggle) don't spam the server action
@@ -22,13 +22,18 @@ export function useEditorPreferences() {
   return ctx;
 }
 
-export default function EditorPreferencesProvider({ children }: { children: React.ReactNode }) {
-  const [preferences, setPreferencesState] = useState<EditorPreferences>(DEFAULT_EDITOR_PREFERENCES);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+interface EditorPreferencesProviderProps {
+  children: React.ReactNode;
+  initialPreferences: EditorPreferences;
+}
 
-  useEffect(() => {
-    getEditorPreferences().then(setPreferencesState);
-  }, []);
+export default function EditorPreferencesProvider({
+  children,
+  initialPreferences,
+}: EditorPreferencesProviderProps) {
+  // Seeded from the server so the editor never renders with default settings first
+  const [preferences, setPreferencesState] = useState<EditorPreferences>(initialPreferences);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setPreferences = useCallback((partial: Partial<EditorPreferences>) => {
     setPreferencesState((prev) => {

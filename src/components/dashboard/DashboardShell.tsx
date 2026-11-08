@@ -9,6 +9,7 @@ import CommandPalette from "@/components/dashboard/CommandPalette";
 import EditorPreferencesProvider from "@/components/dashboard/EditorPreferencesProvider";
 import ProProvider from "@/components/dashboard/ProProvider";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
+import type { EditorPreferences } from "@/lib/constants/editor-preferences";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ interface DashboardShellProps {
   collections: SidebarCollection[];
   user: { name: string; email: string; image?: string | null };
   isPro: boolean;
+  editorPreferences: EditorPreferences;
 }
 
 export default function DashboardShell({
@@ -24,13 +26,14 @@ export default function DashboardShell({
   collections,
   user,
   isPro,
+  editorPreferences,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <ProProvider isPro={isPro}>
-      <EditorPreferencesProvider>
+      <EditorPreferencesProvider initialPreferences={editorPreferences}>
         <SearchProvider>
           <ItemDrawerProvider>
             <CommandPalette />

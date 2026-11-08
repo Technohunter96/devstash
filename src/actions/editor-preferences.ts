@@ -2,12 +2,8 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
+import { updateEditorPreferencesInDb } from "@/lib/db/editor-preferences";
 import {
-  getEditorPreferences as getEditorPreferencesFromDb,
-  updateEditorPreferencesInDb,
-} from "@/lib/db/editor-preferences";
-import {
-  DEFAULT_EDITOR_PREFERENCES,
   FONT_SIZE_OPTIONS,
   TAB_SIZE_OPTIONS,
   type EditorPreferences,
@@ -24,15 +20,6 @@ const EditorPreferencesSchema = z.object({
   minimap: z.boolean(),
   theme: z.enum(["vs-dark", "monokai", "github-dark"]),
 });
-
-export async function getEditorPreferences(): Promise<EditorPreferences> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return DEFAULT_EDITOR_PREFERENCES;
-  }
-
-  return getEditorPreferencesFromDb(session.user.id);
-}
 
 type UpdateEditorPreferencesResult =
   | { success: true; data: EditorPreferences }
