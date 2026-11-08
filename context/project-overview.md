@@ -212,7 +212,7 @@ model Tag {
 | **ORM**          | Prisma 7                    | Migrations only — **never `db push`**  |
 | **Auth**         | NextAuth v5                 | Email/password + GitHub OAuth          |
 | **File Storage** | Cloudflare R2               | S3-compatible                          |
-| **AI**           | OpenAI `gpt-5-nano`         | Auto-tag, summarize, explain, optimize |
+| **AI**           | OpenAI `gpt-6-luna`         | Auto-tag, summarize, explain, optimize |
 | **Styling**      | Tailwind CSS v4 + shadcn/ui |                                        |
 | **Caching**      | Redis (TBD)                 | Evaluate during development            |
 | **Payments**     | Stripe                      | Subscription billing                   |

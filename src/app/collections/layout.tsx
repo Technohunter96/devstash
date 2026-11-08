@@ -31,6 +31,7 @@ export default async function CollectionsLayout({
 
   return (
     <DashboardShell
+      isPro={session.user.isPro}
       itemTypes={itemTypes}
       collections={collections}
       user={{

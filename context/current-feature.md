@@ -610,3 +610,17 @@ Not Started
 - No changes to `CodeEditor`, server actions or the schema — the `language` string was already passed to Monaco; the stored value is still a plain string
 - No new unit tests — UI-only change, no new utilities or server actions
 - `npm run build && npm run lint && npm test` all pass (202 tests)
+
+### 2026-11-08 — AI Auto-Tagging Completed
+
+- Pro-only "Suggest Tags" icon button (`WandSparkles`, ghost, tooltip via `title`) at the end of the tags row in the New Item dialog and the item drawer edit mode; hidden for free users
+- `gpt-6-luna` returns 3-5 freeform tags from title/content (content truncated to 2000 chars) via the Responses API: `responses.parse` + `zodTextFormat`, `reasoning: { effort: "none" }`, `max_output_tokens: 100`, hashed `safety_identifier`, no tools, content wrapped in `<item_content>` and treated as data
+- OpenAI foundation for later AI features: `src/lib/openai.ts` (lazy `getOpenAI()`), `src/lib/constants/ai.ts`, `src/lib/ai/run.ts` (`runStructured`, friendly error mapping — raw OpenAI errors never reach the client), `src/lib/ai/tags.ts` (post-processing, truncation, `mergeTag`)
+- `suggestTags` server action (`src/actions/ai.ts`): `auth()` → `canUseAI` → Zod → rate limit → OpenAI → `{ success, data, error }`; input is a flat `{ title, content, language, typeName, existingTags }` — the drawer sends its current (possibly unsaved) edit state, so the `{ itemId }` variant from the spec was dropped
+- `ai` (20 / 10 min) and `aiDaily` (200 / day) rate limits in `src/lib/rate-limit.ts`, keyed by user ID; `canUseAI` added to `src/lib/usage-limits.ts`
+- Deviation from the spec, on request: suggestions are written straight into the tags field instead of separate accept/reject badges; the new `TagInput` shows tags as badges with an X inside the field (Enter/comma adds, Backspace removes the last)
+- `isPro` refactor: new `ProProvider` (context, provider and `useIsPro()` in one file) wrapped in `DashboardShell`, which takes a required `isPro` prop passed by all 7 dashboard-shell layouts from `session.user.isPro` — removes one `getIsPro` server action call per consumer and the null → value flash; `src/hooks/useIsPro.ts` and the `getIsPro` action were deleted
+- Known and left as-is: without Redis the rate limit fails open (no AI cost ceiling — set a monthly spend limit in the OpenAI dashboard; `failClosed` is Phase 4 of `docs/ai-integration-plan.md`); an item containing `</item_content>` could close the data wrapper (low impact: no tools, schema-validated output)
+- Follow-up idea: `EditorPreferencesProvider` still fetches on mount and flashes the defaults — pass `initialPreferences` from the layouts the same way as `isPro`
+- Verified manually in the browser as a Pro and as a free user
+- Tests: 12 in `src/actions/ai.test.ts`, 11 in `src/lib/ai/tags.test.ts`, 2 `canUseAI` tests in `usage-limits.test.ts`; `npm run build && npm run lint && npm test` all pass (227 tests)

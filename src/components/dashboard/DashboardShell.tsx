@@ -7,6 +7,7 @@ import ItemDrawerProvider from "@/components/dashboard/ItemDrawerProvider";
 import SearchProvider from "@/components/dashboard/SearchProvider";
 import CommandPalette from "@/components/dashboard/CommandPalette";
 import EditorPreferencesProvider from "@/components/dashboard/EditorPreferencesProvider";
+import ProProvider from "@/components/dashboard/ProProvider";
 import type { SidebarItemType, SidebarCollection } from "@/lib/db/sidebar";
 
 interface DashboardShellProps {
@@ -14,6 +15,7 @@ interface DashboardShellProps {
   itemTypes: SidebarItemType[];
   collections: SidebarCollection[];
   user: { name: string; email: string; image?: string | null };
+  isPro: boolean;
 }
 
 export default function DashboardShell({
@@ -21,32 +23,35 @@ export default function DashboardShell({
   itemTypes,
   collections,
   user,
+  isPro,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <EditorPreferencesProvider>
-      <SearchProvider>
-        <ItemDrawerProvider>
-          <CommandPalette />
-          <div className="flex flex-col h-full">
-            <TopBar onMenuToggle={() => setSidebarOpen((v) => !v)} />
-            <div className="flex flex-1 overflow-hidden relative">
-              <Sidebar
-                isOpen={sidebarOpen}
-                isCollapsed={sidebarCollapsed}
-                onClose={() => setSidebarOpen(false)}
-                onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
-                itemTypes={itemTypes}
-                collections={collections}
-                user={user}
-              />
-              <main className="flex-1 overflow-auto">{children}</main>
+    <ProProvider isPro={isPro}>
+      <EditorPreferencesProvider>
+        <SearchProvider>
+          <ItemDrawerProvider>
+            <CommandPalette />
+            <div className="flex flex-col h-full">
+              <TopBar onMenuToggle={() => setSidebarOpen((v) => !v)} />
+              <div className="flex flex-1 overflow-hidden relative">
+                <Sidebar
+                  isOpen={sidebarOpen}
+                  isCollapsed={sidebarCollapsed}
+                  onClose={() => setSidebarOpen(false)}
+                  onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+                  itemTypes={itemTypes}
+                  collections={collections}
+                  user={user}
+                />
+                <main className="flex-1 overflow-auto">{children}</main>
+              </div>
             </div>
-          </div>
-        </ItemDrawerProvider>
-      </SearchProvider>
-    </EditorPreferencesProvider>
+          </ItemDrawerProvider>
+        </SearchProvider>
+      </EditorPreferencesProvider>
+    </ProProvider>
   );
 }

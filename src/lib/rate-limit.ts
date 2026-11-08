@@ -31,6 +31,9 @@ const rateLimitConfigs = {
   resetPassword:       { limiter: Ratelimit.slidingWindow(5, "15 m"), prefix: "devstash:rl:reset-password" },
   resendVerification:  { limiter: Ratelimit.slidingWindow(3, "15 m"), prefix: "devstash:rl:resend-verification" },
   changePassword:      { limiter: Ratelimit.slidingWindow(5, "15 m"), prefix: "devstash:rl:change-password" },
+  // AI is keyed by user ID; burst limiter plus a coarse daily cap (abuse guards, not cost guards)
+  ai:                  { limiter: Ratelimit.slidingWindow(20, "10 m"), prefix: "devstash:rl:ai" },
+  aiDaily:             { limiter: Ratelimit.slidingWindow(200, "1 d"), prefix: "devstash:rl:ai-daily" },
 } as const;
 
 export type RateLimitType = keyof typeof rateLimitConfigs;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canCreateItem, canCreateCollection, canUploadFileType, getUsageLevel } from "./usage-limits";
+import { canCreateItem, canCreateCollection, canUploadFileType, canUseAI, getUsageLevel } from "./usage-limits";
 import { FREE_ITEM_LIMIT, FREE_COLLECTION_LIMIT } from "@/lib/constants/billing";
 
 describe("canCreateItem", () => {
@@ -92,5 +92,17 @@ describe("getUsageLevel", () => {
     expect(getUsageLevel(50, 50)).toBe("full");
     expect(getUsageLevel(3, 3)).toBe("full");
     expect(getUsageLevel(60, 50)).toBe("full");
+  });
+});
+
+describe("canUseAI", () => {
+  it("allows Pro users", () => {
+    expect(canUseAI(true)).toEqual({ allowed: true });
+  });
+
+  it("blocks free users with an upgrade reason", () => {
+    const result = canUseAI(false);
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toContain("Pro");
   });
 });

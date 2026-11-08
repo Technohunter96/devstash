@@ -10,12 +10,14 @@ import { cn, extractActionError } from "@/lib/utils";
 import { CONTENT_TYPES, LANGUAGE_TYPES, CODE_TYPES, MARKDOWN_TYPES, FILE_TYPES } from "@/lib/constants/item-types";
 import { ICON_MAP, ITEM_TYPE_COLORS } from "@/lib/constants/icon-map";
 import { createItem } from "@/actions/items";
-import { useIsPro } from "@/hooks/useIsPro";
+import { useIsPro } from "./ProProvider";
 import CodeEditor from "./CodeEditor";
 import LanguageSelect from "./LanguageSelect";
 import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
 import CollectionMultiSelect from "./CollectionMultiSelect";
+import SuggestTags from "./SuggestTags";
+import TagInput from "./TagInput";
 
 // All creatable item types — File/Image are greyed out for non-Pro users
 const CREATABLE_TYPES = [
@@ -278,11 +280,20 @@ export function NewItemDialogContent({
           {/* Tags */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Tags</label>
-            <input
-              className="w-full bg-transparent text-sm outline-none border border-border rounded-md px-3 py-2 focus:border-primary"
-              placeholder="tag1, tag2, tag3"
-              {...field("tags")}
-            />
+            <div className="flex items-start gap-1.5">
+              <TagInput
+                value={form.tags}
+                onChange={(tags) => setForm((s) => ({ ...s, tags }))}
+              />
+              <SuggestTags
+                title={form.title}
+                content={form.content}
+                language={form.language}
+                typeName={form.typeName}
+                tags={form.tags}
+                onTagsChange={(tags) => setForm((s) => ({ ...s, tags }))}
+              />
+            </div>
           </div>
 
           {/* Collections */}
