@@ -17,6 +17,12 @@ export const AI_DESCRIPTION_MAX_LENGTH = 300;
 export const AI_DESCRIPTION_MAX_OUTPUT_TOKENS = 150;
 export const AI_DESCRIPTION_EFFORT = "none" as const;
 
+// Explain code (~200-300 words of markdown)
+export const AI_EXPLAIN_INPUT_CHARS = 8000;
+export const AI_EXPLAIN_MAX_LENGTH = 3000;
+export const AI_EXPLAIN_MAX_OUTPUT_TOKENS = 700;
+export const AI_EXPLAIN_EFFORT = "low" as const;
+
 // Zod caps on client-supplied input to the AI actions
 export const AI_TITLE_MAX_CHARS = 200;
 export const AI_CONTENT_MAX_CHARS = 50_000;

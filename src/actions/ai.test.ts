@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import OpenAI from "openai";
-import { suggestTags, summarizeDescription } from "./ai";
+import { suggestTags, summarizeDescription, explainCode } from "./ai";
 
 const mockAuth = vi.fn();
 const mockParse = vi.fn();
@@ -175,5 +175,59 @@ describe("summarizeDescription", () => {
     mockParse.mockRejectedValue(new OpenAI.APIError(500, {}, "secret raw message", new Headers()));
     const result = await summarizeDescription(DESC_INPUT);
     expect(result).toEqual({ success: false, error: "AI request failed." });
+  });
+});
+
+describe("explainCode", () => {
+  const EXPLAIN_INPUT = { title: "Debounce", content: "const x = 1;", language: "typescript", typeName: "Snippet" as const };
+
+  it("returns unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    expect(await explainCode(EXPLAIN_INPUT)).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-Pro users and never calls OpenAI", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
+    const result = await explainCode(EXPLAIN_INPUT);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Pro feature");
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty content", async () => {
+    const result = await explainCode({ ...EXPLAIN_INPUT, content: "   " });
+    expect(result).toEqual({ success: false, error: "There is no code to explain" });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects types that are not code", async () => {
+    const result = await explainCode({ ...EXPLAIN_INPUT, typeName: "Note" as "Snippet" });
+    expect(result.success).toBe(false);
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("returns an error when rate limited", async () => {
+    mockCheckRateLimit.mockResolvedValue({ success: false, remaining: 0, retryAfter: 30 });
+    const result = await explainCode(EXPLAIN_INPUT);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("30 seconds");
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("returns the trimmed explanation on success", async () => {
+    mockParse.mockResolvedValue({ status: "completed", output_parsed: { explanation: "  Declares a constant.\n" } });
+    expect(await explainCode(EXPLAIN_INPUT)).toEqual({ success: true, data: "Declares a constant." });
+  });
+
+  it("fails when the AI returns an empty explanation", async () => {
+    mockParse.mockResolvedValue({ status: "completed", output_parsed: { explanation: "  " } });
+    expect(await explainCode(EXPLAIN_INPUT)).toEqual({ success: false, error: "AI couldn't process this item." });
+  });
+
+  it("maps OpenAI rate limit errors to a friendly message", async () => {
+    mockParse.mockRejectedValue(new OpenAI.RateLimitError(429, {}, "rate limited", new Headers()));
+    const result = await explainCode(EXPLAIN_INPUT);
+    expect(result).toEqual({ success: false, error: "AI is busy right now. Try again in a moment." });
   });
 });

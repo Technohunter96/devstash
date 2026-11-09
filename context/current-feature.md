@@ -670,4 +670,13 @@ Not Started
 - `suggestTags` and `summarizeDescription` in `src/actions/ai.ts` now take `SuggestTagsInput` / `SummarizeDescriptionInput` (exported `z.input<typeof Schema>` types) instead of `unknown`, so a misspelled field name is a compile error instead of being silently dropped by Zod
 - `SuggestTags.tsx` and `SuggestDescription.tsx` already passed matching objects — no changes needed; runtime behavior is unchanged (type-only change)
 - A shared `action-utils.ts` (`getAuthedSession`, unified `ActionResult`) was evaluated and deliberately not built: it would save about one line per action at ~14 call sites and would not fix any bug, while the reference project's loose `ActionResult` would weaken the discriminated unions the components narrow on
-- `npm run build && npm run lint` pass; `npm test` could not be run in this session (`DATABASE_URL` is not loaded into the shell and `next-auth` fails to resolve `next/server` under Vitest — identical failure on the base branch without these changes)
+
+### 2026-11-09 — AI Explain Code Completed
+
+- Pro-only "Explain" button (Sparkles icon + label) in the `CodeEditor` header for Snippet and Command items in the item drawer; free users see a Crown icon with the tooltip "AI features require Pro subscription"
+- Works in both the drawer read view and edit mode (deviation from the source spec, on request); in edit mode it explains the current, possibly unsaved, editor content; not available in the New Item dialog
+- After generating, Code/Explain tabs appear at the left of the editor header next to the window dots; the explanation is rendered as markdown in the same container space, while Monaco stays mounted (hidden) so its state is kept
+- `explainCode` server action in `src/actions/ai.ts` built on the shared `runAiAction` pipeline (auth → Pro → Zod → rate limits → OpenAI → clean output); input restricted to Snippet/Command via `z.enum`; spinner (`Loader2`) while generating, errors via toast
+- Created `src/lib/ai/explain.ts` (system prompt, `buildExplainUserMessage`, `postProcessExplanation`) and explain constants in `src/lib/constants/ai.ts`
+- Explanations are not persisted — regenerated on each click
+- Tests: 8 new tests for `explainCode` in `src/actions/ai.test.ts`; `npm run build && npm run lint && npm test` all pass (252 tests)

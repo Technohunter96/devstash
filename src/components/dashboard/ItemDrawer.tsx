@@ -130,6 +130,9 @@ function ItemDrawerBody({
   const isMarkdownType = MARKDOWN_TYPES.includes(item.itemType.name);
   const isFileType = FILE_TYPES.includes(item.itemType.name);
   const isPro = useIsPro();
+  // CODE_TYPES is exactly Snippet/Command, which is what the Explain button supports
+  const explainContext = (title: string) =>
+    isCodeType ? { title, typeName: item.itemType.name as "Snippet" | "Command" } : undefined;
   const isImageType = item.itemType.name === "Image";
 
   const handleCopy = () => {
@@ -398,6 +401,7 @@ function ItemDrawerBody({
                   value={editState.content}
                   language={editState.language || undefined}
                   onChange={(val) => setEditState((s) => ({ ...s, content: val }))}
+                  explain={explainContext(editState.title)}
                 />
               ) : isMarkdownType ? (
                 <MarkdownEditor
@@ -411,6 +415,7 @@ function ItemDrawerBody({
                   value={item.content ?? ""}
                   language={item.language ?? undefined}
                   readOnly
+                  explain={explainContext(item.title)}
                 />
               ) : isMarkdownType ? (
                 <MarkdownEditor
