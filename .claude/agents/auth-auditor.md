@@ -54,7 +54,8 @@ Use these Glob patterns to find relevant files:
 - `src/app/**/forgot-password/**`
 - `src/app/**/reset-password/**`
 - `src/app/**/verify-email/**`
-- `src/app/profile/**`
+- `src/app/(app)/layout.tsx`
+- `src/app/(app)/profile/**`
 - `src/components/auth/**`
 - `src/lib/db/profile.ts`
 
