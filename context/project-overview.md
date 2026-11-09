@@ -32,7 +32,7 @@ Content mode is one of: `text` (snippet, note, prompt, command), `url` (link), o
 | Type    | Icon         | Color     | Content Mode | Tier |
 | ------- | ------------ | --------- | ------------ | ---- |
 | Snippet | `Code`       | `#3b82f6` | text         | Free |
-| Prompt  | `Sparkles`   | `#8b5cf6` | text         | Free |
+| Prompt  | `Bot`        | `#8b5cf6` | text         | Free |
 | Command | `Terminal`   | `#f97316` | text         | Free |
 | Note    | `StickyNote` | `#fde047` | text         | Free |
 | Link    | `Link`       | `#10b981` | url          | Free |
