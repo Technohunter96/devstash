@@ -97,7 +97,9 @@ const SuggestTagsSchema = z.object({
   existingTags: z.array(z.string().max(50)).max(50).optional(),
 });
 
-export async function suggestTags(input: unknown): Promise<AiResult<string[]>> {
+export type SuggestTagsInput = z.input<typeof SuggestTagsSchema>;
+
+export async function suggestTags(input: SuggestTagsInput): Promise<AiResult<string[]>> {
   return runAiAction(
     {
       name: "tags",
@@ -126,7 +128,11 @@ const SummarizeDescriptionSchema = z.object({
   tags: z.array(z.string().max(50)).max(50).optional(),
 });
 
-export async function summarizeDescription(input: unknown): Promise<AiResult<string>> {
+export type SummarizeDescriptionInput = z.input<typeof SummarizeDescriptionSchema>;
+
+export async function summarizeDescription(
+  input: SummarizeDescriptionInput
+): Promise<AiResult<string>> {
   return runAiAction(
     {
       name: "description",

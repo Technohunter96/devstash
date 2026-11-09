@@ -664,3 +664,10 @@ Not Started
 - Both AI buttons now use `Sparkles` (Suggest Tags changed from `WandSparkles`); Prompt item type icon changed from `Sparkles` to `Bot` to avoid the clash (`icon-map.ts`, `NewItemDialog`, `seed.ts`, `project-overview.md`) via data migration `20261109190000_prompt_type_icon` — production needs `prisma migrate deploy` before the app starts, otherwise Prompt briefly falls back to the File icon
 - Known and left as-is: stale `Sparkles` Prompt icon in unused `mock-data.ts`, the `collections.test.ts` fixture and `seed-spec.md`; unused `AI_MAX_INPUT_CHARS`
 - Tests: 9 for `summarizeDescription` in `ai.test.ts`, 7 in `description.test.ts`, 3 in `prompt.test.ts`, `buildTagsUserMessage` tests in `tags.test.ts`; `npm run build && npm run lint && npm test` all pass (244 tests); not verified manually in the browser
+
+### 2026-11-09 — AI Action Input Typing Completed
+
+- `suggestTags` and `summarizeDescription` in `src/actions/ai.ts` now take `SuggestTagsInput` / `SummarizeDescriptionInput` (exported `z.input<typeof Schema>` types) instead of `unknown`, so a misspelled field name is a compile error instead of being silently dropped by Zod
+- `SuggestTags.tsx` and `SuggestDescription.tsx` already passed matching objects — no changes needed; runtime behavior is unchanged (type-only change)
+- A shared `action-utils.ts` (`getAuthedSession`, unified `ActionResult`) was evaluated and deliberately not built: it would save about one line per action at ~14 call sites and would not fix any bug, while the reference project's loose `ActionResult` would weaken the discriminated unions the components narrow on
+- `npm run build && npm run lint` pass; `npm test` could not be run in this session (`DATABASE_URL` is not loaded into the shell and `next-auth` fails to resolve `next/server` under Vitest — identical failure on the base branch without these changes)
