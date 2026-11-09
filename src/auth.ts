@@ -1,10 +1,19 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit, getClientIP, formatRetryTime } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit";
+import { RATE_LIMITED_CODE_PREFIX } from "@/lib/constants/auth";
+
+// Reaches the client as `result.code`, so the form can show the retry time instead of "Invalid email or password"
+class RateLimitedError extends CredentialsSignin {
+  constructor(retryAfter: number) {
+    super();
+    this.code = `${RATE_LIMITED_CODE_PREFIX}${retryAfter}`;
+  }
+}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -50,7 +59,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         const ip = await getClientIP();
         const rl = await checkRateLimit("login", ip);
         if (!rl.success) {
-          throw new Error(`Too many sign-in attempts. Try again in ${formatRetryTime(rl.retryAfter)}.`);
+          throw new RateLimitedError(rl.retryAfter);
         }
 
         const user = await prisma.user.findUnique({

@@ -1,6 +1,8 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
+import { RATE_LIMIT_TIMEOUT_MS } from "@/lib/constants/rate-limit";
+import { formatRetryTime } from "@/lib/retry-time";
 
 let redis: Redis | null = null;
 
@@ -44,6 +46,15 @@ export interface RateLimitResult {
   retryAfter: number;
 }
 
+// Rejects if the promise does not settle in time, so an unreachable Redis cannot stall the request
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Rate limit check timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function getClientIP(): Promise<string> {
   const h = await headers();
   const forwarded = h.get("x-forwarded-for");
@@ -73,7 +84,7 @@ export async function checkRateLimit(
       prefix: config.prefix,
     });
 
-    const result = await ratelimit.limit(identifier);
+    const result = await withTimeout(ratelimit.limit(identifier), RATE_LIMIT_TIMEOUT_MS);
     return {
       success: result.success,
       remaining: result.remaining,
@@ -85,11 +96,7 @@ export async function checkRateLimit(
   }
 }
 
-export function formatRetryTime(seconds: number): string {
-  if (seconds < 60) return `${seconds} second${seconds !== 1 ? "s" : ""}`;
-  const minutes = Math.ceil(seconds / 60);
-  return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
-}
+export { formatRetryTime };
 
 export function rateLimitResponse(retryAfter: number): Response {
   return new Response(

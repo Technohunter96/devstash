@@ -1,5 +1,17 @@
-import { describe, it, expect } from "vitest";
-import { formatRetryTime, rateLimitResponse } from "./rate-limit";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+const { limitMock } = vi.hoisted(() => ({ limitMock: vi.fn() }));
+
+vi.mock("@upstash/ratelimit", () => ({
+  Ratelimit: class {
+    static slidingWindow = vi.fn(() => ({}));
+    limit = limitMock;
+  },
+}));
+vi.mock("@upstash/redis", () => ({ Redis: class {} }));
+vi.mock("next/headers", () => ({ headers: vi.fn() }));
+
+import { checkRateLimit, formatRetryTime, rateLimitResponse } from "./rate-limit";
 
 describe("formatRetryTime", () => {
   it("returns seconds for less than 60", () => {
@@ -43,5 +55,47 @@ describe("rateLimitResponse", () => {
     const res = rateLimitResponse(60);
     const body = await res.json();
     expect(body.error).toContain("1 minute");
+  });
+});
+
+describe("checkRateLimit", () => {
+  beforeEach(() => {
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    limitMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("returns success when under the limit", async () => {
+    limitMock.mockResolvedValue({ success: true, remaining: 3, reset: Date.now() + 1000 });
+    const result = await checkRateLimit("login", "1.2.3.4");
+    expect(result).toEqual({ success: true, remaining: 3, retryAfter: 0 });
+  });
+
+  it("returns retryAfter when the limit is exceeded", async () => {
+    limitMock.mockResolvedValue({ success: false, remaining: 0, reset: Date.now() + 60_000 });
+    const result = await checkRateLimit("login", "1.2.3.4");
+    expect(result.success).toBe(false);
+    expect(result.retryAfter).toBeGreaterThan(0);
+  });
+
+  it("fails open when Redis rejects", async () => {
+    limitMock.mockRejectedValue(new Error("ENOTFOUND"));
+    const result = await checkRateLimit("login", "1.2.3.4");
+    expect(result.success).toBe(true);
+  });
+
+  it("fails open after the timeout when Redis never responds", async () => {
+    vi.useFakeTimers();
+    limitMock.mockReturnValue(new Promise(() => {}));
+    const pending = checkRateLimit("login", "1.2.3.4");
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(pending).resolves.toMatchObject({ success: true });
   });
 });
