@@ -702,3 +702,16 @@ Not Started
 - Known and left as-is: no timeout on the loading state, so a hung navigation keeps the button disabled
 - `context/ai-interaction.md` — workflow step 5 now says to run build/lint/test with the PowerShell tool, not Git Bash, where every vitest suite fails on environment errors (`DATABASE_URL` not set, `Cannot find module next/server`) while the same command passes in PowerShell
 - UI-only change, no new unit tests; `npm run build && npm run lint && npm test` all pass in PowerShell (267 tests)
+
+### 2026-11-09 — Login Rate Limit & Slow Login Fix Completed
+
+- Diagnosed with Playwright: login took 10.2s, ~8.8s of it from two failing Upstash Redis calls (~4.4s each); the Upstash free database had been deleted after 14 days of inactivity, so its hostname no longer resolved (`ENOTFOUND`). Neon (~20–120ms) and bcryptjs (~350–400ms) were not the bottleneck
+- `src/lib/rate-limit.ts` — `checkRateLimit` wraps the Upstash call in a `withTimeout` helper (`RATE_LIMIT_TIMEOUT_MS` = 1000 in `src/lib/constants/rate-limit.ts`); on timeout or error it fails open, so an unreachable Redis can no longer stall login or the other rate-limited endpoints
+- Removed the duplicate login pre-check: deleted `POST /api/auth/login-ratelimit` and the `fetch` in `sign-in-form.tsx`; the only check left is the one in `authorize()`, which NextAuth runs on every credentials sign-in and cannot be bypassed. One login now consumes one attempt instead of two (previously only 2 logins per 15 min were possible)
+- `authorize()` throws a `RateLimitedError` (extends `CredentialsSignin`, `code` = `rate_limited:<seconds>`, prefix in `src/lib/constants/auth.ts`); `sign-in-form.tsx` reads `result.code` and shows "Too many sign-in attempts. Try again in X" instead of the misleading "Invalid email or password"
+- `formatRetryTime` moved to the dependency-free `src/lib/retry-time.ts` so the client form can use it; still re-exported from `rate-limit.ts`
+- Created a new Upstash database and updated `UPSTASH_REDIS_REST_URL/TOKEN` in `.env` and `.env.production` (user's task) — dev server restart required after changing `.env`
+- Verified with Playwright against the new Redis: good login 1.6s (was 10.2s), wrong password shows "Invalid email or password" until the limit, then "Too many sign-in attempts. Try again in 11 minutes."; test rate-limit keys deleted from Redis afterwards
+- Playwright gotcha: mouse `click()` on the Sign in button silently did nothing in this page, while a programmatic `button.click()` submitted the form — a test-harness artifact, not an app bug
+- Known and left as-is: with Redis down, rate limiting is silently not enforced (fail open) — worth monitoring before launch; free Upstash databases are deleted after 14 days of inactivity
+- Tests: 4 new tests for `checkRateLimit` in `src/lib/rate-limit.test.ts` (under limit, over limit, Redis rejects, timeout); `npm run build && npm run lint && npm test` all pass in PowerShell (271 tests)

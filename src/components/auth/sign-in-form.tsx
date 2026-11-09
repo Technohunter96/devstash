@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PasswordInput from "@/components/ui/password-input";
 import GitHubSignInButton from "@/components/auth/github-sign-in-button";
+import { RATE_LIMITED_CODE_PREFIX } from "@/lib/constants/auth";
+import { formatRetryTime } from "@/lib/retry-time";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -46,19 +48,6 @@ const [email, setEmail] = useState("");
 
     setLoading(true);
 
-    const rlRes = await fetch("/api/auth/login-ratelimit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!rlRes.ok) {
-      const data = await rlRes.json().catch(() => ({}));
-      setError(data.error ?? "Too many attempts. Please try again later.");
-      setLoading(false);
-      return;
-    }
-
     const result = await signIn("credentials", {
       email,
       password,
@@ -66,7 +55,14 @@ const [email, setEmail] = useState("");
     });
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      const retryAfter = result.code?.startsWith(RATE_LIMITED_CODE_PREFIX)
+        ? Number(result.code.slice(RATE_LIMITED_CODE_PREFIX.length))
+        : NaN;
+      setError(
+        Number.isFinite(retryAfter)
+          ? `Too many sign-in attempts. Try again in ${formatRetryTime(retryAfter)}.`
+          : "Invalid email or password."
+      );
       setLoading(false);
     } else {
       // Keep the loading state on until the dashboard renders, otherwise the form looks frozen
