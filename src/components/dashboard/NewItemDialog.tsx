@@ -26,7 +26,7 @@ const CREATABLE_TYPES = [
   { name: "Snippet" as const, icon: "Code", color: ITEM_TYPE_COLORS.Snippet },
   { name: "Prompt" as const, icon: "Bot", color: ITEM_TYPE_COLORS.Prompt },
   { name: "Command" as const, icon: "Terminal", color: ITEM_TYPE_COLORS.Command },
-  { name: "Note" as const, icon: "StickyNote", color: ITEM_TYPE_COLORS.Note },
+  { name: "Note" as const, icon: "NotebookText", color: ITEM_TYPE_COLORS.Note },
   { name: "Link" as const, icon: "Link", color: ITEM_TYPE_COLORS.Link },
   { name: "File" as const, icon: "File", color: ITEM_TYPE_COLORS.File },
   { name: "Image" as const, icon: "Image", color: ITEM_TYPE_COLORS.Image },

@@ -55,7 +55,7 @@ Key fields: `content` (the command text), `language` (usually `bash`).
 
 | Property | Value |
 |----------|-------|
-| Icon | `StickyNote` (Lucide) |
+| Icon | `NotebookText` (Lucide) |
 | Color | `#fde047` (yellow) |
 | Content mode | `TEXT` |
 | Tier | Free |

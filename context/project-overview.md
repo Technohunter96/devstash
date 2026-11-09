@@ -34,7 +34,7 @@ Content mode is one of: `text` (snippet, note, prompt, command), `url` (link), o
 | Snippet | `Code`       | `#3b82f6` | text         | Free |
 | Prompt  | `Bot`        | `#8b5cf6` | text         | Free |
 | Command | `Terminal`   | `#f97316` | text         | Free |
-| Note    | `StickyNote` | `#fde047` | text         | Free |
+| Note    | `NotebookText` | `#fde047` | text         | Free |
 | Link    | `Link`       | `#10b981` | url          | Free |
 | File    | `File`       | `#6b7280` | file         | Pro  |
 | Image   | `Image`      | `#ec4899` | file         | Pro  |
