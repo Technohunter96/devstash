@@ -633,3 +633,13 @@ Not Started
 - Removed the now-unused `getEditorPreferences` server action from `src/actions/editor-preferences.ts` together with its 2 tests (same cleanup as `getIsPro`); `updateEditorPreferences` is unchanged
 - Preferences are only read when the layout renders; after a save the provider's local state is the source of truth, so `router.refresh()` does not overwrite it
 - Verified by `npm run build && npm run lint && npm test` (225 tests); not checked manually in the browser
+
+### 2026-11-09 — App Route Group Layout Completed
+
+- Moved `dashboard`, `items/[type]`, `collections`, `profile`, `settings`, `favorites` and `upgrade` into a new `src/app/(app)/` route group via `git mv`; the parentheses keep the folder out of the URL, so all routes and the `proxy.ts` matcher are unchanged (build lists the same 29 routes as before)
+- Replaced the 7 near-identical `layout.tsx` files with a single `src/app/(app)/layout.tsx` (promoted from the old dashboard layout, renamed `AppLayout`): session check, email verification redirect, sidebar data, `isPro` and editor preferences, then `DashboardShell`
+- `DashboardShell` and its providers now stay mounted when navigating between sections — verified manually that a collapsed sidebar stays collapsed when clicking through to another page; sidebar item counts still update after creating an item (mutations call `router.refresh()`), and unauthenticated access still redirects to `/sign-in`
+- Typing a URL by hand or pressing F5 is a full page load and resets client state (sidebar back to expanded) — expected browser behavior, not a regression; persisting the collapsed state (localStorage/cookie) was discussed and left out of scope
+- `.claude/agents/auth-auditor.md` — path updated to `src/app/(app)/profile/**` and `src/app/(app)/layout.tsx` added, since the session check now lives in the shared layout; older History entries and `docs/` still mention the previous paths and are left as historical records
+- Dev-environment gotchas: on Windows `git mv` failed with "Permission denied" while `npm run dev` was running (file watcher holds the folders), so the dev server must be stopped before moving route folders; after the move a stale `.next/dev/types/validator.ts` referencing deleted layouts broke `next build` until that gitignored folder was removed
+- `npm run build && npm run lint && npm test` all pass (225 tests)

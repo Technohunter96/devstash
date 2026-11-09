@@ -7,7 +7,7 @@ import { getSidebarItemTypes, getSidebarCollections } from "@/lib/db/sidebar";
 import { getEditorPreferences } from "@/lib/db/editor-preferences";
 import { isEmailVerificationEnabled } from "@/lib/feature-flags";
 
-export default async function FavoritesLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -18,6 +18,7 @@ export default async function FavoritesLayout({
     redirect("/sign-in");
   }
 
+  // Redirect unverified users only when verification is enabled
   if (isEmailVerificationEnabled() && !session.user.emailVerified) {
     const email = session.user.email ?? "";
     redirect(`/verify-email-sent?email=${encodeURIComponent(email)}`);
