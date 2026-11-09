@@ -17,7 +17,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
   return (
     <header className="h-14 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0">
-      <div className="flex items-center gap-2 w-48 shrink-0">
+      <div className="flex items-center gap-2 sm:w-48 shrink-0">
         <button
           onClick={onMenuToggle}
           className="md:hidden flex items-center justify-center size-7 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -25,18 +25,18 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           <Menu className="size-5" />
         </button>
         <Link href="/" className="flex items-center gap-2 cursor-pointer">
-          <Logo textClassName="text-base" />
+          <Logo textClassName="text-base hidden sm:inline" />
         </Link>
       </div>
 
-      <div className="flex-1 flex justify-center">
+      <div className="flex-1 min-w-0 flex justify-center">
         {/* Fake search input that opens the command palette on click */}
         <button
           onClick={() => setOpen(true)}
-          className="relative w-full max-w-md flex items-center h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm text-muted-foreground shadow-xs cursor-pointer hover:bg-muted/50 transition-colors"
+          className="relative w-full max-w-md min-w-0 flex items-center h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm text-muted-foreground shadow-xs cursor-pointer hover:bg-muted/50 transition-colors"
         >
           <Search className="size-4 mr-2 shrink-0" />
-          <span className="flex-1 text-left">Search...</span>
+          <span className="flex-1 text-left truncate">Search...</span>
           <kbd className="pointer-events-none hidden sm:flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
             <span>⌘</span>K
           </kbd>

@@ -643,3 +643,12 @@ Not Started
 - `.claude/agents/auth-auditor.md` — path updated to `src/app/(app)/profile/**` and `src/app/(app)/layout.tsx` added, since the session check now lives in the shared layout; older History entries and `docs/` still mention the previous paths and are left as historical records
 - Dev-environment gotchas: on Windows `git mv` failed with "Permission denied" while `npm run dev` was running (file watcher holds the folders), so the dev server must be stopped before moving route folders; after the move a stale `.next/dev/types/validator.ts` referencing deleted layouts broke `next build` until that gitignored folder was removed
 - `npm run build && npm run lint && npm test` all pass (225 tests)
+
+### 2026-11-09 — TopBar Mobile Overflow Fix Completed
+
+- Found while verifying the route group refactor with Playwright: at 375px the page was 470px wide (horizontal scroll) because the TopBar's left block had a fixed `w-48` and the action group is `shrink-0`; pre-existing, the refactor did not touch `TopBar.tsx`
+- `TopBar.tsx` — left block is `sm:w-48` instead of always `w-48`; the "DevStash" wordmark is hidden below `sm` (logo mark stays); search wrapper and button got `min-w-0` and the "Search..." label `truncate`, so search absorbs the leftover space
+- Verified with Playwright as a free user (widest case, includes the Upgrade button): no overflow at 375px (all buttons end by 359px, search 82px) and at 320px (search collapses to its icon); desktop 1440px unchanged (logo text visible, 192px left block, 448px search)
+- Same Playwright session verified the route group refactor beyond the earlier manual checks: all sections render with the shell and a collapsed sidebar survives soft navigation; the server HTML carries `editorPreferences` (non-default `minimap:true`), confirming no flash of defaults; free-tier gating works (locked File/Image rows link to `/upgrade`, `/items/files|images` redirect to `/upgrade`, File/Image disabled in New Item, Upgrade button in TopBar, Pro users redirected away from `/upgrade`)
+- Not verified: `loading.tsx`/`error.tsx` behavior after the route move
+- `npm run build && npm run lint && npm test` all pass (225 tests)
