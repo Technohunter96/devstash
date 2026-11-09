@@ -204,14 +204,8 @@ export function NewItemDialogContent({
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Description</label>
-            <div className="flex items-start gap-1.5">
-              <textarea
-                className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md px-3 py-2 focus:border-primary resize-none"
-                placeholder="Optional description"
-                {...field("description")}
-                rows={2}
-              />
+            <div className="flex h-6 items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Description</label>
               <SuggestDescription
                 title={form.title}
                 content={form.content}
@@ -223,6 +217,12 @@ export function NewItemDialogContent({
                 onDescriptionChange={(description) => setForm((s) => ({ ...s, description }))}
               />
             </div>
+            <textarea
+              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md px-3 py-2 focus:border-primary resize-none"
+              placeholder="Optional description"
+              {...field("description")}
+              rows={2}
+            />
           </div>
 
           {/* Language — above content so highlighting follows the selection */}
@@ -290,12 +290,8 @@ export function NewItemDialogContent({
 
           {/* Tags */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Tags</label>
-            <div className="flex items-start gap-1.5">
-              <TagInput
-                value={form.tags}
-                onChange={(tags) => setForm((s) => ({ ...s, tags }))}
-              />
+            <div className="flex h-6 items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Tags</label>
               <SuggestTags
                 title={form.title}
                 content={form.content}
@@ -305,6 +301,10 @@ export function NewItemDialogContent({
                 onTagsChange={(tags) => setForm((s) => ({ ...s, tags }))}
               />
             </div>
+            <TagInput
+              value={form.tags}
+              onChange={(tags) => setForm((s) => ({ ...s, tags }))}
+            />
           </div>
 
           {/* Collections */}
