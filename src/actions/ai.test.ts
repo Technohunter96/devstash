@@ -261,6 +261,12 @@ describe("optimizePrompt", () => {
     expect(mockParse).not.toHaveBeenCalled();
   });
 
+  it("rejects prompts longer than the model can see, without calling OpenAI", async () => {
+    const result = await optimizePrompt({ ...OPTIMIZE_INPUT, content: "a".repeat(8001) });
+    expect(result).toEqual({ success: false, error: "Prompt is too long to optimize (max 8000 characters)." });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
   it("returns an error when rate limited", async () => {
     mockCheckRateLimit.mockResolvedValue({ success: false, remaining: 0, retryAfter: 30 });
     const result = await optimizePrompt(OPTIMIZE_INPUT);
