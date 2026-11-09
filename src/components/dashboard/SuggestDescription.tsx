@@ -70,7 +70,7 @@ export default function SuggestDescription({
       <Button
         type="button"
         variant="ghost"
-        size="icon-lg"
+        size="icon-sm"
         aria-label="Generate description"
         onClick={handleSummarize}
         disabled={isLoading || !hasSource}

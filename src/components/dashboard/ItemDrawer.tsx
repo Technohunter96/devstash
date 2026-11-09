@@ -65,8 +65,22 @@ export default function ItemDrawer({
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-xs font-medium text-muted-foreground mb-2">{children}</h3>;
+// `action` sits on the same row as the label, so it never narrows the field below
+function SectionLabel({
+  children,
+  action,
+}: {
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  const label = <h3 className="text-xs font-medium text-muted-foreground">{children}</h3>;
+  if (!action) return <div className="mb-2">{label}</div>;
+  return (
+    <div className="mb-2 flex h-6 items-center justify-between">
+      {label}
+      {action}
+    </div>
+  );
 }
 
 interface EditState {
@@ -366,26 +380,31 @@ function ItemDrawerBody({
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Description */}
         <section>
-          <SectionLabel>Description</SectionLabel>
+          <SectionLabel
+            action={
+              isEditMode && (
+                <SuggestDescription
+                  title={editState.title}
+                  content={editState.content}
+                  url={editState.url}
+                  fileName={uploadedFile?.fileName ?? item.fileName ?? ""}
+                  language={editState.language}
+                  typeName={item.itemType.name}
+                  tags={editState.tags}
+                  onDescriptionChange={(description) => setEditState((s) => ({ ...s, description }))}
+                />
+              )
+            }
+          >
+            Description
+          </SectionLabel>
           {isEditMode ? (
-            <div className="flex items-start gap-1.5">
-              <textarea
-                ref={descriptionRef}
-                className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none overflow-hidden min-h-[36px]"
-                placeholder="Description (optional)"
-                {...field("description")}
-              />
-              <SuggestDescription
-                title={editState.title}
-                content={editState.content}
-                url={editState.url}
-                fileName={uploadedFile?.fileName ?? item.fileName ?? ""}
-                language={editState.language}
-                typeName={item.itemType.name}
-                tags={editState.tags}
-                onDescriptionChange={(description) => setEditState((s) => ({ ...s, description }))}
-              />
-            </div>
+            <textarea
+              ref={descriptionRef}
+              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none overflow-hidden min-h-[36px]"
+              placeholder="Description (optional)"
+              {...field("description")}
+            />
           ) : (
             item.description && (
               <p className="text-sm leading-relaxed">{item.description}</p>
@@ -549,22 +568,27 @@ function ItemDrawerBody({
         {/* Tags */}
         {(isEditMode || item.tags.length > 0) && (
           <section>
-            <SectionLabel>Tags</SectionLabel>
+            <SectionLabel
+              action={
+                isEditMode && (
+                  <SuggestTags
+                    title={editState.title}
+                    content={editState.content}
+                    language={editState.language}
+                    typeName={item.itemType.name}
+                    tags={editState.tags}
+                    onTagsChange={(tags) => setEditState((s) => ({ ...s, tags }))}
+                  />
+                )
+              }
+            >
+              Tags
+            </SectionLabel>
             {isEditMode ? (
-              <div className="flex items-start gap-1.5">
-                <TagInput
-                  value={editState.tags}
-                  onChange={(tags) => setEditState((s) => ({ ...s, tags }))}
-                />
-                <SuggestTags
-                  title={editState.title}
-                  content={editState.content}
-                  language={editState.language}
-                  typeName={item.itemType.name}
-                  tags={editState.tags}
-                  onTagsChange={(tags) => setEditState((s) => ({ ...s, tags }))}
-                />
-              </div>
+              <TagInput
+                value={editState.tags}
+                onChange={(tags) => setEditState((s) => ({ ...s, tags }))}
+              />
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {item.tags.map((tag) => (

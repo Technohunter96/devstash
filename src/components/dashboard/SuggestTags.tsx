@@ -67,7 +67,7 @@ export default function SuggestTags({
       <Button
         type="button"
         variant="ghost"
-        size="icon-lg"
+        size="icon-sm"
         aria-label="Suggest Tags"
         onClick={handleSuggest}
         disabled={isLoading || missingTitle}
