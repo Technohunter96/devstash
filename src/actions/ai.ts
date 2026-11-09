@@ -13,7 +13,14 @@ import {
   postProcessDescription,
 } from "@/lib/ai/description";
 import {
+  buildExplainUserMessage,
+  EXPLAIN_SYSTEM_PROMPT,
+  postProcessExplanation,
+} from "@/lib/ai/explain";
+import {
   AI_CONTENT_MAX_CHARS,
+  AI_EXPLAIN_EFFORT,
+  AI_EXPLAIN_MAX_OUTPUT_TOKENS,
   AI_DESCRIPTION_EFFORT,
   AI_DESCRIPTION_MAX_OUTPUT_TOKENS,
   AI_TAG_EFFORT,
@@ -147,6 +154,40 @@ export async function summarizeDescription(
         const description = postProcessDescription(out.description);
         if (!description) throw new AiError("AI couldn't process this item.");
         return description;
+      },
+    },
+    input
+  );
+}
+
+// ─── Explain code ────────────────────────────────────────────────────────────
+
+// Only code-like types make sense to explain; the drawer sends its current (possibly unsaved) editor content
+const EXPLAINABLE_TYPE_NAMES = ["Snippet", "Command"] as const;
+
+const ExplainCodeSchema = z.object({
+  title: z.string().max(AI_TITLE_MAX_CHARS).nullable().optional(),
+  content: z.string().trim().min(1, "There is no code to explain").max(AI_CONTENT_MAX_CHARS),
+  language: z.string().max(50).nullable().optional(),
+  typeName: z.enum(EXPLAINABLE_TYPE_NAMES, { error: "Only snippets and commands can be explained" }),
+});
+
+export type ExplainCodeInput = z.input<typeof ExplainCodeSchema>;
+
+export async function explainCode(input: ExplainCodeInput): Promise<AiResult<string>> {
+  return runAiAction(
+    {
+      name: "explanation",
+      inputSchema: ExplainCodeSchema,
+      outputSchema: z.object({ explanation: z.string() }),
+      system: EXPLAIN_SYSTEM_PROMPT,
+      effort: AI_EXPLAIN_EFFORT,
+      maxOutputTokens: AI_EXPLAIN_MAX_OUTPUT_TOKENS,
+      buildMessage: buildExplainUserMessage,
+      toResult: (out) => {
+        const explanation = postProcessExplanation(out.explanation);
+        if (!explanation) throw new AiError("AI couldn't process this item.");
+        return explanation;
       },
     },
     input
