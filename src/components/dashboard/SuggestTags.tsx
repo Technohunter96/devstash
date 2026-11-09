@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WandSparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { suggestTags } from "@/actions/ai";
@@ -75,7 +75,7 @@ export default function SuggestTags({
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <WandSparkles className="h-4 w-4" />
+          <Sparkles className="h-4 w-4" />
         )}
       </Button>
     </span>

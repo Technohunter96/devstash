@@ -1,6 +1,6 @@
 import {
   Code,
-  Sparkles,
+  Bot,
   Terminal,
   StickyNote,
   Link2,
@@ -11,7 +11,7 @@ import {
 
 export const ICON_MAP: Record<string, LucideIcon | undefined> = {
   Code,
-  Sparkles,
+  Bot,
   Terminal,
   StickyNote,
   Link: Link2,

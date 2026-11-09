@@ -652,3 +652,15 @@ Not Started
 - Same Playwright session verified the route group refactor beyond the earlier manual checks: all sections render with the shell and a collapsed sidebar survives soft navigation; the server HTML carries `editorPreferences` (non-default `minimap:true`), confirming no flash of defaults; free-tier gating works (locked File/Image rows link to `/upgrade`, `/items/files|images` redirect to `/upgrade`, File/Image disabled in New Item, Upgrade button in TopBar, Pro users redirected away from `/upgrade`)
 - Not verified: `loading.tsx`/`error.tsx` behavior after the route move
 - `npm run build && npm run lint && npm test` all pass (225 tests)
+
+### 2026-11-09 — AI Description Summary Completed
+
+- Pro-only `Sparkles` icon button next to the Description field in the New Item dialog and the item drawer edit mode; hidden for free users, disabled until title, content, URL or file name is present; generated text replaces the field and is saved only with the item
+- `summarizeDescription` server action (`src/actions/ai.ts`) works from the current, possibly unsaved inputs (title, content, URL, file name, language, type, tags) for every item type incl. File/Image
+- Created `src/lib/ai/description.ts` (prompt, message builder, `hasDescriptionSource`, `postProcessDescription` capped at 300 chars) and `SuggestDescription.tsx`; description constants added to `src/lib/constants/ai.ts`
+- AI actions refactored: private `runAiAction()` in `actions/ai.ts` holds the shared flow (auth → Pro → validation → rate limits → OpenAI → clean output); `suggestTags` and `summarizeDescription` are now just per-feature config, so a new AI feature is ~15 lines
+- Created `src/lib/ai/prompt.ts` (`buildItemMessage`, `ITEM_CONTENT_NOTICE`) shared by tags and description; removed `truncateForTags`; tag prompt uses `MAX_AI_TAGS`; inline `split(",")` in `NewItemDialog`/`ItemDrawer` replaced by `parseTagString`
+- Found in review: first version of the shared helpers lived in `run.ts`, which pulled the OpenAI SDK into the client bundle via `tags.ts`/`description.ts`; moved them to the dependency-free `prompt.ts` and verified no OpenAI code remains in `.next/static`
+- Both AI buttons now use `Sparkles` (Suggest Tags changed from `WandSparkles`); Prompt item type icon changed from `Sparkles` to `Bot` to avoid the clash (`icon-map.ts`, `NewItemDialog`, `seed.ts`, `project-overview.md`) via data migration `20261109190000_prompt_type_icon` — production needs `prisma migrate deploy` before the app starts, otherwise Prompt briefly falls back to the File icon
+- Known and left as-is: stale `Sparkles` Prompt icon in unused `mock-data.ts`, the `collections.test.ts` fixture and `seed-spec.md`; unused `AI_MAX_INPUT_CHARS`
+- Tests: 9 for `summarizeDescription` in `ai.test.ts`, 7 in `description.test.ts`, 3 in `prompt.test.ts`, `buildTagsUserMessage` tests in `tags.test.ts`; `npm run build && npm run lint && npm test` all pass (244 tests); not verified manually in the browser

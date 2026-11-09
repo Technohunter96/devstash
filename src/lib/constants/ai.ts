@@ -11,6 +11,12 @@ export const AI_TAG_INPUT_CHARS = 2000;
 export const AI_TAG_MAX_OUTPUT_TOKENS = 100;
 export const AI_TAG_EFFORT = "none" as const;
 
+// Description summary
+export const AI_DESCRIPTION_INPUT_CHARS = 2000;
+export const AI_DESCRIPTION_MAX_LENGTH = 300;
+export const AI_DESCRIPTION_MAX_OUTPUT_TOKENS = 150;
+export const AI_DESCRIPTION_EFFORT = "none" as const;
+
 // Zod caps on client-supplied input to the AI actions
 export const AI_TITLE_MAX_CHARS = 200;
 export const AI_CONTENT_MAX_CHARS = 50_000;

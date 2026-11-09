@@ -22,6 +22,8 @@ import { useIsPro } from "./ProProvider";
 import CollectionMultiSelect from "./CollectionMultiSelect";
 import CollectionBadge from "./CollectionBadge";
 import SuggestTags from "./SuggestTags";
+import SuggestDescription from "./SuggestDescription";
+import { parseTagString } from "@/lib/ai/tags";
 import TagInput from "./TagInput";
 import { cn, formatBytes, extractActionError } from "@/lib/utils";
 import { ICON_MAP } from "@/lib/constants/icon-map";
@@ -146,10 +148,7 @@ function ItemDrawerBody({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const tags = editState.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const tags = parseTagString(editState.tags);
 
       const result = await updateItem(item.id, {
         title: editState.title,
@@ -353,12 +352,24 @@ function ItemDrawerBody({
         <section>
           <SectionLabel>Description</SectionLabel>
           {isEditMode ? (
-            <textarea
-              ref={descriptionRef}
-              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none overflow-hidden min-h-[36px]"
-              placeholder="Description (optional)"
-              {...field("description")}
-            />
+            <div className="flex items-start gap-1.5">
+              <textarea
+                ref={descriptionRef}
+                className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md p-2 focus:border-primary resize-none overflow-hidden min-h-[36px]"
+                placeholder="Description (optional)"
+                {...field("description")}
+              />
+              <SuggestDescription
+                title={editState.title}
+                content={editState.content}
+                url={editState.url}
+                fileName={uploadedFile?.fileName ?? item.fileName ?? ""}
+                language={editState.language}
+                typeName={item.itemType.name}
+                tags={editState.tags}
+                onDescriptionChange={(description) => setEditState((s) => ({ ...s, description }))}
+              />
+            </div>
           ) : (
             item.description && (
               <p className="text-sm leading-relaxed">{item.description}</p>

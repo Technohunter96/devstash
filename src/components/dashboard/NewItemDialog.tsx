@@ -17,12 +17,14 @@ import MarkdownEditor from "./MarkdownEditor";
 import FileUpload, { type UploadResult } from "./FileUpload";
 import CollectionMultiSelect from "./CollectionMultiSelect";
 import SuggestTags from "./SuggestTags";
+import SuggestDescription from "./SuggestDescription";
+import { parseTagString } from "@/lib/ai/tags";
 import TagInput from "./TagInput";
 
 // All creatable item types — File/Image are greyed out for non-Pro users
 const CREATABLE_TYPES = [
   { name: "Snippet" as const, icon: "Code", color: ITEM_TYPE_COLORS.Snippet },
-  { name: "Prompt" as const, icon: "Sparkles", color: ITEM_TYPE_COLORS.Prompt },
+  { name: "Prompt" as const, icon: "Bot", color: ITEM_TYPE_COLORS.Prompt },
   { name: "Command" as const, icon: "Terminal", color: ITEM_TYPE_COLORS.Command },
   { name: "Note" as const, icon: "StickyNote", color: ITEM_TYPE_COLORS.Note },
   { name: "Link" as const, icon: "Link", color: ITEM_TYPE_COLORS.Link },
@@ -107,10 +109,7 @@ export function NewItemDialogContent({
   const handleSubmit = async () => {
     setIsSaving(true);
     try {
-      const tags = form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const tags = parseTagString(form.tags);
 
       const result = await createItem({
         typeName: form.typeName,
@@ -206,12 +205,24 @@ export function NewItemDialogContent({
           {/* Description */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Description</label>
-            <textarea
-              className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md px-3 py-2 focus:border-primary resize-none"
-              placeholder="Optional description"
-              {...field("description")}
-              rows={2}
-            />
+            <div className="flex items-start gap-1.5">
+              <textarea
+                className="w-full bg-transparent text-sm leading-relaxed outline-none border border-border rounded-md px-3 py-2 focus:border-primary resize-none"
+                placeholder="Optional description"
+                {...field("description")}
+                rows={2}
+              />
+              <SuggestDescription
+                title={form.title}
+                content={form.content}
+                url={form.url}
+                fileName={uploadedFile?.fileName ?? ""}
+                language={form.language}
+                typeName={form.typeName}
+                tags={form.tags}
+                onDescriptionChange={(description) => setForm((s) => ({ ...s, description }))}
+              />
+            </div>
           </div>
 
           {/* Language — above content so highlighting follows the selection */}

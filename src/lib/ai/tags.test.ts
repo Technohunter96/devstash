@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { postProcessTags, truncateForTags, mergeTag, parseTagString } from "./tags";
+import { postProcessTags, buildTagsUserMessage, mergeTag, parseTagString } from "./tags";
 import { AI_TAG_INPUT_CHARS, AI_TAG_MAX_LENGTH, MAX_AI_TAGS } from "@/lib/constants/ai";
 
 describe("postProcessTags", () => {
@@ -26,13 +26,16 @@ describe("postProcessTags", () => {
   });
 });
 
-describe("truncateForTags", () => {
-  it("cuts content to the tag input limit", () => {
-    expect(truncateForTags("a".repeat(AI_TAG_INPUT_CHARS + 500))).toHaveLength(AI_TAG_INPUT_CHARS);
+describe("buildTagsUserMessage", () => {
+  it("includes type, language, title and content", () => {
+    expect(buildTagsUserMessage("Hook", "code", "Snippet", "ts")).toBe(
+      "<item_content>\nType: Snippet\nLanguage: ts\nTitle: Hook\n\ncode\n</item_content>"
+    );
   });
 
-  it("keeps short content unchanged", () => {
-    expect(truncateForTags("short")).toBe("short");
+  it("cuts content to the tag input limit", () => {
+    const msg = buildTagsUserMessage("T", "a".repeat(AI_TAG_INPUT_CHARS + 500), "Note");
+    expect(msg.match(/a/g)).toHaveLength(AI_TAG_INPUT_CHARS);
   });
 });
 
