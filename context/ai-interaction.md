@@ -19,6 +19,8 @@ This is the common workflow that we will use for every single feature/fix:
 3. **Branch** - Create new branch for feature, fix, etc
 4. **Implement** - Implement the feature/fix that I create in @context/current-feature.md
 5. **Test** - Verify it works in the browser. Run `npm run build && npm run lint && npm test` chained in one command and fix any errors
+   - Run it with the PowerShell tool, never the Git Bash tool. In Git Bash every vitest suite fails on environment errors (`DATABASE_URL` not set, `Cannot find module next/server`, `reading 'config'`) while the same command passes in PowerShell — it is a shell issue, not a code bug.
+   - If all suites fail with such errors, rerun in PowerShell before investigating or reporting.
 6. **Iterate** - Iterate and change things if needed
 7. **Commit** - Only after build passes and everything works
 8. **Merge** - Merge to main

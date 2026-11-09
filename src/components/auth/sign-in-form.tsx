@@ -6,10 +6,11 @@ import { signIn } from "next-auth/react";
 import { signInWithGitHub } from "@/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PasswordInput from "@/components/ui/password-input";
-import GitHubIcon from "@/components/icons/github-icon";
+import GitHubSignInButton from "@/components/auth/github-sign-in-button";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -63,11 +64,12 @@ const [email, setEmail] = useState("");
       password,
       redirect: false,
     });
-    setLoading(false);
 
     if (result?.error) {
       setError("Invalid email or password.");
+      setLoading(false);
     } else {
+      // Keep the loading state on until the dashboard renders, otherwise the form looks frozen
       router.push(callbackUrl);
     }
   }
@@ -99,6 +101,7 @@ const [email, setEmail] = useState("");
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
@@ -114,14 +117,7 @@ const [email, setEmail] = useState("");
 
       <div className="flex justify-center">
         <form action={signInWithGitHub}>
-          <Button
-            type="submit"
-            variant="outline"
-            size="icon"
-            aria-label="Sign in with GitHub"
-          >
-            <GitHubIcon className="size-4" />
-          </Button>
+          <GitHubSignInButton />
         </form>
       </div>
 

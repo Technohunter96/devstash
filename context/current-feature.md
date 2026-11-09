@@ -692,3 +692,13 @@ Not Started
 - Included in the same commit on request: `AI_TAG_EFFORT` and `AI_DESCRIPTION_EFFORT` changed from `"none"` to `"low"`
 - Follow-up fix (`fix/optimize-long-prompts`): the model only sees the first 8000 characters (`AI_OPTIMIZE_INPUT_CHARS`) while the action accepts up to 50000, so a rewrite of a longer prompt could drop its tail; `optimizePrompt` now rejects prompts over the limit via `checkInput` with a friendly message (OpenAI is not called), and the Optimize button is disabled with the same message as tooltip; 1 new test, 267 tests total
 - Tests: 8 new tests for `optimizePrompt` in `src/actions/ai.test.ts`, 6 in `src/lib/ai/optimize.test.ts`; `npm run build && npm run lint && npm test` all pass (266 tests)
+
+### 2026-11-09 — Auth Form Loading States Completed
+
+- Found while using the app: after a successful sign-in the form looked frozen until the dashboard rendered — `sign-in-form.tsx`, `register-form.tsx` and `reset-password-form.tsx` called `setLoading(false)` before `router.push(...)`, so the form returned to its idle look while the next page rendered on the server
+- Those three forms now reset `loading` only on error paths; on success it stays `true` until navigation completes (the form unmounts because the target page lives in a different layout)
+- All four auth forms (sign-in, register, forgot-password, reset-password) show a `Loader2` spinner next to the loading text on the submit button
+- Created `src/components/auth/github-sign-in-button.tsx` — uses `useFormStatus` to show a spinner and disable the button while the GitHub OAuth redirect is in progress
+- Known and left as-is: no timeout on the loading state, so a hung navigation keeps the button disabled
+- `context/ai-interaction.md` — workflow step 5 now says to run build/lint/test with the PowerShell tool, not Git Bash, where every vitest suite fails on environment errors (`DATABASE_URL` not set, `Cannot find module next/server`) while the same command passes in PowerShell
+- UI-only change, no new unit tests; `npm run build && npm run lint && npm test` all pass in PowerShell (267 tests)
