@@ -70,16 +70,16 @@ export default function SuggestDescription({
       <Button
         type="button"
         variant="ghost"
-        size="icon-sm"
-        aria-label="Generate description"
+        size="xs"
         onClick={handleSummarize}
         disabled={isLoading || !hasSource}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="animate-spin" />
         ) : (
-          <Sparkles className="h-4 w-4" />
+          <Sparkles />
         )}
+        Generate description
       </Button>
     </span>
   );

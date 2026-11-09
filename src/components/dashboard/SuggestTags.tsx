@@ -67,16 +67,16 @@ export default function SuggestTags({
       <Button
         type="button"
         variant="ghost"
-        size="icon-sm"
-        aria-label="Suggest Tags"
+        size="xs"
         onClick={handleSuggest}
         disabled={isLoading || missingTitle}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="animate-spin" />
         ) : (
-          <Sparkles className="h-4 w-4" />
+          <Sparkles />
         )}
+        Suggest tags
       </Button>
     </span>
   );
