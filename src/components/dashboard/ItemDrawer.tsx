@@ -144,6 +144,19 @@ function ItemDrawerBody({
     setIsEditMode(true);
   };
 
+  // Accepting an optimized prompt from the read view opens edit mode with it; nothing is saved until Save
+  const applyOptimizedPrompt = (content: string) => {
+    if (isEditMode) {
+      setEditState((s) => ({ ...s, content }));
+    } else {
+      setEditState({ ...itemToEditState(item), content });
+      setIsEditMode(true);
+    }
+  };
+
+  const optimizeContext = (title: string) =>
+    item.itemType.name === "Prompt" ? { title, onApply: applyOptimizedPrompt } : undefined;
+
   const handleCancel = () => {
     setIsEditMode(false);
   };
@@ -407,6 +420,7 @@ function ItemDrawerBody({
                 <MarkdownEditor
                   value={editState.content}
                   onChange={(val) => setEditState((s) => ({ ...s, content: val }))}
+                  optimize={optimizeContext(editState.title)}
                 />
               ) : null
             ) : (
@@ -421,6 +435,7 @@ function ItemDrawerBody({
                 <MarkdownEditor
                   value={item.content ?? ""}
                   readOnly
+                  optimize={optimizeContext(item.title)}
                 />
               ) : null
             )}

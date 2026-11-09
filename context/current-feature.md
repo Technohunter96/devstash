@@ -680,3 +680,15 @@ Not Started
 - Created `src/lib/ai/explain.ts` (system prompt, `buildExplainUserMessage`, `postProcessExplanation`) and explain constants in `src/lib/constants/ai.ts`
 - Explanations are not persisted — regenerated on each click
 - Tests: 8 new tests for `explainCode` in `src/actions/ai.test.ts`; `npm run build && npm run lint && npm test` all pass (252 tests)
+
+### 2026-11-09 — AI Prompt Optimizer Completed
+
+- Pro-only "Optimize" button (Sparkles icon + label) in the `MarkdownEditor` header for Prompt items in the item drawer, mirroring the Explain button in `CodeEditor`; free users see a Crown icon with the tooltip "AI features require Pro subscription"; not shown for Notes or in the New Item dialog
+- Works in both the drawer read view and edit mode; in edit mode it optimizes the current, possibly unsaved, editor content
+- `optimizePrompt` server action in `src/actions/ai.ts` built on the shared `runAiAction` pipeline; input restricted to the Prompt type via `z.literal`; the model returns `{ changed, prompt }`, so an already good prompt only shows a toast instead of a pointless suggestion
+- The optimized prompt is never applied automatically: the editor shows it as a preview with "Use the optimized prompt?" and Discard / Use optimized; accepting in edit mode replaces the editor content, accepting in the read view opens edit mode with the new content — nothing is saved until Save; a suggestion made for text that was edited since is dropped as stale
+- Created `src/lib/ai/optimize.ts` (system prompt, `buildOptimizeUserMessage`, `postProcessOptimizedPrompt`) and optimize constants in `src/lib/constants/ai.ts`
+- Fixed a bug in `MarkdownEditor`: the Write textarea auto-resize only re-ran on `value` changes, so after switching Preview → Write (or closing a suggestion) the remounted textarea stayed at the 80px minimum; `tab` and `pending` are now effect deps
+- Included in the same commit on request: `AI_TAG_EFFORT` and `AI_DESCRIPTION_EFFORT` changed from `"none"` to `"low"`
+- Known and left as-is: the model only sees the first 8000 characters (`AI_OPTIMIZE_INPUT_CHARS`) while the action accepts up to 50000, so for a longer prompt the rewrite could drop the tail if the user confirms and saves it — a `checkInput` rejecting over-long prompts is the natural fix
+- Tests: 8 new tests for `optimizePrompt` in `src/actions/ai.test.ts`, 6 in `src/lib/ai/optimize.test.ts`; `npm run build && npm run lint && npm test` all pass (266 tests)
