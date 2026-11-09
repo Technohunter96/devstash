@@ -25,6 +25,7 @@ export const AI_EXPLAIN_EFFORT = "low" as const;
 
 // Prompt optimizer (the rewritten prompt can be as long as the original)
 export const AI_OPTIMIZE_INPUT_CHARS = 8000;
+export const AI_OPTIMIZE_TOO_LONG_MESSAGE = `Prompt is too long to optimize (max ${AI_OPTIMIZE_INPUT_CHARS} characters).`;
 export const AI_OPTIMIZE_MAX_LENGTH = 12_000;
 export const AI_OPTIMIZE_MAX_OUTPUT_TOKENS = 3000;
 export const AI_OPTIMIZE_EFFORT = "low" as const;

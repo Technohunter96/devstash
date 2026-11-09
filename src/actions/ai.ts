@@ -26,6 +26,8 @@ import {
 import {
   AI_CONTENT_MAX_CHARS,
   AI_OPTIMIZE_EFFORT,
+  AI_OPTIMIZE_INPUT_CHARS,
+  AI_OPTIMIZE_TOO_LONG_MESSAGE,
   AI_OPTIMIZE_MAX_OUTPUT_TOKENS,
   AI_EXPLAIN_EFFORT,
   AI_EXPLAIN_MAX_OUTPUT_TOKENS,
@@ -222,6 +224,8 @@ export async function optimizePrompt(input: OptimizePromptInput): Promise<AiResu
       system: OPTIMIZE_SYSTEM_PROMPT,
       effort: AI_OPTIMIZE_EFFORT,
       maxOutputTokens: AI_OPTIMIZE_MAX_OUTPUT_TOKENS,
+      // The model only sees AI_OPTIMIZE_INPUT_CHARS, so a longer rewrite would silently drop the tail of the prompt
+      checkInput: (i) => (i.content.length > AI_OPTIMIZE_INPUT_CHARS ? AI_OPTIMIZE_TOO_LONG_MESSAGE : null),
       buildMessage: buildOptimizeUserMessage,
       toResult: (out, i) => {
         if (!out.prompt.trim()) throw new AiError("AI couldn't process this item.");

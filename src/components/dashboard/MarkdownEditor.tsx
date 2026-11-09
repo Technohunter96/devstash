@@ -7,6 +7,7 @@ import { Copy, Check, Sparkles, Crown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { optimizePrompt } from "@/actions/ai";
 import { useIsPro } from "@/components/dashboard/ProProvider";
+import { AI_OPTIMIZE_INPUT_CHARS, AI_OPTIMIZE_TOO_LONG_MESSAGE } from "@/lib/constants/ai";
 import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
 // When provided, the header shows the AI Optimize button (Prompt in the item drawer only);
@@ -41,6 +42,8 @@ export default function MarkdownEditor({ value, readOnly = false, onChange, opti
     el.style.height = "auto";
     el.style.height = `${Math.max(80, Math.min(400, el.scrollHeight))}px`;
   }, [value, tab, pending]);
+
+  const tooLong = value.length > AI_OPTIMIZE_INPUT_CHARS;
 
   const handleOptimize = async () => {
     if (!optimize) return;
@@ -108,10 +111,10 @@ export default function MarkdownEditor({ value, readOnly = false, onChange, opti
           {optimize && isPro === true && (
             <button
               onClick={handleOptimize}
-              disabled={isOptimizing || !value.trim()}
+              disabled={isOptimizing || !value.trim() || tooLong}
               className="cursor-pointer flex items-center gap-1 text-xs text-[#858585] hover:text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Optimize prompt"
-              title="Optimize prompt"
+              title={tooLong ? AI_OPTIMIZE_TOO_LONG_MESSAGE : "Optimize prompt"}
               type="button"
             >
               {isOptimizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
