@@ -32,6 +32,9 @@ interface Item {
   tags?: { id: string; name: string }[];
 }
 
+// Tags stay on a single row so every card keeps the same height
+const MAX_VISIBLE_TAGS = 3;
+
 export default function ItemCard({ item }: { item: Item }) {
   const router = useRouter();
   const { copied, copy } = useCopyToClipboard();
@@ -88,12 +91,17 @@ export default function ItemCard({ item }: { item: Item }) {
             <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
           )}
           {item.tags && item.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
-              {item.tags.map((tag) => (
-                <Badge key={tag.id} variant="secondary">
+            <div className="flex flex-nowrap gap-1.5 mt-2.5 overflow-hidden">
+              {item.tags.slice(0, MAX_VISIBLE_TAGS).map((tag) => (
+                <Badge key={tag.id} variant="secondary" className="shrink-0 max-w-28 truncate">
                   {tag.name}
                 </Badge>
               ))}
+              {item.tags.length > MAX_VISIBLE_TAGS && (
+                <Badge variant="secondary" className="shrink-0">
+                  +{item.tags.length - MAX_VISIBLE_TAGS}
+                </Badge>
+              )}
             </div>
           )}
         </div>

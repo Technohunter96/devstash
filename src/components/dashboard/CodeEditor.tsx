@@ -31,7 +31,7 @@ const TAB_CLASS = "cursor-pointer px-2 py-0.5 rounded transition-colors";
 export default function CodeEditor({ value, language, readOnly = false, onChange, explain }: CodeEditorProps) {
   const { copied, copy } = useCopyToClipboard();
   const isPro = useIsPro();
-  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explained, setExplained] = useState<{ text: string; source: string } | null>(null);
   const [tab, setTab] = useState<"code" | "explain">("code");
   const [isExplaining, setIsExplaining] = useState(false);
   const { preferences } = useEditorPreferences();
@@ -68,7 +68,7 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
         toast.error(result.error);
         return;
       }
-      setExplanation(result.data);
+      setExplained({ text: result.data, source: value });
       setTab("explain");
     } catch {
       toast.error("AI request failed.");
@@ -77,6 +77,8 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
     }
   };
 
+  // An explanation of different code (after an edit save/cancel) is stale, so it is dropped
+  const explanation = explained && explained.source === value ? explained.text : null;
   const showExplain = tab === "explain" && explanation !== null;
 
   return (
@@ -95,6 +97,7 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
                 <button
                   key={t}
                   type="button"
+                  aria-pressed={tab === t}
                   onClick={() => setTab(t)}
                   className={`${TAB_CLASS} ${tab === t ? "text-white bg-[#3a3a3a]" : "text-[#858585] hover:text-white"}`}
                 >
@@ -153,40 +156,40 @@ export default function CodeEditor({ value, language, readOnly = false, onChange
 
       {/* Kept mounted (just hidden) so Monaco keeps its state while the Explain tab is open */}
       <div className={showExplain ? "hidden" : undefined}>
-      <Editor
-        height={editorHeight}
-        value={value}
-        language={language || "plaintext"}
-        theme={preferences.theme}
-        beforeMount={handleBeforeMount}
-        onMount={handleMount}
-        onChange={(val) => onChange?.(val ?? "")}
-        options={{
-          readOnly,
-          domReadOnly: readOnly,
-          minimap: { enabled: preferences.minimap },
-          scrollBeyondLastLine: false,
-          fontSize: preferences.fontSize,
-          tabSize: preferences.tabSize,
-          lineNumbers: "on",
-          wordWrap: preferences.wordWrap ? "on" : "off",
-          automaticLayout: true,
-          scrollbar: {
-            vertical: "auto",
-            horizontal: "auto",
-            useShadows: false,
-            verticalScrollbarSize: 6,
-            horizontalScrollbarSize: 6,
-          },
-          padding: { top: 12, bottom: 12 },
-          overviewRulerLanes: 0,
-          hideCursorInOverviewRuler: true,
-          overviewRulerBorder: false,
-          renderLineHighlight: readOnly ? "none" : "line",
-          contextmenu: false,
-          folding: false,
-        }}
-      />
+        <Editor
+          height={editorHeight}
+          value={value}
+          language={language || "plaintext"}
+          theme={preferences.theme}
+          beforeMount={handleBeforeMount}
+          onMount={handleMount}
+          onChange={(val) => onChange?.(val ?? "")}
+          options={{
+            readOnly,
+            domReadOnly: readOnly,
+            minimap: { enabled: preferences.minimap },
+            scrollBeyondLastLine: false,
+            fontSize: preferences.fontSize,
+            tabSize: preferences.tabSize,
+            lineNumbers: "on",
+            wordWrap: preferences.wordWrap ? "on" : "off",
+            automaticLayout: true,
+            scrollbar: {
+              vertical: "auto",
+              horizontal: "auto",
+              useShadows: false,
+              verticalScrollbarSize: 6,
+              horizontalScrollbarSize: 6,
+            },
+            padding: { top: 12, bottom: 12 },
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            overviewRulerBorder: false,
+            renderLineHighlight: readOnly ? "none" : "line",
+            contextmenu: false,
+            folding: false,
+          }}
+        />
       </div>
     </div>
   );
