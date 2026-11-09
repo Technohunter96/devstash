@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PasswordInput from "@/components/ui/password-input";
 
@@ -35,14 +36,15 @@ export default function ResetPasswordForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, password }),
     });
-    setLoading(false);
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Something went wrong. Please try again.");
+      setLoading(false);
       return;
     }
 
+    // Keep the loading state on until the sign-in page renders, otherwise the form looks frozen
     router.push("/sign-in?reset=1");
   }
 
@@ -77,6 +79,7 @@ export default function ResetPasswordForm() {
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? "Saving..." : "Set new password"}
         </Button>
       </form>

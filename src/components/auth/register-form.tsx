@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PasswordInput from "@/components/ui/password-input";
@@ -42,13 +43,14 @@ export default function RegisterForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
     });
-    setLoading(false);
 
     if (res.ok) {
+      // Keep the loading state on until the next page renders, otherwise the form looks frozen
       router.push(`/verify-email-sent?email=${encodeURIComponent(email)}`);
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Registration failed. Please try again.");
+      setLoading(false);
     }
   }
 
@@ -87,6 +89,7 @@ export default function RegisterForm() {
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? "Creating account..." : "Create account"}
         </Button>
       </form>
