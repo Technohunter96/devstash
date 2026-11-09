@@ -18,7 +18,15 @@ import {
   postProcessExplanation,
 } from "@/lib/ai/explain";
 import {
+  buildOptimizeUserMessage,
+  OPTIMIZE_SYSTEM_PROMPT,
+  postProcessOptimizedPrompt,
+  type OptimizeResult,
+} from "@/lib/ai/optimize";
+import {
   AI_CONTENT_MAX_CHARS,
+  AI_OPTIMIZE_EFFORT,
+  AI_OPTIMIZE_MAX_OUTPUT_TOKENS,
   AI_EXPLAIN_EFFORT,
   AI_EXPLAIN_MAX_OUTPUT_TOKENS,
   AI_DESCRIPTION_EFFORT,
@@ -188,6 +196,36 @@ export async function explainCode(input: ExplainCodeInput): Promise<AiResult<str
         const explanation = postProcessExplanation(out.explanation);
         if (!explanation) throw new AiError("AI couldn't process this item.");
         return explanation;
+      },
+    },
+    input
+  );
+}
+
+// ─── Optimize prompt ─────────────────────────────────────────────────────────
+
+// Only prompts are optimized; the drawer sends its current (possibly unsaved) editor content
+const OptimizePromptSchema = z.object({
+  title: z.string().max(AI_TITLE_MAX_CHARS).nullable().optional(),
+  content: z.string().trim().min(1, "There is no prompt to optimize").max(AI_CONTENT_MAX_CHARS),
+  typeName: z.literal("Prompt", { error: "Only prompts can be optimized" }),
+});
+
+export type OptimizePromptInput = z.input<typeof OptimizePromptSchema>;
+
+export async function optimizePrompt(input: OptimizePromptInput): Promise<AiResult<OptimizeResult>> {
+  return runAiAction(
+    {
+      name: "optimized_prompt",
+      inputSchema: OptimizePromptSchema,
+      outputSchema: z.object({ changed: z.boolean(), prompt: z.string() }),
+      system: OPTIMIZE_SYSTEM_PROMPT,
+      effort: AI_OPTIMIZE_EFFORT,
+      maxOutputTokens: AI_OPTIMIZE_MAX_OUTPUT_TOKENS,
+      buildMessage: buildOptimizeUserMessage,
+      toResult: (out, i) => {
+        if (!out.prompt.trim()) throw new AiError("AI couldn't process this item.");
+        return postProcessOptimizedPrompt(out, i.content);
       },
     },
     input

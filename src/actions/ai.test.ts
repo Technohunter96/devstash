@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import OpenAI from "openai";
-import { suggestTags, summarizeDescription, explainCode } from "./ai";
+import { suggestTags, summarizeDescription, explainCode, optimizePrompt } from "./ai";
 
 const mockAuth = vi.fn();
 const mockParse = vi.fn();
@@ -229,5 +229,67 @@ describe("explainCode", () => {
     mockParse.mockRejectedValue(new OpenAI.RateLimitError(429, {}, "rate limited", new Headers()));
     const result = await explainCode(EXPLAIN_INPUT);
     expect(result).toEqual({ success: false, error: "AI is busy right now. Try again in a moment." });
+  });
+});
+
+describe("optimizePrompt", () => {
+  const OPTIMIZE_INPUT = { title: "Code review", content: "review my code", typeName: "Prompt" as const };
+
+  it("returns unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    expect(await optimizePrompt(OPTIMIZE_INPUT)).toEqual({ success: false, error: "Unauthorized" });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-Pro users and never calls OpenAI", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
+    const result = await optimizePrompt(OPTIMIZE_INPUT);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Pro feature");
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty content", async () => {
+    const result = await optimizePrompt({ ...OPTIMIZE_INPUT, content: "   " });
+    expect(result).toEqual({ success: false, error: "There is no prompt to optimize" });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("rejects types that are not prompts", async () => {
+    const result = await optimizePrompt({ ...OPTIMIZE_INPUT, typeName: "Note" as "Prompt" });
+    expect(result).toEqual({ success: false, error: "Only prompts can be optimized" });
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("returns an error when rate limited", async () => {
+    mockCheckRateLimit.mockResolvedValue({ success: false, remaining: 0, retryAfter: 30 });
+    const result = await optimizePrompt(OPTIMIZE_INPUT);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("30 seconds");
+    expect(mockParse).not.toHaveBeenCalled();
+  });
+
+  it("returns the trimmed optimized prompt when it changed", async () => {
+    mockParse.mockResolvedValue({
+      status: "completed",
+      output_parsed: { changed: true, prompt: "  Review the code for bugs.\n" },
+    });
+    expect(await optimizePrompt(OPTIMIZE_INPUT)).toEqual({
+      success: true,
+      data: { changed: true, prompt: "Review the code for bugs." },
+    });
+  });
+
+  it("reports unchanged when the AI says the prompt is already good", async () => {
+    mockParse.mockResolvedValue({ status: "completed", output_parsed: { changed: false, prompt: "review my code" } });
+    expect(await optimizePrompt(OPTIMIZE_INPUT)).toEqual({
+      success: true,
+      data: { changed: false, prompt: "review my code" },
+    });
+  });
+
+  it("fails when the AI returns an empty prompt", async () => {
+    mockParse.mockResolvedValue({ status: "completed", output_parsed: { changed: true, prompt: "  " } });
+    expect(await optimizePrompt(OPTIMIZE_INPUT)).toEqual({ success: false, error: "AI couldn't process this item." });
   });
 });
