@@ -59,17 +59,25 @@ export default function SuggestTags({
     }
   };
 
+  const missingTitle = !title.trim();
+
+  // Tooltip lives on the wrapper: the disabled button has pointer-events-none, so it can't show its own title
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-lg"
-      title="Suggest Tags"
-      aria-label="Suggest Tags"
-      onClick={handleSuggest}
-      disabled={isLoading || !title.trim()}
-    >
-      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <WandSparkles className="h-4 w-4" />}
-    </Button>
+    <span title={missingTitle ? "Fill in the title to suggest tags" : "Suggest Tags"}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-lg"
+        aria-label="Suggest Tags"
+        onClick={handleSuggest}
+        disabled={isLoading || missingTitle}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <WandSparkles className="h-4 w-4" />
+        )}
+      </Button>
+    </span>
   );
 }
